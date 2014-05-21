@@ -1,0 +1,7 @@
+<use name="BaconAna/DataFormats"/>
+<use name="root"/>
+<use name="fastjet"/>
+<flags CXXFLAGS="-g -Wall"/>
+<bin   file="runBacon.cpp" name="runBacon"> </bin>
+
+
