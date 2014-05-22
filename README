@@ -1,10 +1,10 @@
---- install fastjet ---
+[1] --- install fastjet ---
 http://fastjet.fr/quickstart.html
 cd fastjet-install
 setenv FASTJET_BASE $PWD
 cd ..
 
---- install fastjet/contrib ---
+[2] --- install fastjet/contrib ---
 svn co http://fastjet.hepforge.org/svn/contrib/branches/1.012-alpha-PUWS14.1
 ./scripts/update-contribs.sh
 ./configure --fastjet-config=$FASTJET_BASE/bin/fastjet-config CXXFLAGS="-I$FASTJET_BASE/include -I$FASTJET_BASE/tools"
@@ -14,11 +14,11 @@ make install
 make shared-fragile
 make shared-fragile-install
 
---- link CMSSW to your installation of fastjet(/contrib) ---
+[3] --- link CMSSW to your installation of fastjet(/contrib) ---
 # modify fastjet.xml.modified to make it your local installation of fastjet
 cp fastjet.xml.modified $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/
 scram setup fastjet
 
---- try it out ---
+[4] --- try it out ---
 cd Summer14/bin
 scram b
