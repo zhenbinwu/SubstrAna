@@ -1,4 +1,6 @@
+<use name="SubstrAna/Summer14"/>
 <use name="BaconAna/DataFormats"/>
+<use name="CondFormats/JetMETObjects"/>
 <use name="root"/>
 <use name="fastjet"/>
 <flags CXXFLAGS="-g -Wall"/>

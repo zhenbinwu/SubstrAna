@@ -9,7 +9,7 @@ using namespace fastjet;
 
 //FASTJET_BEGIN_NAMESPACE      // defined in fastjet/internal/base.hh
 
-puppiContainer::puppiContainer(std::vector<RecoObj> iEvent) { 
+puppiContainer::puppiContainer(std::vector<RecoObj> &iEvent) { 
     _allParticles.resize(0);
     _pfParticles.resize(0);
     _genParticles.resize(0);
@@ -36,7 +36,7 @@ puppiContainer::puppiContainer(std::vector<RecoObj> iEvent) {
 	(curParticle.user_index() == 2) ? _isPU.push_back(0) : _isPU.push_back(1);
     }
 }
-puppiContainer::puppiContainer(std::vector<PseudoJet> iEvent){
+puppiContainer::puppiContainer(std::vector<PseudoJet> &iEvent){
     _allParticles.resize(0);
     _pfParticles.resize(0);
     _genParticles.resize(0);
@@ -62,6 +62,12 @@ puppiContainer::puppiContainer(std::vector<PseudoJet> iEvent){
 	if(curParticle.user_index() == 3) _pfParticles   .push_back(curParticle);
 	(curParticle.user_index() == 2) ? _isPU.push_back(0) : _isPU.push_back(1);
     }
+}
+void puppiContainer::setGen(std::vector<PseudoJet> &iEvent){
+  _genParticles.resize(0);
+  for (unsigned int i = 0; i < iEvent.size(); i++) {
+    _genParticles.push_back(iEvent[i]);
+  }
 }
 puppiContainer::~puppiContainer(){}
 std::vector<fastjet::PseudoJet> puppiContainer::puppiFetch(int iPU, double iQuant){

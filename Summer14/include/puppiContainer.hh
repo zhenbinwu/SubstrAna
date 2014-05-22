@@ -16,9 +16,10 @@ class puppiContainer{
 
 public:
     // default ctor
-    puppiContainer(std::vector<RecoObj>   iEvent);
-    puppiContainer(std::vector<PseudoJet> iEvent);
+    puppiContainer(std::vector<RecoObj>   &iEvent);
+    puppiContainer(std::vector<PseudoJet> &iEvent);
     ~puppiContainer();
+    void setGen(std::vector<PseudoJet> &iEvent); 
 
     std::vector<fastjet::PseudoJet> puppiFetch(int nPU, double iQuant=0.5);
     std::vector<fastjet::PseudoJet> genFetch(){ return _genParticles; }
