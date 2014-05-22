@@ -1,12 +1,21 @@
 #include "../include/PFLoader.hh"
+#include "../include/RecoObj.hh"
+#include "../include/puppiContainer.hh"
+#include "fastjet/ClusterSequence.hh"
+#include "fastjet/ClusterSequenceArea.hh"
+#include <fastjet/tools/GridMedianBackgroundEstimator.hh>
+#include <fastjet/ClusterSequence.hh>
+#include <fastjet/GhostedAreaSpec.hh>
+#include <fastjet/ClusterSequenceArea.hh>
+//#include :
 #include "TMath.h"
 
 using namespace baconhep;
 
 PFLoader::PFLoader(TTree *iTree) { 
   fPFCands  = new TClonesArray("baconhep::TPFPart");
-  iTree->SetBranchAddress("PFPart",       &fPFCandss);
-  fPFPartBr  = iTree->GetBranch("PFPart");
+  iTree->SetBranchAddress("PFPart",       &fPFCands);
+  fPFCandBr  = iTree->GetBranch("PFPart");
   fPuppi.clear(); 
 }
 PFLoader::~PFLoader() { 
@@ -25,27 +34,27 @@ void PFLoader::setupTree(TTree *iTree) {
   fTree->Branch("metphi" ,&fMetPhi,"fMetPhi/F");
 }
 void PFLoader::load(int iEvent) { 
-  fPFParts   ->Clear();
-  fPFPartBr ->GetEntry(iEvent);
+  fPFCands  ->Clear();
+  fPFCandBr ->GetEntry(iEvent);
 }
 TLorentzVector PFLoader::met() { 
   TLorentzVector lVec(0,0,0,0);
-  for(int i0 = 0; i0 < fPFParts->size(); i0++) { 
-    TPFPart *pPart = (TPFPart*)((*fPFParts)[i0]);    
+  for(int i0 = 0; i0 < fPFCands->GetEntriesFast(); i0++) { 
+    TPFPart *pPart = (TPFPart*)((*fPFCands)[i0]);    
     TLorentzVector pVec(0,0,0,0);
     pVec.SetPtEtaPhiM(pPart->pt,0.,pPart->phi,0.);
     lVec += pVec;
   }
   return lVec;
 }
-std::vector<PseudoJet> PFLoader::puppiFetch() {
+std::vector<fastjet::PseudoJet> PFLoader::puppiFetch() {
   bool lIsCh = false;
-  bool lIsPU = false;
+  bool lIsPV = false;
   std::vector<RecoObj> lPuppi;
-  for(int i0 = 0; i0 < fPFParts->size(); i0++) { 
-    TPFPart *pPart = (TPFPart*)((*fPFParts)[i0]);    
+  for(int i0 = 0; i0 < fPFCands->GetEntriesFast(); i0++) { 
+    TPFPart *pPart = (TPFPart*)((*fPFCands)[i0]);    
     lIsCh   = (pPart->pfType == 1 || pPart->pfType == 2 || pPart->pfType == 3) && (pPart->vtxId > -1 || fabs(pPart->dz) < 0.2) ;
-    lIsPV   = (pPart->vtxId  == 0  || (fabs(pPart->dz) < 0.2 && isCh));
+    lIsPV   = (pPart->vtxId  == 0  || (fabs(pPart->dz) < 0.2 && lIsCh));
     int lID = -1;
     if (!lIsCh) lID = 1;
     if (lIsCh &&  lIsPV) lID = 2;
@@ -67,40 +76,40 @@ std::vector<PseudoJet> PFLoader::puppiFetch() {
     lPuppi.push_back(pJet); 
   }
   puppiContainer curEvent(lPuppi);
-  fPuppi = curEvent.fetchEvent(7,0.5);
+  fPuppi = curEvent.puppiFetch(7,0.5);
   return fPuppi;
 }
-std::vector<PseudoJet> PFLoader::puppiJets(std::vector<TLorentzVector> lVetoes) { 
+std::vector<fastjet::PseudoJet> PFLoader::puppiJets(std::vector<TLorentzVector> iVetoes) { 
   std::vector < fastjet::PseudoJet > lJets;
-  getJets(lPuppi,lJets);
+  getJets(fPuppi,lJets,iVetoes);
   return lJets;
 }
-std::vector<PseudoJet> PFLoader::pfJets(std::vector<TLorentzVector> lVetoes) { 
+std::vector<fastjet::PseudoJet> PFLoader::pfJets(std::vector<TLorentzVector> iVetoes) { 
   std::vector < fastjet::PseudoJet > lConstits;
   std::vector < fastjet::PseudoJet > lJets;
-  for(int i0 = 0; i0 < fPFParts->size(); i0++) { 
-    TPFPart *pPart = (TPFPart*)((*fPFParts)[i0]);    
+  for(int i0 = 0; i0 < fPFCands->GetEntriesFast(); i0++) { 
+    TPFPart *pPart = (TPFPart*)((*fPFCands)[i0]);    
     fastjet::PseudoJet pJet;
     pJet.reset_PtYPhiM(pPart->pt,pPart->eta,pPart->phi,pPart->m);
     lConstits.push_back(pJet);
   }
-  getJets(lConstits,lJets);
+  getJets(lConstits,lJets,iVetoes);
   return lJets;
 }
-std::vector<PseudoJet> PFLoader::chsJets(std::vector<TLorentzVector> lVetoes) { 
+std::vector<fastjet::PseudoJet> PFLoader::chsJets(std::vector<TLorentzVector> iVetoes) { 
   std::vector < fastjet::PseudoJet > lConstits;
   std::vector < fastjet::PseudoJet > lJets;
-  for(int i0 = 0; i0 < fPFParts->size(); i0++) { 
-    TPFPart *pPart = (TPFPart*)((*fPFParts)[i0]);    
+  for(int i0 = 0; i0 < fPFCands->GetEntriesFast(); i0++) { 
+    TPFPart *pPart = (TPFPart*)((*fPFCands)[i0]);    
     if(pPart->vtxId > 0) continue;
     fastjet::PseudoJet pJet;
     pJet.reset_PtYPhiM(pPart->pt,pPart->eta,pPart->phi,pPart->m);
     lConstits.push_back(pJet);
   }
-  getJets(lConstits,lJets)
+  getJets(lConstits,lJets,iVetoes);
   return lJets;
 }
-void PFLoader::getJets(std::vector < fastjet::PseudoJet > &constits,std::vector < fastjet::PseudoJet > &jets) { 
+void PFLoader::getJets(std::vector < fastjet::PseudoJet > &constits,std::vector < fastjet::PseudoJet > &jets,std::vector<TLorentzVector> iVetoes) { 
   double rParam = 0.7;
   fastjet::JetDefinition jetDef(fastjet::antikt_algorithm, rParam);    
   int activeAreaRepeats = 1;
@@ -112,13 +121,14 @@ void PFLoader::getJets(std::vector < fastjet::PseudoJet > &constits,std::vector 
   std::vector<fastjet::PseudoJet> out_jets = sorted_by_pt(thisClustering_->inclusive_jets(5.0));
   for(unsigned int i0 = 0; i0 < out_jets.size(); i0++) {
     bool pMatch = false;
-    for(unsigned int i1 = 0; i1 < vetoes.size(); i1++) {
-      double pDEta = out_jets[i0].eta() - vetoes[i1].Eta();
-      double pDPhi = fabs(out_jets[i0].phi() - vetoes[i1].Phi());
+    for(unsigned int i1 = 0; i1 < iVetoes.size(); i1++) {
+      double pDEta = out_jets[i0].eta() - iVetoes[i1].Eta();
+      double pDPhi = fabs(out_jets[i0].phi() - iVetoes[i1].Phi());
       if(fabs(pDPhi) > 2.*TMath::Pi()-fabs(pDPhi)) pDPhi =  2.*TMath::Pi()-fabs(pDPhi);
       if(sqrt(pDPhi*pDPhi+pDEta*pDEta) < 0.5) continue;
       pMatch = true;
     } 
+    if(pMatch) continue;
     jets.push_back(out_jets[i0]); 
   }
 }

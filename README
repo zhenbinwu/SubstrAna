@@ -1,7 +1,19 @@
 --- install fastjet ---
-http://fastjet.fr/quickstart.html
-cd fastjet-install
+mkdir fastjet
+cd fastjet
+FASTJET_URL="http://fastjet.fr/repo"
+FASTJET_TGZ="fastjet-3.0.6.tar.gz"
+FASTJET_DIR=`echo $EXTERNAL/$FASTJET_TGZ | sed 's/.tar.gz//'`
+FASTJET_VER=`echo $FASTJET_TGZ | sed 's/.tar.gz//' |cut -d'-' -f2`
+wget "$FASTJET_URL/$FASTJET_TGZ" -O $FASTJET_TGZ
+tar fzx $FASTJET_TGZ
+rm -rf $FASTJET_TGZ
 setenv FASTJET_BASE $PWD
+cd $FASTJET_DIR
+./configure --prefix=$FASTJET_BASE
+make
+make check
+make install
 cd ..
 
 --- install fastjet/contrib ---
@@ -11,8 +23,8 @@ svn co http://fastjet.hepforge.org/svn/contrib/branches/1.012-alpha-PUWS14.1
 make
 make check  # optional
 make install
-make shared-fragile
-make shared-fragile-install
+make fragile-shared
+make fragile-shared-install
 
 --- link CMSSW to your installation of fastjet(/contrib) ---
 # modify fastjet.xml.modified to make it your local installation of fastjet

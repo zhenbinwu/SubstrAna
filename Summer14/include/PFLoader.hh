@@ -1,3 +1,4 @@
+#include "fastjet/PseudoJet.hh"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TClonesArray.h"
@@ -14,16 +15,17 @@ public:
   void setupTree(TTree *iTree);
   void load (int iEvent);
   TLorentzVector met();
-  TLorentzVector puppiFetch();
-  std::vector<PseudoJet> puppiJets(std::vector<TLorentzVector> lVetoes);
-  std::vector<PseudoJet> pfJets   (std::vector<TLorentzVector> lVetoes);
-  std::vector<PseudoJet> chsJets  (std::vector<TLorentzVector> lVetoes);
-  void getJets(std::vector < fastjet::PseudoJet > &constits,std::vector < fastjet::PseudoJet > &jets);
+  std::vector<fastjet::PseudoJet> puppiFetch();
+  std::vector<fastjet::PseudoJet> puppiJets(std::vector<TLorentzVector> lVetoes);
+  std::vector<fastjet::PseudoJet> pfJets   (std::vector<TLorentzVector> lVetoes);
+  std::vector<fastjet::PseudoJet> chsJets  (std::vector<TLorentzVector> lVetoes);
+  void getJets(std::vector < fastjet::PseudoJet > &constits,std::vector < fastjet::PseudoJet > &jets,std::vector<TLorentzVector> lVetoes);
  
 protected: 
   TClonesArray *fPFCands;
-  TBranch      *fPFPartBr;
+  TBranch      *fPFCandBr;
   TTree        *fTree;
   float fMet;
   float fMetPhi;
+  std::vector<fastjet::PseudoJet> fPuppi;
 };

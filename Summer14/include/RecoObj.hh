@@ -13,11 +13,11 @@ public:
     ~RecoObj(){}
     
     float         pt, eta, phi, m;  // kinematics
-    int           id;
     int           pfType;
     int           vtxId;               // Vertex Id from Vertex Collection
     float         trkChi2;             // Track Chi2
     float         vtxChi2;             // Vertex Chi2
+    int           id;
     float         time,depth;    // Usefule Info
     float         expProb;
     float         expChi2PU;
