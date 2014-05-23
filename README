@@ -1,9 +1,35 @@
---- install fastjet ---
+[1] --- check out the necessary packages ---
+cmsrel CMSSW_6_2_8
+cd CMSSW_6_2_8/src/
+cmsenv
+git clone https://github.com/violatingcp/BaconAna.git -b CMSSW_6_2_X
+git clone https://github.com/nhanvtran/SubstrAna.git
+git clone https://github.com/violatingcp/Dummy.git
+
+
+[2] --- link CMSSW to a local installation of fastjet(/contrib) ---
+# modify fastjet.xml.modified to make it your local installation of fastjet
+# if you are at the CMSLPC, then you can use this: /uscms_data/d2/ntran/physics/fastjet/summer14/fastjet
+# if you are at the LXPLUS, then you can use this: ????
+# if you want to install your own fastjet, then follow the appendix below [A]
+cp fastjet.xml.modified $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/fastjet.xml
+scram setup fastjet
+
+[3] --- compile, try it out ---
+scram b -j8
+cd SubstrAna/Summer14/bin
+runBacon
+runPuppi 500 test 1
+
+===========================================================================
+===========================================================================
+
+[A] --- install fastjet and fastjet/contrib  ---
 mkdir fastjet
 cd fastjet
 FASTJET_URL="http://fastjet.fr/repo"
 FASTJET_TGZ="fastjet-3.0.6.tar.gz"
-FASTJET_DIR=`echo $EXTERNAL/$FASTJET_TGZ | sed 's/.tar.gz//'`
+FASTJET_DIR=`echo $PWD/$FASTJET_TGZ | sed 's/.tar.gz//'`
 FASTJET_VER=`echo $FASTJET_TGZ | sed 's/.tar.gz//' |cut -d'-' -f2`
 wget "$FASTJET_URL/$FASTJET_TGZ" -O $FASTJET_TGZ
 tar fzx $FASTJET_TGZ
@@ -16,7 +42,6 @@ make check
 make install
 cd ..
 
-[2] --- install fastjet/contrib ---
 svn co http://fastjet.hepforge.org/svn/contrib/branches/1.012-alpha-PUWS14.1
 ./scripts/update-contribs.sh
 ./configure --fastjet-config=$FASTJET_BASE/bin/fastjet-config CXXFLAGS="-I$FASTJET_BASE/include -I$FASTJET_BASE/tools"
@@ -26,18 +51,6 @@ make install
 make fragile-shared
 make fragile-shared-install
 
-[3] --- link CMSSW to your installation of fastjet(/contrib) ---
-# modify fastjet.xml.modified to make it your local installation of fastjet
-cp fastjet.xml.modified $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/
-scram setup fastjet
 
-[4] ---- Install CMSSW Puppi
-cd $CMSSW_BASE/src
-git clone https://github.com/violatingcp/Dummy.git
-scram b
 
-[5] --- try it out ---
-cd Summer14/bin
-scram b
-runBacon
-runPuppi 500 test 1
+
