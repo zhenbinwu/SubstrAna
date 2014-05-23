@@ -3,6 +3,7 @@
     <lib name="fastjetplugins"/>
     <lib name="fastjettools"/>
     <lib name="siscone"/>
+    <lib name="fastjetcontribfragile"/>
     <lib name="siscone_spherical"/>
     <lib name="fastjet"/>
     <client>

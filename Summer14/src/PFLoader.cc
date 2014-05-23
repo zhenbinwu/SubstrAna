@@ -1,5 +1,5 @@
 #include "../include/PFLoader.hh"
-#include "../include/RecoObj.hh"
+#include "Dummy/Puppi/interface/RecoObj.hh"
 #include "../include/puppiContainer.hh"
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/ClusterSequenceArea.hh"
@@ -7,15 +7,22 @@
 #include <fastjet/ClusterSequence.hh>
 #include <fastjet/GhostedAreaSpec.hh>
 #include <fastjet/ClusterSequenceArea.hh>
-//#include :
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/PythonParameterSet/interface/MakeParameterSets.h"
 #include "TMath.h"
+#include "boost/shared_ptr.hpp"
 
 using namespace baconhep;
 
-PFLoader::PFLoader(TTree *iTree) { 
+PFLoader::PFLoader(TTree *iTree,std::string iName) { 
   fPFCands  = new TClonesArray("baconhep::TPFPart");
   iTree->SetBranchAddress("PFPart",       &fPFCands);
   fPFCandBr  = iTree->GetBranch("PFPart");
+  boost::shared_ptr<edm::ParameterSet> lConfig = edm::readPSetsFrom(iName.c_str());
+  //const edm::ParameterSet& lConfig = edm::readPSetsFrom(iName.c_str())->getParameter<edm::ParameterSet>("puppi"); 
+  //edm::ParameterSet lConfig1 = *lConfig;
+  const edm::ParameterSet& lConfig1 = lConfig->getParameter<edm::ParameterSet>("puppi"); 
+  fPuppiContainer = new PuppiContainer(lConfig1);
   fPuppi.clear(); 
 }
 PFLoader::~PFLoader() { 
@@ -33,10 +40,6 @@ void PFLoader::setupTree(TTree *iTree) {
   fTree->Branch("met"    ,&fMet   ,"fMet/F");
   fTree->Branch("metphi" ,&fMetPhi,"fMetPhi/F");
 }
-void PFLoader::load(int iEvent) { 
-  fPFCands  ->Clear();
-  fPFCandBr ->GetEntry(iEvent);
-}
 TLorentzVector PFLoader::met() { 
   TLorentzVector lVec(0,0,0,0);
   for(int i0 = 0; i0 < fPFCands->GetEntriesFast(); i0++) { 
@@ -47,37 +50,75 @@ TLorentzVector PFLoader::met() {
   }
   return lVec;
 }
-std::vector<fastjet::PseudoJet> PFLoader::puppiFetch() {
-  bool lIsCh = false;
-  bool lIsPV = false;
+void PFLoader::load(int iEvent) { 
+  fPFCands  ->Clear();
+  fPFCandBr ->GetEntry(iEvent);
+  fetch();
+}
+void PFLoader::fetch() { 
+  fAllParticles  .resize(0);
+  fPFParticles   .resize(0);
+  fPFCHSParticles.resize(0);
   std::vector<RecoObj> lPuppi;
   for(int i0 = 0; i0 < fPFCands->GetEntriesFast(); i0++) { 
-    TPFPart *pPart = (TPFPart*)((*fPFCands)[i0]);    
-    lIsCh   = (pPart->pfType == 1 || pPart->pfType == 2 || pPart->pfType == 3) && (pPart->vtxId > -1 || fabs(pPart->dz) < 0.2) ;
-    lIsPV   = (pPart->vtxId  == 0  || (fabs(pPart->dz) < 0.2 && lIsCh));
+    TPFPart  *pPart = (TPFPart*)((*fPFCands)[i0]);    
+    RecoObj   pObj  = convert(pPart);
+    PseudoJet pPar  = convert(&pObj);
+    fAllParticles  .push_back(pObj); 
+    fPFParticles   .push_back(pPar);
+    if(pPar.user_index() != 3) fPFCHSParticles.push_back(pPar);
+  }
+}
+std::vector<fastjet::PseudoJet> PFLoader::puppiFetch() {
+  //puppiContainer curEvent(fAllParticlesPuppi);
+  //fPuppi = curEvent.puppiFetch(7,0.5);
+  fPuppiContainer->initialize(fAllParticles);
+  fPuppiContainer->puppiWeights();
+  fPuppi = fPuppiContainer->puppiParticles();
+  return fPuppi;
+}
+std::vector<fastjet::PseudoJet> PFLoader::pfchsFetch(double iPtCut) { 
+  if(iPtCut < 0) return fPFCHSParticles;
+  std::vector<PseudoJet> lParts;
+  for(unsigned int i0 = 0; i0 < fPFCHSParticles.size(); i0++) { 
+    int charge_tmp = fPFCHSParticles[i0].user_index() > 1;
+    if(charge_tmp && fPFCHSParticles[i0].pt() < iPtCut) continue;
+    lParts.push_back(fPFCHSParticles[i0]);
+  }
+  return lParts;
+}
+RecoObj PFLoader::convert(TPFPart *iPart) { 
+    bool lIsCh   = (iPart->pfType == 1 || iPart->pfType == 2 || iPart->pfType == 3) && (iPart->vtxId > -1 || fabs(iPart->dz) < 0.2) ;
+    bool lIsPV   = (iPart->vtxId  == 0 || (fabs(iPart->dz) < 0.2 && lIsCh));
     int lID = -1;
     if (!lIsCh) lID = 1;
     if (lIsCh &&  lIsPV) lID = 2;
     if (lIsCh && !lIsPV) lID = 3;
     RecoObj pJet;
-    pJet.pt  = pPart->pt;
-    pJet.eta = pPart->eta;
-    pJet.phi = pPart->phi;
-    pJet.m   = pPart->m;
-    pJet.id  = lID;
-    pJet.vtxId = pPart->vtxId;
-    pJet.trkChi2 = pPart->trkChi2;
-    pJet.vtxChi2 = pPart->vtxChi2;
-    pJet.pfType  = pPart->pfType;
-    pJet.depth   = pPart->depth;
-    pJet.time    = pPart->time;
-    pJet.d0        = pPart->d0;
-    pJet.dZ        = pPart->dz;
-    lPuppi.push_back(pJet); 
-  }
-  puppiContainer curEvent(lPuppi);
-  fPuppi = curEvent.puppiFetch(7,0.5);
-  return fPuppi;
+    pJet.pt      = iPart->pt;
+    pJet.eta     = iPart->eta;
+    pJet.phi     = iPart->phi;
+    pJet.m       = iPart->m;
+    pJet.id      = lID;
+    pJet.vtxId   = iPart->vtxId;
+    pJet.trkChi2 = iPart->trkChi2;
+    pJet.vtxChi2 = iPart->vtxChi2;
+    pJet.pfType  = iPart->pfType;
+    pJet.depth   = iPart->depth;
+    pJet.time    = iPart->time;
+    pJet.d0      = iPart->d0;
+    pJet.dZ      = iPart->dz;
+    return pJet;
+}
+PseudoJet PFLoader::convert(RecoObj *iObj) { 
+  double Px    = iObj->pt*cos(iObj->phi);
+  double Py    = iObj->pt*sin(iObj->phi);
+  double theta = 2*atan(exp( -iObj->eta)); //eta = -ln(tan(theta/2))
+  double Pz    = iObj->pt/tan(theta);
+  double E     = sqrt(Px*Px+Py*Py+Pz*Pz+iObj->m*iObj->m);
+  fastjet::PseudoJet tmp_psjet(Px, Py, Pz, E);
+  tmp_psjet.set_user_index(iObj->id);
+  return tmp_psjet;
 }
 std::vector<fastjet::PseudoJet> PFLoader::puppiJets(std::vector<TLorentzVector> iVetoes) { 
   std::vector < fastjet::PseudoJet > lJets;

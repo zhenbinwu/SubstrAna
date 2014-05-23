@@ -5,5 +5,6 @@
 <use name="fastjet"/>
 <flags CXXFLAGS="-g -Wall"/>
 <bin   file="runBacon.cpp" name="runBacon"> </bin>
+<bin   file="runPuppi.cpp" name="runPuppi"> </bin>
 
 

@@ -1,3 +1,5 @@
+<use name="FWCore/PythonParameterSet"/>
+<use name="Dummy/Puppi"/>
 <use name="BaconAna/DataFormats"/>
 <use name="root"/>
 <use name="fastjet"/>

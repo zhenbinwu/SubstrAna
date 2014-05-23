@@ -1,7 +1,7 @@
 #ifndef SUBSTR_SUMMER14_HH
 #define SUBSTR_SUMMER14_HH
 
-#include "RecoObj.hh"
+#include "Dummy/Puppi/interface/RecoObj.hh"
 #include "fastjet/internal/base.hh"
 #include "fastjet/PseudoJet.hh"
 #include "TRandom.h"
