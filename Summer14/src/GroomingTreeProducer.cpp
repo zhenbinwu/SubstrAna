@@ -20,7 +20,7 @@ void GroomingTreeProducer::ProduceTree()
 	
 	TFile OutputFile (outFileName.c_str(), "RECREATE");
 	
-	Float_t mass_PFjet, mass_Filtered_PFjet, mass_Pruned_PFjet, mass_Pruned_PFjet_subtracted, mass_Trimmed_PFjet, pt_PFjet, mass_GENjet, mass_Filtered_GENjet, mass_Pruned_GENjet, mass_Trimmed_GENjet, pt_GENjet, mass_PFjet_subtracted;
+	Float_t mass_PFjet, mass_Filtered_PFjet, mass_Pruned_PFjet, mass_Pruned_PFjet_subtracted, mass_Trimmed_PFjet, pt_PFjet, mass_GENjet, mass_Filtered_GENjet, mass_Pruned_GENjet, mass_Trimmed_GENjet, pt_GENjet, mass_PFjet_subtracted, mass_soft_drop;
 	Int_t nPU;
 	
 	
@@ -28,12 +28,13 @@ void GroomingTreeProducer::ProduceTree()
 	TTree *GEN_tree = new TTree("GEN", "GEN");
 	
 	PF_tree -> Branch("mass_PFjet",&mass_PFjet,"mass_PFjet/F");
-	PF_tree -> Branch("mass_PFjet_subtracted",&mass_PFjet_subtracted,"mass_PFjet/F");
+	PF_tree -> Branch("mass_PFjet_subtracted",&mass_PFjet_subtracted,"mass_PFjet_subtracted/F");
 	PF_tree -> Branch("pt_PFjet",&pt_PFjet,"pt_PFjet/F");
 	PF_tree -> Branch("mass_Pruned_PFjet",&mass_Pruned_PFjet,"mass_Pruned_PFjet/F");
 	PF_tree -> Branch("mass_Pruned_PFjet_subtracted",&mass_Pruned_PFjet_subtracted,"mass_Pruned_PFjet_subtracted/F");
 	PF_tree -> Branch("mass_Trimmed_PFjet",&mass_Trimmed_PFjet,"mass_Trimmed_PFjet/F");
 	PF_tree -> Branch("mass_Filtered_PFjet",&mass_Filtered_PFjet,"mass_Filtered_PFjet/F");
+	PF_tree -> Branch("mass_soft_drop",&mass_soft_drop,"mass_soft_drop/F");
 	PF_tree -> Branch("nPU",&nPU,"nPU/I");
 	
 	GEN_tree -> Branch("mass_GENjet",&mass_GENjet,"mass_GENjet/F");
@@ -141,10 +142,12 @@ void GroomingTreeProducer::ProduceTree()
 	   Pruner pruner(jet_def, 0.1,RCut);
 	   Filter trimmer(jet_def_filtering ,SelectorPtFractionMin(0.05) );
 	   Filter filter(jet_def_filtering , SelectorNHardest(3) );
+	   contrib::SoftDrop softdrop(2., 0.1, 1.0);
 	   trimmer.set_subtractor(area_subtractor);
 	   filter.set_subtractor(area_subtractor);
+	   softdrop.set_subtractor(area_subtractor);
 	   
-	   PseudoJet pruned_jet, pruned_jet_subtracted, trimmed_jet, filtered_jet, subtracted_jet;
+	   PseudoJet pruned_jet, pruned_jet_subtracted, trimmed_jet, filtered_jet, subtracted_jet, soft_drop_jet;
 	   
 	   for (unsigned j =0; j < PF_jets_basic.size();++j)
 	   {
@@ -152,6 +155,7 @@ void GroomingTreeProducer::ProduceTree()
 	     	     
 	      trimmed_jet = (PseudoJet) trimmer.result(PF_jets_basic.at(j));
 	      filtered_jet = (PseudoJet) filter.result(PF_jets_basic.at(j));
+	      soft_drop_jet= (PseudoJet) softdrop.result(PF_jets_basic.at(j));
 	  
 	      pruned_jet = pruner(PF_jets_basic.at(j));
 	      pruned_jet_subtracted = pruner(subtracted_jet);
@@ -163,6 +167,7 @@ void GroomingTreeProducer::ProduceTree()
 	      mass_Pruned_PFjet_subtracted = pruned_jet_subtracted.m();
 	      mass_Filtered_PFjet = filtered_jet.m();
 	      mass_Trimmed_PFjet = trimmed_jet.m();
+	      mass_soft_drop = soft_drop_jet.m();
 	      
 	      PF_tree -> Fill();
 	   }

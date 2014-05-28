@@ -1,6 +1,7 @@
 #ifndef  GROOMINGTREEPRODUCER
 #define GROOMINGTREEPRODUCER
 #include <iostream>
+#include <dirent.h>
 #include "fastjet/PseudoJet.hh"
 #include "fastjet/ClusterSequenceArea.hh"
 #include "fastjet/contrib/GenericSubtractor.hh"
@@ -12,6 +13,7 @@
 #include "fastjet/tools/JetMedianBackgroundEstimator.hh"
 #include "fastjet/tools/Subtractor.hh"
 #include "fastjet/contrib/SafeSubtractor.hh"
+#include "fastjet/contrib/SoftDrop.hh"
 #include "fastjet/contrib/SoftKiller.hh"
 #include "fastjet/contrib/ConstituentSubtractor.hh"
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
@@ -28,6 +30,7 @@
 #include "BaconAna/DataFormats/interface/TPFPart.hh"
 #include "BaconAna/DataFormats/interface/TGenParticle.hh"
 #include "BaconAna/DataFormats/interface/TEventInfo.hh"
+
 
 using namespace std;
 using namespace fastjet;
