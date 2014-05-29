@@ -21,7 +21,7 @@ int main( int argc, char **argv ) {
   TTree *tree_pf    = (TTree *)inputFile->Get("pf");
   TTree *tree_pfchs = (TTree *)inputFile->Get("chs");
   TTree *tree_puppi = (TTree *)inputFile->Get("puppi");
-  TTree *tree_pfcmssw = (TTree *)inputFile->Get("cmsswpf");
+  //TTree *tree_pfcmssw = (TTree *)inputFile->Get("cmsswpf");
 
   int maxEntries = -1;
   float minpt = atof(argv[3]);
@@ -29,27 +29,23 @@ int main( int argc, char **argv ) {
 
   JetTreeAnalyzer *genAnalyzer = new JetTreeAnalyzer(tree_gen);
   genAnalyzer->bookHistograms("_gen", maxpt);
-  //genAnalyzer->bookHistograms("");
   genAnalyzer->fillHistograms(maxEntries,minpt);
 
   JetTreeAnalyzer *pfAnalyzer = new JetTreeAnalyzer(tree_pf);
   pfAnalyzer->bookHistograms("_pf", maxpt);
-  //pfAnalyzer->bookHistograms("");
   pfAnalyzer->fillHistograms(maxEntries,minpt);
   
   JetTreeAnalyzer *pfchsAnalyzer = new JetTreeAnalyzer(tree_pfchs);
   pfchsAnalyzer->bookHistograms("_pfchs", maxpt);
-  //pfchsAnalyzer->bookHistograms("");
   pfchsAnalyzer->fillHistograms(maxEntries,minpt);
 
   JetTreeAnalyzer *puppiAnalyzer = new JetTreeAnalyzer(tree_puppi);
   puppiAnalyzer->bookHistograms("_puppi", maxpt);
-  //puppiAnalyzer->bookHistograms("");
   puppiAnalyzer->fillHistograms(maxEntries,minpt);
 
-  JetTreeAnalyzer *pfcmsswAnalyzer = new JetTreeAnalyzer(tree_pfcmssw);
-  pfcmsswAnalyzer->bookHistograms("_pfcmssw", maxpt);
-  pfcmsswAnalyzer->fillHistograms(maxEntries, minpt);
+  //JetTreeAnalyzer *pfcmsswAnalyzer = new JetTreeAnalyzer(tree_pfcmssw);
+  //pfcmsswAnalyzer->bookHistograms("_pfcmssw", maxpt);
+  //pfcmsswAnalyzer->fillHistograms(maxEntries, minpt);
   
   // save results in file
   TFile *outfile = new TFile(outname.c_str(),"RECREATE");
@@ -57,7 +53,7 @@ int main( int argc, char **argv ) {
   pfAnalyzer->saveHistograms(outfile,"pf");
   pfchsAnalyzer->saveHistograms(outfile,"pfchs");
   puppiAnalyzer->saveHistograms(outfile,"puppi");
-  pfcmsswAnalyzer->saveHistograms(outfile,"pfcmssw");
+  //pfcmsswAnalyzer->saveHistograms(outfile,"pfcmssw");
   
 
 }

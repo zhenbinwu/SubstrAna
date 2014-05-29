@@ -70,7 +70,14 @@ class JetTreeAnalyzer{
   std::vector<float>   *etagen;
   std::vector<float>   *phigen;
   std::vector<float>   *mgen;
-  std::vector<int>     *ismatched;
+
+  std::vector<float>   *mrawgen;
+  std::vector<float>   *mtrimgen;
+  std::vector<float>   *mtrimsafegen;
+  std::vector<float>   *mcleangen;
+  std::vector<float>   *mconstgen;
+
+  std::vector<int>     *imatch;
 
 
   // List of branches
@@ -98,7 +105,12 @@ class JetTreeAnalyzer{
   TBranch        *b_etagen;   //!                                                                                                                                                                   
   TBranch        *b_phigen;   //!                                                                                                                                                                                                  
   TBranch        *b_mgen;   //!
-  TBranch        *b_ismatched;   //!              
+  TBranch        *b_mrawgen;   //!
+  TBranch        *b_mtrimgen;   //!
+  TBranch        *b_mtrimsafegen;   //!
+  TBranch        *b_mcleangen;   //!
+  TBranch        *b_mconstgen;   //!
+  TBranch        *b_imatch;   //!              
 
   // histograms declaration
   TH1F *hnjets;
