@@ -292,7 +292,7 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
 	hmconst_leadjet   -> Fill(mconst->at(j));
       }
 
-      if (matchInd > -1 ) {
+      if (matchInd == -1 ) {
 	hptgen_pu -> Fill(ptgen->at(j));
 	hptraw_pu -> Fill(ptraw->at(j));
 	hpt_pu    -> Fill(pt->at(j));
