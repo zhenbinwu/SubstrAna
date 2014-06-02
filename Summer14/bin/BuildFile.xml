@@ -6,5 +6,6 @@
 <flags CXXFLAGS="-g -Wall -fpermissive"/>
 <bin   file="runBacon.cpp" name="runBacon"> </bin>
 <bin   file="runPuppi.cpp" name="runPuppi"> </bin>
-
-
+<bin   file="MiniNtuplizer.cpp" name="MiniNtuplizer"> </bin>
+<bin   file="TestJetTreeAnalysis.cc" name="TestJetTreeAnalysis"> </bin>
+<bin   file="GEN_PF.cpp" name="GEN_PF"> </bin>
