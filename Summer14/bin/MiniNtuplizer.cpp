@@ -461,16 +461,17 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI,JetMedianBackgroundEstimator bge_
   (iJetI.nneutrals ).push_back(neutrals.size());
   (iJetI.ncharged  ).push_back(chargedLV.size()+chargedPU.size());
     
-  (iJetI.imatch).push_back(-1);
-  (iJetI.ptgen    ).push_back(-999.);
-  (iJetI.etagen   ).push_back(-999.);
-  (iJetI.phigen   ).push_back(-999.);
-  (iJetI.mgen     ).push_back(-999.);
-  (iJetI.mrawgen     ).push_back(-999.);
-  (iJetI.mtrimgen    ).push_back(-999.);
-  (iJetI.mtrimsafegen).push_back(-999.);
-  (iJetI.mcleangen   ).push_back(-999.);
-  (iJetI.mconstgen   ).push_back(-999.);
+  // some duplicate infos.... should be fixed.
+  (iJetI.imatch      ).push_back((iJetI.pt).size()-1);
+  (iJetI.ptgen       ).push_back(lCorr     .pt());
+  (iJetI.etagen      ).push_back(iJet      .eta());
+  (iJetI.phigen      ).push_back(iJet      .phi());
+  (iJetI.mgen        ).push_back(lCorr     .m());
+  (iJetI.mrawgen     ).push_back(iJet      .m());
+  (iJetI.mtrimgen    ).push_back(lTrim     .m());
+  (iJetI.mtrimsafegen).push_back(lTrimSafe .m());
+  (iJetI.mcleangen   ).push_back(lClean    .m());
+  (iJetI.mconstgen   ).push_back(lConstit  .m());
 }
 
 
