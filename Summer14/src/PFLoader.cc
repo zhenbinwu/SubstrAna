@@ -16,8 +16,9 @@ using namespace baconhep;
 
 PFLoader::PFLoader(TTree *iTree,std::string iName) { 
   fPFCands  = new TClonesArray("baconhep::TPFPart");
-  iTree->SetBranchAddress("PFPart",       &fPFCands);
-  fPFCandBr  = iTree->GetBranch("PFPart");
+  fPFCandBr = 0; 
+  iTree->SetBranchAddress("PFPart",       &fPFCands, &fPFCandBr);
+  //fPFCandBr  = iTree->GetBranch("PFPart");
   boost::shared_ptr<edm::ParameterSet> lConfig = edm::readPSetsFrom(iName.c_str());
   //const edm::ParameterSet& lConfig = edm::readPSetsFrom(iName.c_str())->getParameter<edm::ParameterSet>("puppi"); 
   //edm::ParameterSet lConfig1 = *lConfig;
