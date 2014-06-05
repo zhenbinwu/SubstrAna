@@ -8,12 +8,14 @@ using namespace baconhep;
 
 GenLoader::GenLoader(TTree *iTree) { 
   fGenInfo  = new TGenEventInfo();
-  iTree->SetBranchAddress("GenEvtInfo",       &fGenInfo);
-  fGenInfoBr  = iTree->GetBranch("GenEvtInfo");
+  fGenInfoBr = 0;
+  iTree->SetBranchAddress("GenEvtInfo",       &fGenInfo, &fGenInfoBr);
+  //fGenInfoBr  = iTree->GetBranch("GenEvtInfo");
 
   fGens  = new TClonesArray("baconhep::TGenParticle");
-  iTree->SetBranchAddress("GenParticle",       &fGens);
-  fGenBr  = iTree->GetBranch("GenParticle");
+  fGenBr = 0;
+  iTree->SetBranchAddress("GenParticle",       &fGens, &fGenBr);
+  //fGenBr  = iTree->GetBranch("GenParticle");
 }
 GenLoader::~GenLoader() { 
   delete fGenInfo;
