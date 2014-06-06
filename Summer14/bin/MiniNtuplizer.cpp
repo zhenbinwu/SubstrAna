@@ -661,6 +661,10 @@ void readCMSSWJet(int entry, TTree *iTree, TTree &oTree,  std::vector<fastjet::P
     (iJetI.mclean    ).push_back(-999.);
     (iJetI.mtrim     ).push_back(-999.);
     (iJetI.mtrimsafe ).push_back(-999.);
+    (iJetI.mpruned   ).push_back(-999.);
+    (iJetI.mprunedsafe).push_back(-999.);
+    (iJetI.msoftdrop).push_back(-999.);
+    (iJetI.msoftdropsafe).push_back(-999.);
     (iJetI.mconst    ).push_back(-999.);
   
     //-- gen matching
