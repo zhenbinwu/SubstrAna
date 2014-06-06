@@ -498,7 +498,7 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
     
   // -- fill jet info
   (iJetI.pt        ).push_back(lCorr     .pt());
-  (iJetI.ptcorr    ).push_back(iJet      .pt()*lJEC);//is it correct now?
+  (iJetI.ptcorr    ).push_back(iJet      .pt());
   (iJetI.ptraw     ).push_back(iJet      .pt());
   (iJetI.ptclean   ).push_back(lClean    .pt());
   (iJetI.pttrim    ).push_back(lTrim     .pt());
@@ -775,6 +775,7 @@ int main (int argc, char ** argv) {
 
   // --- Setup JetAlgos
   JetDefinition jet_def(antikt_algorithm,jetR);         // the jet definition....
+  JetDefinition jet_def_Pruning(antikt_algorithm,0.3);//this is a jet algorithm for pruning. Smaller radius to be used
   AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
   
   // --- Setup cleansing
@@ -828,10 +829,10 @@ int main (int argc, char ** argv) {
     int nPU = eventInfo->nPU;
 
     // save jet info in a tree
-    fillGenJetsInfo(genJets, jet_def, gen_event, JGenInfo, gsn_cleanser, nPU);
-    fillRecoJetsInfo(puppiJets, jet_def, puppi_event, JPuppiInfo, JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU);
-    fillRecoJetsInfo(pfJets , jet_def, pf_event   , JPFInfo   , JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU);
-    fillRecoJetsInfo(chsJets, jet_def, chs_event  , JCHSInfo  , JGenInfo, true , jetCorr, jetUnc, gsn_cleanser,nPU);
+    fillGenJetsInfo(genJets, jet_def_Pruning, gen_event, JGenInfo, gsn_cleanser, nPU);
+    fillRecoJetsInfo(puppiJets, jet_def_Pruning, puppi_event, JPuppiInfo, JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU);
+    fillRecoJetsInfo(pfJets , jet_def_Pruning, pf_event   , JPFInfo   , JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU);
+    fillRecoJetsInfo(chsJets, jet_def_Pruning, chs_event  , JCHSInfo  , JGenInfo, true , jetCorr, jetUnc, gsn_cleanser,nPU);
 
     genTree->Fill();
     puppiTree->Fill();
