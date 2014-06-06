@@ -498,7 +498,7 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
     
   // -- fill jet info
   (iJetI.pt        ).push_back(lCorr     .pt());
-  (iJetI.ptcorr    ).push_back(iJet      .pt());
+  (iJetI.ptcorr    ).push_back(iJet      .pt()*lJEC);//is it correct now?
   (iJetI.ptraw     ).push_back(iJet      .pt());
   (iJetI.ptclean   ).push_back(lClean    .pt());
   (iJetI.pttrim    ).push_back(lTrim     .pt());
