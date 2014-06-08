@@ -1,0 +1,11 @@
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_10_1_aJf.root
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_11_1_RpW.root
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_1_1_N0C.root
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_2_1_6jf.root
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_3_1_pFl.root
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_4_1_Hnr.root
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_5_1_w8h.root
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_6_1_Hbu.root
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_7_1_WDt.root
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_8_1_hQb.root
+root://///eos/uscms/store/user/ntran/PUPPI/bacon/qcd10001400_62x_PU40BX50/ntuple_9_1_txN.root
