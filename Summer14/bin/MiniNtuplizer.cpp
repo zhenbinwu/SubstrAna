@@ -189,29 +189,29 @@ int matchingIndexFromJetInfo(PseudoJet jet, JetInfo jetInfo) {
 void setupTree(TTree *iTree, JetInfo &iJet, std::string iName) {
   iTree->Branch((iName+"npu"       ).c_str(),&iJet.npu       );
 
-  iTree->Branch((iName+"pt"        ).c_str(),&iJet.pt        );
-  iTree->Branch((iName+"ptcorr"    ).c_str(),&iJet.ptcorr    );
-  iTree->Branch((iName+"ptraw"     ).c_str(),&iJet.ptraw     );
-  iTree->Branch((iName+"ptclean"   ).c_str(),&iJet.ptclean   );
-  iTree->Branch((iName+"pttrim"    ).c_str(),&iJet.pttrim    );
-  iTree->Branch((iName+"pttrimsafe").c_str(),&iJet.pttrimsafe);
-  iTree->Branch((iName+"ptconst"   ).c_str(),&iJet.ptconst   );
-  iTree->Branch((iName+"ptunc"     ).c_str(),&iJet.ptunc     );
-  iTree->Branch((iName+"eta"       ).c_str(),&iJet.eta       );
-  iTree->Branch((iName+"phi"       ).c_str(),&iJet.phi       );
-  iTree->Branch((iName+"m"         ).c_str(),&iJet.m         );
-  iTree->Branch((iName+"mraw"      ).c_str(),&iJet.mraw      );
-  iTree->Branch((iName+"mtrim"     ).c_str(),&iJet.mtrim     );
-  iTree->Branch((iName+"mtrimsafe" ).c_str(),&iJet.mtrimsafe );
-  iTree->Branch((iName+"mpruned" ).c_str(),&iJet.mpruned );
-  iTree->Branch((iName+"mprunedsafe" ).c_str(),&iJet.mprunedsafe );
-  iTree->Branch((iName+"msoftdrop" ).c_str(),&iJet.msoftdrop);
-  iTree->Branch((iName+"msoftdropsafe" ).c_str(),&iJet.msoftdropsafe);
-  iTree->Branch((iName+"mclean"    ).c_str(),&iJet.mclean    );
-  iTree->Branch((iName+"mconst"    ).c_str(),&iJet.mconst    );
-  iTree->Branch((iName+"nparticles").c_str(),&iJet.nparticles);
-  iTree->Branch((iName+"nneutrals" ).c_str(),&iJet.nneutrals);
-  iTree->Branch((iName+"ncharged"  ).c_str(),&iJet.ncharged);
+  iTree->Branch((iName+"pt"           ).c_str(),&iJet.pt        );
+  iTree->Branch((iName+"ptcorr"       ).c_str(),&iJet.ptcorr    );
+  iTree->Branch((iName+"ptraw"        ).c_str(),&iJet.ptraw     );
+  iTree->Branch((iName+"ptclean"      ).c_str(),&iJet.ptclean   );
+  iTree->Branch((iName+"pttrim"       ).c_str(),&iJet.pttrim    );
+  iTree->Branch((iName+"pttrimsafe"   ).c_str(),&iJet.pttrimsafe);
+  iTree->Branch((iName+"ptconst"      ).c_str(),&iJet.ptconst   );
+  iTree->Branch((iName+"ptunc"        ).c_str(),&iJet.ptunc     );
+  iTree->Branch((iName+"eta"          ).c_str(),&iJet.eta       );
+  iTree->Branch((iName+"phi"          ).c_str(),&iJet.phi       );
+  iTree->Branch((iName+"m"            ).c_str(),&iJet.m         );
+  iTree->Branch((iName+"mraw"         ).c_str(),&iJet.mraw      );
+  iTree->Branch((iName+"mtrim"        ).c_str(),&iJet.mtrim     );
+  iTree->Branch((iName+"mtrimsafe"    ).c_str(),&iJet.mtrimsafe );
+  iTree->Branch((iName+"mpruned"      ).c_str(),&iJet.mpruned );
+  iTree->Branch((iName+"mprunedsafe"  ).c_str(),&iJet.mprunedsafe );
+  iTree->Branch((iName+"msoftdrop"    ).c_str(),&iJet.msoftdrop);
+  iTree->Branch((iName+"msoftdropsafe").c_str(),&iJet.msoftdropsafe);
+  iTree->Branch((iName+"mclean"       ).c_str(),&iJet.mclean    );
+  iTree->Branch((iName+"mconst"       ).c_str(),&iJet.mconst    );
+  iTree->Branch((iName+"nparticles"   ).c_str(),&iJet.nparticles);
+  iTree->Branch((iName+"nneutrals"    ).c_str(),&iJet.nneutrals);
+  iTree->Branch((iName+"ncharged"     ).c_str(),&iJet.ncharged);
   // gen info
   iTree->Branch((iName+"ptgen"       ).c_str(),&iJet.ptgen       );
   iTree->Branch((iName+"etagen"      ).c_str(),&iJet.etagen      );
@@ -386,13 +386,13 @@ void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI,JetDefinition 
   trimmer.set_subtractor(area_subtractor);
   PseudoJet lTrimSafe = (trimmer)(iJet);
   
-    //pruning
+  // -- pruning
   double RCut= 0.5;
   Pruner pruner(jet_def_, 0.1,RCut);
   PseudoJet lPruned = pruner(iJet);
   PseudoJet lPrunedSafe = pruner(lCorr);
  
-  //softdrop
+  // -- softdrop
   contrib::SoftDrop softdrop(2., 0.1, 1.0);
   PseudoJet lSoftDropped = softdrop(iJet);
   softdrop.set_subtractor(area_subtractor);
@@ -485,17 +485,17 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
   trimmer.set_subtractor(area_subtractor);
   PseudoJet lTrimSafe = (trimmer)(iJet);
   
-   double RCut= 0.5;
+  double RCut= 0.5;
   Pruner pruner(jet_def_, 0.1,RCut);
   PseudoJet lPruned = pruner(iJet);
   PseudoJet lPrunedSafe = pruner(lCorr);
   
-  //softdrop
- contrib::SoftDrop softdrop(2., 0.1, 1.0);
+  // -- softdrop
+  contrib::SoftDrop softdrop(2., 0.1, 1.0);
   PseudoJet lSoftDropped = softdrop(iJet);
   softdrop.set_subtractor(area_subtractor);
   PseudoJet lSoftDroppedSafe = softdrop(iJet);
-    
+  
   // -- fill jet info
   (iJetI.pt        ).push_back(lCorr     .pt());
   (iJetI.ptcorr    ).push_back(iJet      .pt());
@@ -686,18 +686,28 @@ void readCMSSWJet(int entry, TTree *iTree, TTree &oTree,  std::vector<fastjet::P
     delete recojet;
 
     if (imatch > -1){
+      (iJetI.imatch   ).push_back(imatch);
       (iJetI.ptgen    ).push_back(genJets[imatch].pt());
       (iJetI.etagen   ).push_back(genJets[imatch].eta());
       (iJetI.phigen   ).push_back(genJets[imatch].phi());
       (iJetI.mgen     ).push_back(genJets[imatch].m());
-      (iJetI.imatch   ).push_back(imatch);
+      (iJetI.mrawgen     ).push_back(-999.);// dummy val                                                                                                                                                           
+      (iJetI.mtrimgen    ).push_back(-999.);// dummy val                                                                                                                                                                 
+      (iJetI.mtrimsafegen).push_back(-999.);// dummy val                                                                                                                                                                  
+      (iJetI.mcleangen   ).push_back(-999.);// dummy val                                                                                                                                                                  
+      (iJetI.mconstgen   ).push_back(-999.);// dummy val   
     }
     else {
+      (iJetI.imatch   ).push_back(imatch);
       (iJetI.ptgen    ).push_back(-999.);
       (iJetI.etagen   ).push_back(-999.);
       (iJetI.phigen   ).push_back(-999.);
       (iJetI.mgen     ).push_back(-999.);
-      (iJetI.imatch   ).push_back(imatch);
+      (iJetI.mrawgen     ).push_back(-999.);// dummy val                                                                                                                                                                  
+      (iJetI.mtrimgen    ).push_back(-999.);// dummy val                                                                                                                                                                  
+      (iJetI.mtrimsafegen).push_back(-999.);// dummy val                                                                                                                                                                  
+      (iJetI.mcleangen   ).push_back(-999.);// dummy val                                                                                                                                                                  
+      (iJetI.mconstgen   ).push_back(-999.);// dummy val      
     }
   }
 
@@ -740,7 +750,12 @@ bool FillChain(TChain& chain, const std::string& inputFileList)
 //---------------------------------------------------------------------------------------------------------------
 int main (int argc, char ** argv) {
 
-  // args 
+  // --- args 
+  if (argc<6){
+    cout << "Missing arguments!!!" <<endl;
+    cout << "Usage: MiniNtuplizer <input files list> <max events> <output file> <cone size> <analyze cmssw pf jets>" <<endl;
+  }
+
   std::string inputFilesList = argv[1];        // input file name
   int maxEvents              = atoi(argv[2]);  // max events
   std::string fOut           = argv[3];        // output name
@@ -805,7 +820,8 @@ int main (int argc, char ** argv) {
 
     if(ientry % 50 == 0) 
       std::cout << "===> Processed " << ientry << " - Done : " << (float(ientry)/float(maxEvents))*100 << "%" << std::endl;
-    std::cout << ientry << std::endl;
+
+
     // -- For each event build collections of particles (gen, puppi, etc..) to cluster
     fPFCand->load(ientry);
     fGen   ->load(ientry); 
