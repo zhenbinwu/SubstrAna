@@ -201,14 +201,11 @@ class JetTreeAnalyzer{
   TH1F* hpt_pu_leadjet;
   TH1F* hpt_good_leadjet;
   TH1F* hpt_response_leadjet;
-<<<<<<< HEAD
 
   TH1F* hptcorr_leadjet;
   TH1F* hptcorr_pu_leadjet;
   TH1F* hptcorr_good_leadjet;
   TH1F* hptcorr_response_leadjet;
-=======
->>>>>>> 6bfe8398e4508d4b6164356e713476c2c4272a93
  
   TH1F* heta_leadjet;
   TH1F* heta_pu_leadjet;

@@ -156,15 +156,9 @@ void JetTreeAnalyzer::bookHistograms(std::string suffix, float maxpt){
   hmconst = new TH1F(("hmconst"+suffix).c_str(), ("hmconst"+suffix).c_str(), 200, 0, 200 );
   hmconst_response = new TH1F(("hmconst_response"+suffix).c_str(), ("hmconst_response"+suffix).c_str(), 200, -100, 100 );
 
-<<<<<<< HEAD
   hnparticles = new TH1F(("hnparticles"+suffix).c_str(), ("hnparticles"+suffix).c_str(), 1000, 0, 1000 );
   hnneutrals = new TH1F(("hnneutrals"+suffix).c_str(), ("hnneutrals"+suffix).c_str(), 1000, 0, 1000 );
   hncharged = new TH1F(("hncharged"+suffix).c_str(), ("hncharged"+suffix).c_str(), 1000, 0, 1000 );
-=======
-  hnparticles = new TH1F(("hnparticles"+suffix).c_str(), ("hnparticles"+suffix).c_str(), 200, 0, 200 );
-  hnneutrals = new TH1F(("hnneutrals"+suffix).c_str(), ("hnneutrals"+suffix).c_str(), 200, 0, 200 );
-  hncharged = new TH1F(("hncharged"+suffix).c_str(), ("hncharged"+suffix).c_str(), 200, 0, 200 );
->>>>>>> 6bfe8398e4508d4b6164356e713476c2c4272a93
 
   // leading jet 
   hptraw_leadjet = new TH1F(("hptraw_leadjet"+suffix).c_str(), ("hptraw_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
@@ -176,14 +170,11 @@ void JetTreeAnalyzer::bookHistograms(std::string suffix, float maxpt){
   hpt_pu_leadjet = new TH1F(("hpt_pu_leadjet"+suffix).c_str(), ("hpt_pu_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
   hpt_good_leadjet = new TH1F(("hpt_good_leadjet"+suffix).c_str(), ("hpt_good_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
   hpt_response_leadjet = new TH1F(("hpt_response_leadjet"+suffix).c_str(), ("hpt_response_leadjet"+suffix).c_str(), 200, -100, 100 );
-<<<<<<< HEAD
 
   hptcorr_leadjet = new TH1F(("hptcorr_leadjet"+suffix).c_str(), ("hptcorr_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
   hptcorr_pu_leadjet = new TH1F(("hptcorr_pu_leadjet"+suffix).c_str(), ("hptcorr_pu_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
   hptcorr_good_leadjet = new TH1F(("hptcorr_good_leadjet"+suffix).c_str(), ("hptcorr_good_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
   hptcorr_response_leadjet = new TH1F(("hptcorr_response_leadjet"+suffix).c_str(), ("hptcorr_response_leadjet"+suffix).c_str(), 200, -100, 100 );
-=======
->>>>>>> 6bfe8398e4508d4b6164356e713476c2c4272a93
   
   heta_leadjet = new TH1F(("heta_leadjet"+suffix).c_str(), ("heta_leadjet"+suffix).c_str(), 100, -5, 5 );
   heta_pu_leadjet = new TH1F(("heta_pu_leadjet"+suffix).c_str(), ("heta_pu_leadjet"+suffix).c_str(), 100, -5, 5 );
@@ -260,12 +251,7 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
   for (int entry = 0; entry < maxEntries; entry++){
     fChain->GetEntry(entry);
 
-
-<<<<<<< HEAD
     if (entry%100==0) std::cout << "Analyzing entry : " << entry << "\r" << std::flush;
-=======
-    if (entry%1==0) std::cout << "Analyzing entry : " << entry << "\r" << std::flush;
->>>>>>> 6bfe8398e4508d4b6164356e713476c2c4272a93
         
     // --- Loop over jets in this event                                                                                                                                      
     int nj = 0;
@@ -301,10 +287,7 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
       if (j == 0){
 	hptraw_leadjet    -> Fill(ptraw->at(j));
 	hpt_leadjet       -> Fill(pt->at(j));
-<<<<<<< HEAD
 	hptcorr_leadjet   -> Fill(ptcorr->at(j));
-=======
->>>>>>> 6bfe8398e4508d4b6164356e713476c2c4272a93
 	heta_leadjet      -> Fill(eta->at(j));
 	hmraw_leadjet     -> Fill(mraw->at(j));
 	hm_leadjet        -> Fill(m->at(j));
@@ -324,10 +307,7 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
 	if (j == 0){
 	  hptraw_pu_leadjet -> Fill(ptraw->at(j));
 	  hpt_pu_leadjet    -> Fill(pt->at(j));
-<<<<<<< HEAD
 	  hptcorr_pu_leadjet-> Fill(ptcorr->at(j));
-=======
->>>>>>> 6bfe8398e4508d4b6164356e713476c2c4272a93
 	  heta_pu_leadjet   -> Fill(eta->at(j));
 	}
       }
@@ -341,10 +321,7 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
 	if (j == 0){
 	  hptraw_good_leadjet -> Fill(ptraw->at(j));
 	  hpt_good_leadjet    -> Fill(pt->at(j));
-<<<<<<< HEAD
 	  hptcorr_good_leadjet-> Fill(ptcorr->at(j));
-=======
->>>>>>> 6bfe8398e4508d4b6164356e713476c2c4272a93
 	  heta_good_leadjet   -> Fill(eta->at(j));
 	}
       }
@@ -393,10 +370,7 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
 	if (j == 0){
 	  hptraw_response_leadjet     -> Fill(ptraw->at(j)-ptgen->at(j));
 	  hpt_response_leadjet        -> Fill(pt->at(j)-ptgen->at(j));
-<<<<<<< HEAD
 	  hptcorr_response_leadjet    -> Fill(ptcorr->at(j)-ptgen->at(j));
-=======
->>>>>>> 6bfe8398e4508d4b6164356e713476c2c4272a93
 	  hmraw_response_leadjet      -> Fill(mraw->at(j)-mrawgen->at(j));
 	  hm_response_leadjet         -> Fill(m->at(j)-mgen->at(j));
 	  hmtrim_response_leadjet     -> Fill(mtrim->at(j)-mtrimgen->at(j));
@@ -479,15 +453,11 @@ void JetTreeAnalyzer::saveHistograms(TFile *outfile, std::string dir){
   hpt_pu_leadjet->Write();
   hpt_good_leadjet->Write();
   hpt_response_leadjet->Write();
-
-<<<<<<< HEAD
   hptcorr_leadjet->Write();
   hptcorr_pu_leadjet->Write();
   hptcorr_good_leadjet->Write();
   hptcorr_response_leadjet->Write();
 
-=======
->>>>>>> 6bfe8398e4508d4b6164356e713476c2c4272a93
   heta_leadjet->Write();
   heta_pu_leadjet->Write();
   heta_good_leadjet->Write();
