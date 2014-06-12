@@ -37,8 +37,8 @@ class JetTreeAnalyzer{
   virtual void Init(TTree *tree);
   virtual int  GetEntry(Long64_t entry);
 
-  virtual void bookHistograms(std::string suffix="", float maxpt=200.);
-  virtual void fillHistograms(int maxEntries, float minPt);
+  virtual void bookHistograms(std::string suffix="");
+  virtual void fillHistograms(int maxEntries, float minPt, float maxPt);
   virtual void saveHistograms(TFile *file, std::string dir);
 
   
@@ -166,6 +166,7 @@ class JetTreeAnalyzer{
 
   TH2F* hpt_response_vs_pt;
   TH2F* hptraw_response_vs_pt;
+  TH2F* hptcorr_response_vs_pt;
   TH2F* hmraw_response_vs_pt;
   TH2F* hm_response_vs_pt;
   TH2F* hmtrim_response_vs_pt;
@@ -175,6 +176,7 @@ class JetTreeAnalyzer{
 
   TH2F* hpt_response_vs_eta;
   TH2F* hptraw_response_vs_eta;
+  TH2F* hptcorr_response_vs_eta;
   TH2F* hmraw_response_vs_eta;
   TH2F* hm_response_vs_eta;
   TH2F* hmtrim_response_vs_eta;
@@ -184,6 +186,7 @@ class JetTreeAnalyzer{
 
   TH2F* hpt_response_vs_npu;
   TH2F* hptraw_response_vs_npu;
+  TH2F* hptcorr_response_vs_npu;
   TH2F* hmraw_response_vs_npu;
   TH2F* hm_response_vs_npu;
   TH2F* hmtrim_response_vs_npu;

@@ -25,28 +25,28 @@ int main( int argc, char **argv ) {
   // -- gen
   TTree *tree_gen   = (TTree *)inputFile->Get("gen");
   JetTreeAnalyzer *genAnalyzer = new JetTreeAnalyzer(tree_gen);
-  genAnalyzer->bookHistograms("_gen", maxpt);
-  genAnalyzer->fillHistograms(maxEntries,minpt);
+  genAnalyzer->bookHistograms("_gen");
+  genAnalyzer->fillHistograms(maxEntries,minpt, maxpt);
   delete tree_gen;
 
   // -- pf
   TTree *tree_pf    = (TTree *)inputFile->Get("pf");
   JetTreeAnalyzer *pfAnalyzer = new JetTreeAnalyzer(tree_pf);
-  pfAnalyzer->bookHistograms("_pf", maxpt);
-  pfAnalyzer->fillHistograms(maxEntries,minpt);
+  pfAnalyzer->bookHistograms("_pf");
+  pfAnalyzer->fillHistograms(maxEntries,minpt,maxpt);
   delete tree_pf;
 
   // -- pfchs
   TTree *tree_pfchs = (TTree *)inputFile->Get("chs");
   JetTreeAnalyzer *pfchsAnalyzer = new JetTreeAnalyzer(tree_pfchs);
-  pfchsAnalyzer->bookHistograms("_pfchs", maxpt);
-  pfchsAnalyzer->fillHistograms(maxEntries,minpt);
+  pfchsAnalyzer->bookHistograms("_pfchs");
+  pfchsAnalyzer->fillHistograms(maxEntries,minpt,maxpt);
 
   // -- puppi
   TTree *tree_puppi = (TTree *)inputFile->Get("puppi");
   JetTreeAnalyzer *puppiAnalyzer = new JetTreeAnalyzer(tree_puppi);
-  puppiAnalyzer->bookHistograms("_puppi", maxpt);
-  puppiAnalyzer->fillHistograms(maxEntries,minpt);
+  puppiAnalyzer->bookHistograms("_puppi");
+  puppiAnalyzer->fillHistograms(maxEntries,minpt,maxpt);
   delete tree_puppi;
 
   // -- pf cmssw
@@ -55,8 +55,8 @@ int main( int argc, char **argv ) {
   if (doCMSSWJets){
     tree_pfcmssw = (TTree *)inputFile->Get("cmsswpf");
     pfcmsswAnalyzer = new JetTreeAnalyzer(tree_pfcmssw);
-    pfcmsswAnalyzer->bookHistograms("_pfcmssw", maxpt);
-    pfcmsswAnalyzer->fillHistograms(maxEntries, minpt);
+    pfcmsswAnalyzer->bookHistograms("_pfcmssw");
+    pfcmsswAnalyzer->fillHistograms(maxEntries, minpt,maxpt);
     delete tree_pfcmssw;
   }
 

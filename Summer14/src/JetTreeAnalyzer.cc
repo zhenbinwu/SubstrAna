@@ -91,6 +91,13 @@ void JetTreeAnalyzer::Init(TTree *tree)
   fChain->SetBranchAddress("mconstgen", &mconstgen, &b_mconstgen);
   fChain->SetBranchAddress("imatch", &imatch, &b_imatch);
 
+  // disable branches that are not used here
+  fChain->SetBranchStatus("ptclean",0);
+  fChain->SetBranchStatus("pttrim", 0);
+  fChain->SetBranchStatus("pttrimsafe",0);
+  fChain->SetBranchStatus("ptconst",0);
+  fChain->SetBranchStatus("ptunc", 0);
+
 }
 
 // --- get Tree entry ----------------------------------------------------------------
@@ -103,7 +110,7 @@ Int_t JetTreeAnalyzer::GetEntry(Long64_t entry)
 
 
 // --- Book histograms ---------------------------------------------------------------
-void JetTreeAnalyzer::bookHistograms(std::string suffix, float maxpt){
+void JetTreeAnalyzer::bookHistograms(std::string suffix){
 
   std::cout << "Booking histograms for " << suffix.c_str() << " tree" << std::endl;
 
@@ -111,23 +118,23 @@ void JetTreeAnalyzer::bookHistograms(std::string suffix, float maxpt){
 
 
   // all jets
-  hptgen = new TH1F(("hptgen"+suffix).c_str(), ("hptgen"+suffix).c_str(), maxpt, 0, maxpt );
-  hptgen_pu = new TH1F(("hptgen_pu"+suffix).c_str(), ("hptgen_pu"+suffix).c_str(), maxpt, 0, maxpt );
-  hptgen_good = new TH1F(("hptgen_good"+suffix).c_str(), ("hptgen_good"+suffix).c_str(), maxpt, 0, maxpt );
+  hptgen = new TH1F(("hptgen"+suffix).c_str(), ("hptgen"+suffix).c_str(), 2000, 0, 2000 );
+  hptgen_pu = new TH1F(("hptgen_pu"+suffix).c_str(), ("hptgen_pu"+suffix).c_str(), 2000, 0, 2000 );
+  hptgen_good = new TH1F(("hptgen_good"+suffix).c_str(), ("hptgen_good"+suffix).c_str(), 2000, 0, 2000 );
 
-  hptraw = new TH1F(("hptraw"+suffix).c_str(), ("hptraw"+suffix).c_str(), maxpt, 0, maxpt );
-  hptraw_pu = new TH1F(("hptraw_pu"+suffix).c_str(), ("hptraw_pu"+suffix).c_str(), maxpt, 0, maxpt );
-  hptraw_good = new TH1F(("hptraw_good"+suffix).c_str(), ("hptraw_good"+suffix).c_str(), maxpt, 0, maxpt );
+  hptraw = new TH1F(("hptraw"+suffix).c_str(), ("hptraw"+suffix).c_str(), 2000, 0, 2000 );
+  hptraw_pu = new TH1F(("hptraw_pu"+suffix).c_str(), ("hptraw_pu"+suffix).c_str(), 2000, 0, 2000 );
+  hptraw_good = new TH1F(("hptraw_good"+suffix).c_str(), ("hptraw_good"+suffix).c_str(), 2000, 0, 2000 );
   hptraw_response = new TH1F(("hptraw_response"+suffix).c_str(), ("hptraw_response"+suffix).c_str(), 200, -100, 100 );
 
-  hpt = new TH1F(("hpt"+suffix).c_str(), ("hpt"+suffix).c_str(), maxpt, 0, maxpt );
-  hpt_pu = new TH1F(("hpt_pu"+suffix).c_str(), ("hpt_pu"+suffix).c_str(), maxpt, 0, maxpt );
-  hpt_good = new TH1F(("hpt_good"+suffix).c_str(), ("hpt_good"+suffix).c_str(), maxpt, 0, maxpt );
+  hpt = new TH1F(("hpt"+suffix).c_str(), ("hpt"+suffix).c_str(), 2000, 0, 2000 );
+  hpt_pu = new TH1F(("hpt_pu"+suffix).c_str(), ("hpt_pu"+suffix).c_str(), 2000, 0, 2000 );
+  hpt_good = new TH1F(("hpt_good"+suffix).c_str(), ("hpt_good"+suffix).c_str(), 2000, 0, 2000 );
   hpt_response = new TH1F(("hpt_response"+suffix).c_str(), ("hpt_response"+suffix).c_str(), 200, -100, 100 );
 
-  hptcorr = new TH1F(("hptcorr"+suffix).c_str(), ("hptcorr"+suffix).c_str(), maxpt, 0, maxpt );
-  hptcorr_pu = new TH1F(("hptcorr_pu"+suffix).c_str(), ("hptcorr_pu"+suffix).c_str(), maxpt, 0, maxpt );
-  hptcorr_good = new TH1F(("hptcorr_good"+suffix).c_str(), ("hptcorr_good"+suffix).c_str(), maxpt, 0, maxpt );
+  hptcorr = new TH1F(("hptcorr"+suffix).c_str(), ("hptcorr"+suffix).c_str(), 2000, 0, 2000 );
+  hptcorr_pu = new TH1F(("hptcorr_pu"+suffix).c_str(), ("hptcorr_pu"+suffix).c_str(), 2000, 0, 2000 );
+  hptcorr_good = new TH1F(("hptcorr_good"+suffix).c_str(), ("hptcorr_good"+suffix).c_str(), 2000, 0, 2000 );
   hptcorr_response = new TH1F(("hptcorr_response"+suffix).c_str(), ("hptcorr_response"+suffix).c_str(), 200, -100, 100 );
 
   heta = new TH1F(("heta"+suffix).c_str(), ("heta"+suffix).c_str(), 100, -5, 5 );
@@ -161,19 +168,19 @@ void JetTreeAnalyzer::bookHistograms(std::string suffix, float maxpt){
   hncharged = new TH1F(("hncharged"+suffix).c_str(), ("hncharged"+suffix).c_str(), 1000, 0, 1000 );
 
   // leading jet 
-  hptraw_leadjet = new TH1F(("hptraw_leadjet"+suffix).c_str(), ("hptraw_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
-  hptraw_pu_leadjet = new TH1F(("hptraw_pu_leadjet"+suffix).c_str(), ("hptraw_pu_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
-  hptraw_good_leadjet = new TH1F(("hptraw_good_leadjet"+suffix).c_str(), ("hptraw_good_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
+  hptraw_leadjet = new TH1F(("hptraw_leadjet"+suffix).c_str(), ("hptraw_leadjet"+suffix).c_str(), 2000, 0, 2000 );
+  hptraw_pu_leadjet = new TH1F(("hptraw_pu_leadjet"+suffix).c_str(), ("hptraw_pu_leadjet"+suffix).c_str(), 2000, 0, 2000 );
+  hptraw_good_leadjet = new TH1F(("hptraw_good_leadjet"+suffix).c_str(), ("hptraw_good_leadjet"+suffix).c_str(), 2000, 0, 2000 );
   hptraw_response_leadjet = new TH1F(("hptraw_response_leadjet"+suffix).c_str(), ("hptraw_response_leadjet"+suffix).c_str(), 200, -100, 100 );
 
-  hpt_leadjet = new TH1F(("hpt_leadjet"+suffix).c_str(), ("hpt_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
-  hpt_pu_leadjet = new TH1F(("hpt_pu_leadjet"+suffix).c_str(), ("hpt_pu_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
-  hpt_good_leadjet = new TH1F(("hpt_good_leadjet"+suffix).c_str(), ("hpt_good_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
+  hpt_leadjet = new TH1F(("hpt_leadjet"+suffix).c_str(), ("hpt_leadjet"+suffix).c_str(), 2000, 0, 2000 );
+  hpt_pu_leadjet = new TH1F(("hpt_pu_leadjet"+suffix).c_str(), ("hpt_pu_leadjet"+suffix).c_str(), 2000, 0, 2000 );
+  hpt_good_leadjet = new TH1F(("hpt_good_leadjet"+suffix).c_str(), ("hpt_good_leadjet"+suffix).c_str(), 2000, 0, 2000 );
   hpt_response_leadjet = new TH1F(("hpt_response_leadjet"+suffix).c_str(), ("hpt_response_leadjet"+suffix).c_str(), 200, -100, 100 );
 
-  hptcorr_leadjet = new TH1F(("hptcorr_leadjet"+suffix).c_str(), ("hptcorr_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
-  hptcorr_pu_leadjet = new TH1F(("hptcorr_pu_leadjet"+suffix).c_str(), ("hptcorr_pu_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
-  hptcorr_good_leadjet = new TH1F(("hptcorr_good_leadjet"+suffix).c_str(), ("hptcorr_good_leadjet"+suffix).c_str(), maxpt, 0, maxpt );
+  hptcorr_leadjet = new TH1F(("hptcorr_leadjet"+suffix).c_str(), ("hptcorr_leadjet"+suffix).c_str(), 2000, 0, 2000 );
+  hptcorr_pu_leadjet = new TH1F(("hptcorr_pu_leadjet"+suffix).c_str(), ("hptcorr_pu_leadjet"+suffix).c_str(), 2000, 0, 2000 );
+  hptcorr_good_leadjet = new TH1F(("hptcorr_good_leadjet"+suffix).c_str(), ("hptcorr_good_leadjet"+suffix).c_str(), 2000, 0, 2000 );
   hptcorr_response_leadjet = new TH1F(("hptcorr_response_leadjet"+suffix).c_str(), ("hptcorr_response_leadjet"+suffix).c_str(), 200, -100, 100 );
   
   heta_leadjet = new TH1F(("heta_leadjet"+suffix).c_str(), ("heta_leadjet"+suffix).c_str(), 100, -5, 5 );
@@ -204,38 +211,50 @@ void JetTreeAnalyzer::bookHistograms(std::string suffix, float maxpt){
 
   // 2d histograms
 
-  hptraw_response_vs_pt     = new TH2F(("hptraw_response_vs_pt"+suffix).c_str(), ("hptraw_response_vs_pt"+suffix).c_str(), maxpt, 0, maxpt, 200, -100, 100 );
-  hpt_response_vs_pt        = new TH2F(("hpt_response_vs_pt"+suffix).c_str(), ("hpt_response_vs_pt"+suffix).c_str(), maxpt, 0, maxpt, 200, -100, 100 );
-  hmraw_response_vs_pt      = new TH2F(("hmraw_response_vs_pt"+suffix).c_str(), ("hmraw_response_vs_pt"+suffix).c_str(), maxpt, 0, maxpt, 200, -100, 100 );
-  hm_response_vs_pt         = new TH2F(("hm_response_vs_pt"+suffix).c_str(), ("hm_response_vs_pt"+suffix).c_str(), maxpt, 0, maxpt, 200, -100, 100 );
-  hmtrim_response_vs_pt     = new TH2F(("hmtrim_response_vs_pt"+suffix).c_str(), ("hmtrim_response_vs_pt"+suffix).c_str(), maxpt, 0, maxpt, 200, -100, 100 );
-  hmtrimsafe_response_vs_pt = new TH2F(("hmtrimsafe_response_vs_pt"+suffix).c_str(), ("hmtrimsafe_response_vs_pt"+suffix).c_str(), maxpt, 0, maxpt, 200, -100, 100 );
-  hmclean_response_vs_pt    = new TH2F(("hmclean_response_vs_pt"+suffix).c_str(), ("hmclean_response_vs_pt"+suffix).c_str(), maxpt, 0, maxpt, 200, -100, 100 );
-  hmconst_response_vs_pt    = new TH2F(("hmconst_response_vs_pt"+suffix).c_str(), ("hmconst_response_vs_pt"+suffix).c_str(), maxpt, 0, maxpt, 200, -100, 100 );
+  //hptraw_response_vs_pt     = new TH2F(("hptraw_response_vs_pt"+suffix).c_str(), ("hptraw_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -100, 100 );
+  //hpt_response_vs_pt        = new TH2F(("hpt_response_vs_pt"+suffix).c_str(), ("hpt_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -100, 100 );
+  //hptcorr_response_vs_pt        = new TH2F(("hptcorr_response_vs_pt"+suffix).c_str(), ("hptcorr_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -100, 100 );
+  hptraw_response_vs_pt     = new TH2F(("hptraw_response_vs_pt"+suffix).c_str(), ("hptraw_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -1, 1 );
+  hpt_response_vs_pt        = new TH2F(("hpt_response_vs_pt"+suffix).c_str(), ("hpt_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -1, 1 );
+  hptcorr_response_vs_pt    = new TH2F(("hptcorr_response_vs_pt"+suffix).c_str(), ("hptcorr_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -1, 1 );
+  hmraw_response_vs_pt      = new TH2F(("hmraw_response_vs_pt"+suffix).c_str(), ("hmraw_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -100, 100 );
+  hm_response_vs_pt         = new TH2F(("hm_response_vs_pt"+suffix).c_str(), ("hm_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -100, 100 );
+  hmtrim_response_vs_pt     = new TH2F(("hmtrim_response_vs_pt"+suffix).c_str(), ("hmtrim_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -100, 100 );
+  hmtrimsafe_response_vs_pt = new TH2F(("hmtrimsafe_response_vs_pt"+suffix).c_str(), ("hmtrimsafe_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -100, 100 );
+  hmclean_response_vs_pt    = new TH2F(("hmclean_response_vs_pt"+suffix).c_str(), ("hmclean_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -100, 100 );
+  hmconst_response_vs_pt    = new TH2F(("hmconst_response_vs_pt"+suffix).c_str(), ("hmconst_response_vs_pt"+suffix).c_str(), 2000, 0, 2000, 200, -100, 100 );
 
-  hptraw_response_vs_eta = new TH2F(("hptraw_response_vs_eta"+suffix).c_str(), ("hptraw_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
-  hpt_response_vs_eta = new TH2F(("hpt_response_vs_eta"+suffix).c_str(), ("hpt_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
-  hmraw_response_vs_eta = new TH2F(("hmraw_response_vs_eta"+suffix).c_str(), ("hmraw_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
-  hm_response_vs_eta = new TH2F(("hm_response_vs_eta"+suffix).c_str(), ("hm_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
-  hmtrim_response_vs_eta = new TH2F(("hmtrim_response_vs_eta"+suffix).c_str(), ("hmtrim_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
+  //hptraw_response_vs_eta   = new TH2F(("hptraw_response_vs_eta"+suffix).c_str(), ("hptraw_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
+  //hpt_response_vs_eta      = new TH2F(("hpt_response_vs_eta"+suffix).c_str(), ("hpt_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
+  //hptcorr_response_vs_eta  = new TH2F(("hptcorr_response_vs_eta"+suffix).c_str(), ("hptcorr_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
+  hptraw_response_vs_eta     = new TH2F(("hptraw_response_vs_eta"+suffix).c_str(), ("hptraw_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -1, 1 );
+  hpt_response_vs_eta        = new TH2F(("hpt_response_vs_eta"+suffix).c_str(), ("hpt_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -1, 1 );
+  hptcorr_response_vs_eta    = new TH2F(("hptcorr_response_vs_eta"+suffix).c_str(), ("hptcorr_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -1, 1 );
+  hmraw_response_vs_eta      = new TH2F(("hmraw_response_vs_eta"+suffix).c_str(), ("hmraw_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
+  hm_response_vs_eta         = new TH2F(("hm_response_vs_eta"+suffix).c_str(), ("hm_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
+  hmtrim_response_vs_eta     = new TH2F(("hmtrim_response_vs_eta"+suffix).c_str(), ("hmtrim_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
   hmtrimsafe_response_vs_eta = new TH2F(("hmtrimsafe_response_vs_eta"+suffix).c_str(), ("hmtrimsafe_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
-  hmclean_response_vs_eta = new TH2F(("hmclean_response_vs_eta"+suffix).c_str(), ("hmclean_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
-  hmconst_response_vs_eta = new TH2F(("hmconst_response_vs_eta"+suffix).c_str(), ("hmconst_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
+  hmclean_response_vs_eta    = new TH2F(("hmclean_response_vs_eta"+suffix).c_str(), ("hmclean_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
+  hmconst_response_vs_eta    = new TH2F(("hmconst_response_vs_eta"+suffix).c_str(), ("hmconst_response_vs_eta"+suffix).c_str(), 100, -5, 5, 200, -100, 100 );
 
-  hptraw_response_vs_npu = new TH2F(("hptraw_response_vs_npu"+suffix).c_str(), ("hptraw_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
-  hpt_response_vs_npu = new TH2F(("hpt_response_vs_npu"+suffix).c_str(), ("hpt_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
-  hmraw_response_vs_npu = new TH2F(("hmraw_response_vs_npu"+suffix).c_str(), ("hmraw_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
-  hm_response_vs_npu = new TH2F(("hm_response_vs_npu"+suffix).c_str(), ("hm_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
-  hmtrim_response_vs_npu = new TH2F(("hmtrim_response_vs_npu"+suffix).c_str(), ("hmtrim_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
+  //hptraw_response_vs_npu   = new TH2F(("hptraw_response_vs_npu"+suffix).c_str(), ("hptraw_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
+  //hpt_response_vs_npu      = new TH2F(("hpt_response_vs_npu"+suffix).c_str(), ("hpt_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
+  //hptcorr_response_vs_npu  = new TH2F(("hptcorr_response_vs_npu"+suffix).c_str(), ("hptcorr_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
+  hptraw_response_vs_npu     = new TH2F(("hptraw_response_vs_npu"+suffix).c_str(), ("hptraw_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -1, 1 );
+  hpt_response_vs_npu        = new TH2F(("hpt_response_vs_npu"+suffix).c_str(), ("hpt_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -1, 1 );
+  hptcorr_response_vs_npu    = new TH2F(("hptcorr_response_vs_npu"+suffix).c_str(), ("hptcorr_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -1, 1 );
+  hmraw_response_vs_npu      = new TH2F(("hmraw_response_vs_npu"+suffix).c_str(), ("hmraw_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
+  hm_response_vs_npu         = new TH2F(("hm_response_vs_npu"+suffix).c_str(), ("hm_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
+  hmtrim_response_vs_npu     = new TH2F(("hmtrim_response_vs_npu"+suffix).c_str(), ("hmtrim_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
   hmtrimsafe_response_vs_npu = new TH2F(("hmtrimsafe_response_vs_npu"+suffix).c_str(), ("hmtrimsafe_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
-  hmclean_response_vs_npu = new TH2F(("hmclean_response_vs_npu"+suffix).c_str(), ("hmclean_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
-  hmconst_response_vs_npu = new TH2F(("hmconst_response_vs_npu"+suffix).c_str(), ("hmconst_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
+  hmclean_response_vs_npu    = new TH2F(("hmclean_response_vs_npu"+suffix).c_str(), ("hmclean_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
+  hmconst_response_vs_npu    = new TH2F(("hmconst_response_vs_npu"+suffix).c_str(), ("hmconst_response_vs_npu"+suffix).c_str(), 100, 0, 100, 200, -100, 100 );
 
 }
 
 
 // --- Fill histograms ---------------------------------------------------------------
-void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
+void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt, float maxPt){
 
   std::cout << "Filling histograms..." << std::endl;
   
@@ -248,19 +267,28 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
     maxEntries = fChain->GetEntries();
 
   
+
+
   for (int entry = 0; entry < maxEntries; entry++){
     fChain->GetEntry(entry);
 
     if (entry%100==0) std::cout << "Analyzing entry : " << entry << "\r" << std::flush;
+
         
     // --- Loop over jets in this event                                                                                                                                      
     int nj = 0;
 
-    for (unsigned int j = 0; j < ptraw->size(); j++){
+    float thispt = 0;
 
-      float thispt = pt->at(j); // use pt 
+    for (unsigned int j = 0; j < ptraw->size(); j++){
+    
+      thispt = pt->at(j); // use pt 
+      //float thispt = ptcorr->at(j); // use ptcorr 
+      //float thispt = ptraw->at(j); // use pt raw
       
       if (thispt < minPt)  continue;
+      //if (thispt < minPt) break; // since are ordered in decreasing pT, can skip all the rest
+      if (thispt > maxPt)  continue;
 
       nj++;
       int matchInd = imatch->at(j);
@@ -338,9 +366,14 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
 	hmtrimsafe_response -> Fill(mtrimsafe->at(j)-mtrimsafegen->at(j));
 	hmclean_response    -> Fill(mclean->at(j)-mcleangen->at(j));
 	hmconst_response    -> Fill(mconst->at(j)-mconstgen->at(j));
-	
-	hptraw_response_vs_pt     -> Fill(pt->at(j),ptraw->at(j)-ptgen->at(j));
-	hpt_response_vs_pt        -> Fill(pt->at(j),pt->at(j)-ptgen->at(j));
+
+	// 2d plots
+	//hptraw_response_vs_pt     -> Fill(ptgen->at(j),ptraw->at(j)-ptgen->at(j));
+	//hpt_response_vs_pt        -> Fill(ptgen->at(j),pt->at(j)-ptgen->at(j));
+	//hptcorr_response_vs_pt    -> Fill(ptgen->at(j),ptcorr->at(j)-ptgen->at(j));
+	hptraw_response_vs_pt     -> Fill(ptgen->at(j),ptraw->at(j)/ptgen->at(j)-1); // fill with (pt-ptgen)/ptgen
+	hpt_response_vs_pt        -> Fill(ptgen->at(j),pt->at(j)/ptgen->at(j)-1);    // fill with (pt-ptgen)/ptgen
+	hptcorr_response_vs_pt    -> Fill(ptgen->at(j),ptcorr->at(j)/ptgen->at(j)-1);    // fill with (pt-ptgen)/ptgen
 	hmraw_response_vs_pt      -> Fill(pt->at(j),mraw->at(j)-mrawgen->at(j));
 	hm_response_vs_pt         -> Fill(pt->at(j),m->at(j)-mgen->at(j));
 	hmtrim_response_vs_pt     -> Fill(pt->at(j),mtrim->at(j)-mtrimgen->at(j));
@@ -348,8 +381,12 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
 	hmclean_response_vs_pt    -> Fill(pt->at(j),mclean->at(j)-mcleangen->at(j));
 	hmconst_response_vs_pt    -> Fill(pt->at(j),mconst->at(j)-mconstgen->at(j));
 
-	hptraw_response_vs_eta     -> Fill(eta->at(j),ptraw->at(j)-ptgen->at(j));
-	hpt_response_vs_eta        -> Fill(eta->at(j),pt->at(j)-ptgen->at(j));
+	//hptraw_response_vs_eta     -> Fill(eta->at(j),ptraw->at(j)-ptgen->at(j));
+	//hpt_response_vs_eta        -> Fill(eta->at(j),pt->at(j)-ptgen->at(j));
+	//hptcorr_response_vs_eta    -> Fill(eta->at(j),ptcorr->at(j)-ptgen->at(j));
+	hptraw_response_vs_eta     -> Fill(eta->at(j),ptraw->at(j)/ptgen->at(j)-1); // fill with (pt-ptgen)/ptgen
+	hpt_response_vs_eta        -> Fill(eta->at(j),pt->at(j)/ptgen->at(j)-1);    // fill with (pt-ptgen)/ptgen
+	hptcorr_response_vs_eta    -> Fill(eta->at(j),ptcorr->at(j)/ptgen->at(j)-1);    // fill with (pt-ptgen)/ptgen
 	hmraw_response_vs_eta      -> Fill(eta->at(j),mraw->at(j)-mrawgen->at(j));
 	hm_response_vs_eta         -> Fill(eta->at(j),m->at(j)-mgen->at(j));
 	hmtrim_response_vs_eta     -> Fill(eta->at(j),mtrim->at(j)-mtrimgen->at(j));
@@ -357,8 +394,12 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt){
 	hmclean_response_vs_eta    -> Fill(eta->at(j),mclean->at(j)-mcleangen->at(j));
 	hmconst_response_vs_eta    -> Fill(eta->at(j),mconst->at(j)-mconstgen->at(j));
 
-	hptraw_response_vs_npu     -> Fill(npu,ptraw->at(j)-ptgen->at(j));
-	hpt_response_vs_npu        -> Fill(npu,pt->at(j)-ptgen->at(j));
+	//hptraw_response_vs_npu     -> Fill(npu,ptraw->at(j)-ptgen->at(j));
+	//hpt_response_vs_npu        -> Fill(npu,pt->at(j)-ptgen->at(j));
+	//hptcorr_response_vs_npu        -> Fill(npu,ptcorr->at(j)-ptgen->at(j));
+	hptraw_response_vs_npu     -> Fill(npu,ptraw->at(j)/ptgen->at(j)-1); // fill with (pt-ptgen)/ptgen
+	hpt_response_vs_npu        -> Fill(npu,pt->at(j)/ptgen->at(j)-1);    // fill with (pt-ptgen)/ptgen
+	hptcorr_response_vs_npu    -> Fill(npu,ptcorr->at(j)/ptgen->at(j)-1);    // fill with (pt-ptgen)/ptgen
 	hmraw_response_vs_npu      -> Fill(npu,mraw->at(j)-mrawgen->at(j));
 	hm_response_vs_npu         -> Fill(npu,m->at(j)-mgen->at(j));
 	hmtrim_response_vs_npu     -> Fill(npu,mtrim->at(j)-mtrimgen->at(j));
@@ -482,6 +523,7 @@ void JetTreeAnalyzer::saveHistograms(TFile *outfile, std::string dir){
   // 2d
   hptraw_response_vs_pt->Write();
   hpt_response_vs_pt->Write();
+  hptcorr_response_vs_pt->Write();
   hmraw_response_vs_pt->Write();
   hm_response_vs_pt->Write();
   hmtrim_response_vs_pt->Write();
@@ -491,6 +533,7 @@ void JetTreeAnalyzer::saveHistograms(TFile *outfile, std::string dir){
 
   hptraw_response_vs_eta->Write();
   hpt_response_vs_eta->Write();
+  hptcorr_response_vs_eta->Write();
   hm_response_vs_eta->Write();
   hmraw_response_vs_eta->Write();
   hmtrim_response_vs_eta->Write();
@@ -500,6 +543,7 @@ void JetTreeAnalyzer::saveHistograms(TFile *outfile, std::string dir){
 
   hptraw_response_vs_npu->Write();
   hpt_response_vs_npu->Write();
+  hptcorr_response_vs_npu->Write();
   hmraw_response_vs_npu->Write();
   hm_response_vs_npu->Write();
   hmtrim_response_vs_npu->Write();
