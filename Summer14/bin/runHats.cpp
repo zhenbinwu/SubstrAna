@@ -269,6 +269,10 @@ int main( int argc, char *argv[] ){
   Float_t CHSjetMass                         ;        
   Float_t PUPjetMass                         ;        
   Float_t GENjetMass                         ;        
+  Float_t PFjetArea                          ;        
+  Float_t CHSjetArea                         ;        
+  Float_t PUPjetArea                         ;        
+  Float_t GENjetArea                         ;        
   Float_t PFjetPt                            ;        
   Float_t CHSjetPt                           ;        
   Float_t PUPjetPt                           ;        
@@ -399,6 +403,10 @@ int main( int argc, char *argv[] ){
   JetTree->Branch("CHSjetMass"                      ,&CHSjetMass                   ,"CHSjetMass"                   );
   JetTree->Branch("PUPjetMass"                      ,&PUPjetMass                   ,"PUPjetMass"                   );
   JetTree->Branch("GENjetMass"                      ,&GENjetMass                   ,"GENjetMass"                   );
+  JetTree->Branch("PFjetArea"                       ,&PFjetArea                    ,"PFjetArea"                    );
+  JetTree->Branch("CHSjetArea"                      ,&CHSjetArea                   ,"CHSjetArea"                   );
+  JetTree->Branch("PUPjetArea"                      ,&PUPjetArea                   ,"PUPjetArea"                   );
+  JetTree->Branch("GENjetArea"                      ,&GENjetArea                   ,"GENjetArea"                   );
   JetTree->Branch("PFjetPt"                         ,&PFjetPt                      ,"PFjetPt"                      );
   JetTree->Branch("CHSjetPt"                        ,&CHSjetPt                     ,"CHSjetPt"                     );
   JetTree->Branch("PUPjetPt"                        ,&PUPjetPt                     ,"PUPjetPt"                     );
@@ -510,8 +518,8 @@ int main( int argc, char *argv[] ){
   /////////////////////////////////////////////////////////////////////
 
   TChain fIn("Events");  
-  //std::ifstream input_file_list("fileListRS3000.txt");
-  std::ifstream input_file_list("fileListQCD.txt");
+  std::ifstream input_file_list("fileListRS3000.txt");
+  //std::ifstream input_file_list("fileListQCD.txt");
   std::string tmp;
 
   if(!input_file_list.is_open())
@@ -719,6 +727,13 @@ int main( int argc, char *argv[] ){
     double pupMass   = pupJets[0].m() * correction(pupJets[0],jetCorr,0);         //Assume rho is zero for this
     double genMass   = genJets[0].m() * 1.;
 
+    double pfArea    = pfJets[0].area();
+    double chsArea    = chsJets[0].area();
+    double pupArea    = pupJets[0].area();
+    double genArea    = genJets[0].area();
+
+
+
     // Fill tree and output some info
     PFjetMassUncorr  = pfJets[0].m() ;
     CHSjetMassUncorr = chsJets[0].m();
@@ -729,6 +744,11 @@ int main( int argc, char *argv[] ){
     CHSjetMass       = chsMass ;
     PUPjetMass       = pupMass ;
     GENjetMass       = genMass ;
+    
+    PFjetArea        = pfArea  ;
+    CHSjetArea       = chsArea ;
+    PUPjetArea       = pupArea ;
+    GENjetArea       = genArea ;
 
     PFjetPt          = pfPt   ;
     CHSjetPt         = chsPt  ;
