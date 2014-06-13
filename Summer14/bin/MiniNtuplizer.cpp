@@ -14,9 +14,9 @@
 #include "fastjet/contrib/SoftDrop.hh"
 #include "fastjet/contrib/ConstituentSubtractor.hh"
 #include "fastjet/Selector.hh"
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
-#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TChain.h"
@@ -62,133 +62,9 @@ struct JetInfo {
   vector<float> pttrimsafe;
   vector<float> ptconst;
   vector<float> ptunc;
-  vector<float> pt_tr1;
-  vector<float> pt_tr2;
-  vector<float> pt_tr3;
-  vector<float> pt_tr4;
-  vector<float> pt_tr1_safe;
-  vector<float> pt_tr2_safe;
-  vector<float> pt_tr3_safe;
-  vector<float> pt_tr4_safe;
-  vector<float> pt_pr1;
-  vector<float> pt_pr2;
-  vector<float> pt_pr3;
-  vector<float> pt_pr4;
-  vector<float> pt_pr1_safe;
-  vector<float> pt_pr2_safe;
-  vector<float> pt_pr3_safe;
-  vector<float> pt_pr4_safe;
-  vector<float> pt_sd1;
-  vector<float> pt_sd2;
-  vector<float> pt_sd3;
-  vector<float> pt_sd4;
-  vector<float> pt_sd5;
-  vector<float> pt_sd1_safe;
-  vector<float> pt_sd2_safe;
-  vector<float> pt_sd3_safe;
-  vector<float> pt_sd4_safe;
-  vector<float> pt_sd5_safe;
-  
-
-  
-
-
-
-//////////////////////eta
   vector<float> eta;
-  vector<float> eta_tr1;
-  vector<float> eta_tr2;
-  vector<float> eta_tr3;
-  vector<float> eta_tr4;
-  vector<float> eta_tr1_safe;
-  vector<float> eta_tr2_safe;
-  vector<float> eta_tr3_safe;
-  vector<float> eta_tr4_safe;
-  vector<float> eta_pr1;
-  vector<float> eta_pr2;
-  vector<float> eta_pr3;
-  vector<float> eta_pr4;
-  vector<float> eta_pr1_safe;
-  vector<float> eta_pr2_safe;
-  vector<float> eta_pr3_safe;
-  vector<float> eta_pr4_safe;
-  vector<float> eta_sd1;
-  vector<float> eta_sd2;
-  vector<float> eta_sd3;
-  vector<float> eta_sd4;
-  vector<float> eta_sd5;
-  vector<float> eta_sd1_safe;
-  vector<float> eta_sd2_safe;
-  vector<float> eta_sd3_safe;
-  vector<float> eta_sd4_safe;
-  vector<float> eta_sd5_safe;
-
-
-/////////////////////////////////////phi
-
   vector<float> phi;
-  vector<float> phi_tr1;
-  vector<float> phi_tr2;
-  vector<float> phi_tr3;
-  vector<float> phi_tr4;
-  vector<float> phi_tr1_safe;
-  vector<float> phi_tr2_safe;
-  vector<float> phi_tr3_safe;
-  vector<float> phi_tr4_safe;
-  vector<float> phi_pr1;
-  vector<float> phi_pr2;
-  vector<float> phi_pr3;
-  vector<float> phi_pr4;
-  vector<float> phi_pr1_safe;
-  vector<float> phi_pr2_safe;
-  vector<float> phi_pr3_safe;
-  vector<float> phi_pr4_safe;
-  vector<float> phi_sd1;
-  vector<float> phi_sd2;
-  vector<float> phi_sd3;
-  vector<float> phi_sd4;
-  vector<float> phi_sd5;
-  vector<float> phi_sd1_safe;
-  vector<float> phi_sd2_safe;
-  vector<float> phi_sd3_safe;
-  vector<float> phi_sd4_safe;
-  vector<float> phi_sd5_safe;
-  
-
-
-  
   vector<float> m;
-  vector<float> mass_tr1;
-  vector<float> mass_tr2;
-  vector<float> mass_tr3;
-  vector<float> mass_tr4;
-  vector<float> mass_tr1_safe;
-  vector<float> mass_tr2_safe;
-  vector<float> mass_tr3_safe;
-  vector<float> mass_tr4_safe;
-  vector<float> mass_pr1;
-  vector<float> mass_pr2;
-  vector<float> mass_pr3;
-  vector<float> mass_pr4;
-  vector<float> mass_pr1_safe;
-  vector<float> mass_pr2_safe;
-  vector<float> mass_pr3_safe;
-  vector<float> mass_pr4_safe;
-  vector<float> mass_sd1;
-  vector<float> mass_sd2;
-  vector<float> mass_sd3;
-  vector<float> mass_sd4;
-  vector<float> mass_sd5;
-  vector<float> mass_sd1_safe;
-  vector<float> mass_sd2_safe;
-  vector<float> mass_sd3_safe;
-  vector<float> mass_sd4_safe;
-  vector<float> mass_sd5_safe;
-
-
-
-
-
   vector<float> mraw;
   vector<float> mclean;
   vector<float> mpruned;
@@ -204,129 +80,9 @@ struct JetInfo {
 
   // gen level info
   vector<float> ptgen;
-   vector<float> pt_tr1_gen;
-  vector<float> pt_tr2_gen;
-  vector<float> pt_tr3_gen;
-  vector<float> pt_tr4_gen;
-  vector<float> pt_tr1_safe_gen;
-  vector<float> pt_tr2_safe_gen;
-  vector<float> pt_tr3_safe_gen;
-  vector<float> pt_tr4_safe_gen;
-  vector<float> pt_pr1_gen;
-  vector<float> pt_pr2_gen;
-  vector<float> pt_pr3_gen;
-  vector<float> pt_pr4_gen;
-  vector<float> pt_pr1_safe_gen;
-  vector<float> pt_pr2_safe_gen;
-  vector<float> pt_pr3_safe_gen;
-  vector<float> pt_pr4_safe_gen;
-  vector<float> pt_sd1_gen;
-  vector<float> pt_sd2_gen;
-  vector<float> pt_sd3_gen;
-  vector<float> pt_sd4_gen;
-  vector<float> pt_sd5_gen;
-  vector<float> pt_sd1_safe_gen;
-  vector<float> pt_sd2_safe_gen;
-  vector<float> pt_sd3_safe_gen; 
-  vector<float> pt_sd4_safe_gen;
-  vector<float> pt_sd5_safe_gen; 
-
-
-
   vector<float> etagen;
-  vector<float> eta_tr1_gen;
-  vector<float> eta_tr2_gen;
-  vector<float> eta_tr3_gen;
-  vector<float> eta_tr4_gen;
-  vector<float> eta_tr1_safe_gen;
-  vector<float> eta_tr2_safe_gen;
-  vector<float> eta_tr3_safe_gen;
-  vector<float> eta_tr4_safe_gen;
-  vector<float> eta_pr1_gen;
-  vector<float> eta_pr2_gen;
-  vector<float> eta_pr3_gen;
-  vector<float> eta_pr4_gen;
-  vector<float> eta_pr1_safe_gen;
-  vector<float> eta_pr2_safe_gen;
-  vector<float> eta_pr3_safe_gen;
-  vector<float> eta_pr4_safe_gen;
-  vector<float> eta_sd1_gen;
-  vector<float> eta_sd2_gen;
-  vector<float> eta_sd3_gen;
-  vector<float> eta_sd4_gen;
-  vector<float> eta_sd5_gen;
-  vector<float> eta_sd1_safe_gen;
-  vector<float> eta_sd2_safe_gen;
-  vector<float> eta_sd3_safe_gen;
-  vector<float> eta_sd4_safe_gen;
-   vector<float> eta_sd5_safe_gen;
-
-
-
-
-
-
   vector<float> phigen;
-  vector<float> phi_tr1_gen;
-  vector<float> phi_tr2_gen;
-  vector<float> phi_tr3_gen;
-  vector<float> phi_tr4_gen;
-  vector<float> phi_tr1_safe_gen;
-  vector<float> phi_tr2_safe_gen;
-  vector<float> phi_tr3_safe_gen;
-  vector<float> phi_tr4_safe_gen;
-  vector<float> phi_pr1_gen;
-  vector<float> phi_pr2_gen;
-  vector<float> phi_pr3_gen;
-  vector<float> phi_pr4_gen;
-  vector<float> phi_pr1_safe_gen;
-  vector<float> phi_pr2_safe_gen;
-  vector<float> phi_pr3_safe_gen;
-  vector<float> phi_pr4_safe_gen;
-  vector<float> phi_sd1_gen;
-  vector<float> phi_sd2_gen;
-  vector<float> phi_sd3_gen;
-  vector<float> phi_sd4_gen;
-  vector<float> phi_sd5_gen;
-  vector<float> phi_sd1_safe_gen;
-  vector<float> phi_sd2_safe_gen;
-  vector<float> phi_sd3_safe_gen;
-  vector<float> phi_sd4_safe_gen;
-  vector<float> phi_sd5_safe_gen;
-
-
-
   vector<float> mgen;
-  vector<float> mass_tr1_gen;
-  vector<float> mass_tr2_gen;
-  vector<float> mass_tr3_gen;
-  vector<float> mass_tr4_gen;
-  vector<float> mass_tr1_safe_gen;
-  vector<float> mass_tr2_safe_gen;
-  vector<float> mass_tr3_safe_gen;
-  vector<float> mass_tr4_safe_gen;
-  vector<float> mass_pr1_gen;
-  vector<float> mass_pr2_gen;
-  vector<float> mass_pr3_gen;
-  vector<float> mass_pr4_gen;
-  vector<float> mass_pr1_safe_gen;
-  vector<float> mass_pr2_safe_gen;
-  vector<float> mass_pr3_safe_gen;
-  vector<float> mass_pr4_safe_gen;
-  vector<float> mass_sd1_gen;
-  vector<float> mass_sd2_gen;
-  vector<float> mass_sd3_gen;
-  vector<float> mass_sd4_gen;
-  vector<float> mass_sd5_gen;
-  vector<float> mass_sd1_safe_gen;
-  vector<float> mass_sd2_safe_gen;
-  vector<float> mass_sd3_safe_gen;
-  vector<float> mass_sd4_safe_gen;
-  vector<float> mass_sd5_safe_gen;
-
-
-
-
   vector<float> mrawgen;
   vector<float> mtrimgen;
   vector<float> mtrimsafegen;
@@ -433,33 +189,7 @@ int matchingIndexFromJetInfo(PseudoJet jet, JetInfo jetInfo) {
 void setupTree(TTree *iTree, JetInfo &iJet, std::string iName) {
   iTree->Branch((iName+"npu"       ).c_str(),&iJet.npu       );
   iTree->Branch((iName+"pt"        ).c_str(),&iJet.pt        );
-  iTree->Branch((iName+"pt_tr1"        ).c_str(),&iJet.pt_tr1 );
-  iTree->Branch((iName+"pt_tr2"        ).c_str(),&iJet.pt_tr2 );
-  iTree->Branch((iName+"pt_tr3"        ).c_str(),&iJet.pt_tr3 );
-  iTree->Branch((iName+"pt_tr4"        ).c_str(),&iJet.pt_tr4 );
-  iTree->Branch((iName+"pt_tr1_safe"        ).c_str(),&iJet.pt_tr1_safe );
-  iTree->Branch((iName+"pt_tr2_safe"        ).c_str(),&iJet.pt_tr2_safe );
-  iTree->Branch((iName+"pt_tr3_safe"        ).c_str(),&iJet.pt_tr3_safe );
-  iTree->Branch((iName+"pt_tr4_safe"        ).c_str(),&iJet.pt_tr4_safe );
-  iTree->Branch((iName+"pt_pr1"        ).c_str(),&iJet.pt_pr1 );
-  iTree->Branch((iName+"pt_pr2"        ).c_str(),&iJet.pt_pr2 );
-  iTree->Branch((iName+"pt_pr3"        ).c_str(),&iJet.pt_pr3 );
-  iTree->Branch((iName+"pt_pr4"        ).c_str(),&iJet.pt_pr4 );
-  iTree->Branch((iName+"pt_pr1_safe"        ).c_str(),&iJet.pt_pr1_safe );
-  iTree->Branch((iName+"pt_pr2_safe"        ).c_str(),&iJet.pt_pr2_safe );
-  iTree->Branch((iName+"pt_pr3_safe"        ).c_str(),&iJet.pt_pr3_safe );
-  iTree->Branch((iName+"pt_pr4_safe"        ).c_str(),&iJet.pt_pr4_safe );
-  iTree->Branch((iName+"pt_sd1_safe"        ).c_str(),&iJet.pt_sd1_safe );
-  iTree->Branch((iName+"pt_sd2_safe"        ).c_str(),&iJet.pt_sd2_safe );
-  iTree->Branch((iName+"pt_sd3_safe"        ).c_str(),&iJet.pt_sd3_safe );
-  iTree->Branch((iName+"pt_sd4_safe"        ).c_str(),&iJet.pt_sd4_safe );
-  iTree->Branch((iName+"pt_sd5_safe"        ).c_str(),&iJet.pt_sd5_safe );
-  iTree->Branch((iName+"pt_sd1"        ).c_str(),&iJet.pt_sd1 );
-  iTree->Branch((iName+"pt_sd2"        ).c_str(),&iJet.pt_sd2 );
-  iTree->Branch((iName+"pt_sd3"        ).c_str(),&iJet.pt_sd3 );
-  iTree->Branch((iName+"pt_sd4"        ).c_str(),&iJet.pt_sd4 );
-  iTree->Branch((iName+"pt_sd5"        ).c_str(),&iJet.pt_sd5 );
-
+ 
   
   iTree->Branch((iName+"ptcorr"    ).c_str(),&iJet.ptcorr    );
   iTree->Branch((iName+"ptraw"     ).c_str(),&iJet.ptraw     );
@@ -468,101 +198,9 @@ void setupTree(TTree *iTree, JetInfo &iJet, std::string iName) {
   iTree->Branch((iName+"pttrimsafe").c_str(),&iJet.pttrimsafe);
   iTree->Branch((iName+"ptconst"   ).c_str(),&iJet.ptconst   );
   iTree->Branch((iName+"ptunc"     ).c_str(),&iJet.ptunc     );
-    
-
   iTree->Branch((iName+"eta"       ).c_str(),&iJet.eta       );
-
-
-
-  iTree->Branch((iName+"eta_tr1"        ).c_str(),&iJet.eta_tr1 );
-  iTree->Branch((iName+"eta_tr2"        ).c_str(),&iJet.eta_tr2 );
-  iTree->Branch((iName+"eta_tr3"        ).c_str(),&iJet.eta_tr3 );
-  iTree->Branch((iName+"eta_tr4"        ).c_str(),&iJet.eta_tr4 );
-  iTree->Branch((iName+"eta_tr1_safe"        ).c_str(),&iJet.eta_tr1_safe );
-  iTree->Branch((iName+"eta_tr2_safe"        ).c_str(),&iJet.eta_tr2_safe );
-  iTree->Branch((iName+"eta_tr3_safe"        ).c_str(),&iJet.eta_tr3_safe );
-  iTree->Branch((iName+"eta_tr4_safe"        ).c_str(),&iJet.eta_tr4_safe );
-  iTree->Branch((iName+"eta_pr1"        ).c_str(),&iJet.eta_pr1 );
-  iTree->Branch((iName+"eta_pr2"        ).c_str(),&iJet.eta_pr2 );
-  iTree->Branch((iName+"eta_pr3"        ).c_str(),&iJet.eta_pr3 );
-  iTree->Branch((iName+"eta_pr4"        ).c_str(),&iJet.eta_pr4 );
-  iTree->Branch((iName+"eta_pr1_safe"        ).c_str(),&iJet.eta_pr1_safe );
-  iTree->Branch((iName+"eta_pr2_safe"        ).c_str(),&iJet.eta_pr2_safe );
-  iTree->Branch((iName+"eta_pr3_safe"        ).c_str(),&iJet.eta_pr3_safe );
-  iTree->Branch((iName+"eta_pr4_safe"        ).c_str(),&iJet.eta_pr4_safe );
-  iTree->Branch((iName+"eta_sd1_safe"        ).c_str(),&iJet.eta_sd1_safe );
-  iTree->Branch((iName+"eta_sd2_safe"        ).c_str(),&iJet.eta_sd2_safe );
-  iTree->Branch((iName+"eta_sd3_safe"        ).c_str(),&iJet.eta_sd3_safe );
-  iTree->Branch((iName+"eta_sd4_safe"        ).c_str(),&iJet.eta_sd4_safe );
-  iTree->Branch((iName+"eta_sd5_safe"        ).c_str(),&iJet.eta_sd5_safe );
-  iTree->Branch((iName+"eta_sd1"        ).c_str(),&iJet.eta_sd1 );
-  iTree->Branch((iName+"eta_sd2"        ).c_str(),&iJet.eta_sd2 );
-  iTree->Branch((iName+"eta_sd3"        ).c_str(),&iJet.eta_sd3 );
-  iTree->Branch((iName+"eta_sd4"        ).c_str(),&iJet.eta_sd4 );
-  iTree->Branch((iName+"eta_sd5"        ).c_str(),&iJet.eta_sd5 );
-
-
-
   iTree->Branch((iName+"phi"       ).c_str(),&iJet.phi       );
- 
-
- iTree->Branch((iName+"phi_tr1"        ).c_str(),&iJet.phi_tr1 );
-  iTree->Branch((iName+"phi_tr2"        ).c_str(),&iJet.phi_tr2 );
-  iTree->Branch((iName+"phi_tr3"        ).c_str(),&iJet.phi_tr3 );
-  iTree->Branch((iName+"phi_tr4"        ).c_str(),&iJet.phi_tr4 );
-  iTree->Branch((iName+"phi_tr1_safe"        ).c_str(),&iJet.phi_tr1_safe );
-  iTree->Branch((iName+"phi_tr2_safe"        ).c_str(),&iJet.phi_tr2_safe );
-  iTree->Branch((iName+"phi_tr3_safe"        ).c_str(),&iJet.phi_tr3_safe );
-  iTree->Branch((iName+"phi_tr4_safe"        ).c_str(),&iJet.phi_tr4_safe );
-  iTree->Branch((iName+"phi_pr1"        ).c_str(),&iJet.phi_pr1 );
-  iTree->Branch((iName+"phi_pr2"        ).c_str(),&iJet.phi_pr2 );
-  iTree->Branch((iName+"phi_pr3"        ).c_str(),&iJet.phi_pr3 );
-  iTree->Branch((iName+"phi_pr4"        ).c_str(),&iJet.phi_pr4 );
-  iTree->Branch((iName+"phi_pr1_safe"        ).c_str(),&iJet.phi_pr1_safe );
-  iTree->Branch((iName+"phi_pr2_safe"        ).c_str(),&iJet.phi_pr2_safe );
-  iTree->Branch((iName+"phi_pr3_safe"        ).c_str(),&iJet.phi_pr3_safe );
-  iTree->Branch((iName+"phi_pr4_safe"        ).c_str(),&iJet.phi_pr4_safe );
-  iTree->Branch((iName+"phi_sd1_safe"        ).c_str(),&iJet.phi_sd1_safe );
-  iTree->Branch((iName+"phi_sd2_safe"        ).c_str(),&iJet.phi_sd2_safe );
-  iTree->Branch((iName+"phi_sd3_safe"        ).c_str(),&iJet.phi_sd3_safe );
-  iTree->Branch((iName+"phi_sd4_safe"        ).c_str(),&iJet.phi_sd4_safe );
-  iTree->Branch((iName+"phi_sd5_safe"        ).c_str(),&iJet.phi_sd5_safe );
-  iTree->Branch((iName+"phi_sd1"        ).c_str(),&iJet.phi_sd1 );
-  iTree->Branch((iName+"phi_sd2"        ).c_str(),&iJet.phi_sd2 );
-  iTree->Branch((iName+"phi_sd3"        ).c_str(),&iJet.phi_sd3 );
-  iTree->Branch((iName+"phi_sd4"        ).c_str(),&iJet.phi_sd4 );
-  iTree->Branch((iName+"phi_sd5"        ).c_str(),&iJet.phi_sd5 );
-
   iTree->Branch((iName+"m"         ).c_str(),&iJet.m         );
-  iTree->Branch((iName+"mass_tr1"        ).c_str(),&iJet.mass_tr1 );
-  iTree->Branch((iName+"mass_tr2"        ).c_str(),&iJet.mass_tr2 );
-  iTree->Branch((iName+"mass_tr3"        ).c_str(),&iJet.mass_tr3 );
-  iTree->Branch((iName+"mass_tr4"        ).c_str(),&iJet.mass_tr4 );
-  iTree->Branch((iName+"mass_tr1_safe"        ).c_str(),&iJet.mass_tr1_safe );
-  iTree->Branch((iName+"mass_tr2_safe"        ).c_str(),&iJet.mass_tr2_safe );
-  iTree->Branch((iName+"mass_tr3_safe"        ).c_str(),&iJet.mass_tr3_safe );
-  iTree->Branch((iName+"mass_tr4_safe"        ).c_str(),&iJet.mass_tr4_safe );
-  iTree->Branch((iName+"mass_pr1"        ).c_str(),&iJet.mass_pr1 );
-  iTree->Branch((iName+"mass_pr2"        ).c_str(),&iJet.mass_pr2 );
-  iTree->Branch((iName+"mass_pr3"        ).c_str(),&iJet.mass_pr3 );
-  iTree->Branch((iName+"mass_pr4"        ).c_str(),&iJet.mass_pr4 );
-  iTree->Branch((iName+"mass_pr1_safe"        ).c_str(),&iJet.mass_pr1_safe );
-  iTree->Branch((iName+"mass_pr2_safe"        ).c_str(),&iJet.mass_pr2_safe );
-  iTree->Branch((iName+"mass_pr3_safe"        ).c_str(),&iJet.mass_pr3_safe );
-  iTree->Branch((iName+"mass_pr4_safe"        ).c_str(),&iJet.mass_pr4_safe );
-  iTree->Branch((iName+"mass_sd1_safe"        ).c_str(),&iJet.mass_sd1_safe );
-  iTree->Branch((iName+"mass_sd2_safe"        ).c_str(),&iJet.mass_sd2_safe );
-  iTree->Branch((iName+"mass_sd3_safe"        ).c_str(),&iJet.mass_sd3_safe );
-  iTree->Branch((iName+"mass_sd4_safe"        ).c_str(),&iJet.mass_sd4_safe );
-  iTree->Branch((iName+"mass_sd5_safe"        ).c_str(),&iJet.mass_sd5_safe );
-  iTree->Branch((iName+"mass_sd1"        ).c_str(),&iJet.mass_sd1 );
-  iTree->Branch((iName+"mass_sd2"        ).c_str(),&iJet.mass_sd2 );
-  iTree->Branch((iName+"mass_sd3"        ).c_str(),&iJet.mass_sd3 );
-  iTree->Branch((iName+"mass_sd4"        ).c_str(),&iJet.mass_sd4 );
-  iTree->Branch((iName+"mass_sd5"        ).c_str(),&iJet.mass_sd5 );
-
-
-
   iTree->Branch((iName+"mraw"      ).c_str(),&iJet.mraw      );
   iTree->Branch((iName+"mtrim"     ).c_str(),&iJet.mtrim     );
   iTree->Branch((iName+"mtrimsafe" ).c_str(),&iJet.mtrimsafe );
@@ -577,132 +215,14 @@ void setupTree(TTree *iTree, JetInfo &iJet, std::string iName) {
   iTree->Branch((iName+"ncharged"  ).c_str(),&iJet.ncharged);
   // gen info
   iTree->Branch((iName+"ptgen"       ).c_str(),&iJet.ptgen       );
-  iTree->Branch((iName+"pt_tr1_gen"        ).c_str(),&iJet.pt_tr1_gen );
-  iTree->Branch((iName+"pt_tr2_gen"        ).c_str(),&iJet.pt_tr2_gen );
-  iTree->Branch((iName+"pt_tr3_gen"        ).c_str(),&iJet.pt_tr3_gen );
-  iTree->Branch((iName+"pt_tr4_gen"        ).c_str(),&iJet.pt_tr4_gen );
-  iTree->Branch((iName+"pt_tr1_safe_gen"        ).c_str(),&iJet.pt_tr1_safe_gen );
-  iTree->Branch((iName+"pt_tr2_safe_gen"        ).c_str(),&iJet.pt_tr2_safe_gen );
-  iTree->Branch((iName+"pt_tr3_safe_gen"        ).c_str(),&iJet.pt_tr3_safe_gen );
-  iTree->Branch((iName+"pt_tr4_safe_gen"        ).c_str(),&iJet.pt_tr4_safe_gen );
-  iTree->Branch((iName+"pt_pr1_gen"        ).c_str(),&iJet.pt_pr1_gen );
-  iTree->Branch((iName+"pt_pr2_gen"        ).c_str(),&iJet.pt_pr2_gen );
-  iTree->Branch((iName+"pt_pr3_gen"        ).c_str(),&iJet.pt_pr3_gen );
-  iTree->Branch((iName+"pt_pr4_gen"        ).c_str(),&iJet.pt_pr4_gen );
-  iTree->Branch((iName+"pt_pr1_safe_gen"        ).c_str(),&iJet.pt_pr1_safe_gen );
-  iTree->Branch((iName+"pt_pr2_safe_gen"        ).c_str(),&iJet.pt_pr2_safe_gen );
-  iTree->Branch((iName+"pt_pr3_safe_gen"        ).c_str(),&iJet.pt_pr3_safe_gen );
-  iTree->Branch((iName+"pt_pr4_safe_gen"        ).c_str(),&iJet.pt_pr4_safe_gen );
-  iTree->Branch((iName+"pt_sd1_safe_gen"        ).c_str(),&iJet.pt_sd1_safe_gen );
-  iTree->Branch((iName+"pt_sd2_safe_gen"        ).c_str(),&iJet.pt_sd2_safe_gen );
-  iTree->Branch((iName+"pt_sd3_safe_gen"        ).c_str(),&iJet.pt_sd3_safe_gen );
-  iTree->Branch((iName+"pt_sd4_safe_gen"        ).c_str(),&iJet.pt_sd4_safe_gen );
-  iTree->Branch((iName+"pt_sd5_safe_gen"        ).c_str(),&iJet.pt_sd5_safe_gen );
-  iTree->Branch((iName+"pt_sd1_gen"        ).c_str(),&iJet.pt_sd1_gen );
-  iTree->Branch((iName+"pt_sd2_gen"        ).c_str(),&iJet.pt_sd2_gen );
-  iTree->Branch((iName+"pt_sd3_gen"        ).c_str(),&iJet.pt_sd3_gen );
-  iTree->Branch((iName+"pt_sd4_gen"        ).c_str(),&iJet.pt_sd4_gen );
-  iTree->Branch((iName+"pt_sd5_gen"        ).c_str(),&iJet.pt_sd5_gen );
-
-
-
   iTree->Branch((iName+"etagen"      ).c_str(),&iJet.etagen      );
-
-
-  iTree->Branch((iName+"eta_tr1_gen"        ).c_str(),&iJet.eta_tr1_gen );
-  iTree->Branch((iName+"eta_tr2_gen"        ).c_str(),&iJet.eta_tr2_gen );
-  iTree->Branch((iName+"eta_tr3_gen"        ).c_str(),&iJet.eta_tr3_gen );
-  iTree->Branch((iName+"eta_tr4_gen"        ).c_str(),&iJet.eta_tr4_gen );
-  iTree->Branch((iName+"eta_tr1_safe_gen"        ).c_str(),&iJet.eta_tr1_safe_gen );
-  iTree->Branch((iName+"eta_tr2_safe_gen"        ).c_str(),&iJet.eta_tr2_safe_gen );
-  iTree->Branch((iName+"eta_tr3_safe_gen"        ).c_str(),&iJet.eta_tr3_safe_gen );
-  iTree->Branch((iName+"eta_tr4_safe_gen"        ).c_str(),&iJet.eta_tr4_safe_gen );
-  iTree->Branch((iName+"eta_pr1_gen"        ).c_str(),&iJet.eta_pr1_gen );
-  iTree->Branch((iName+"eta_pr2_gen"        ).c_str(),&iJet.eta_pr2_gen );
-  iTree->Branch((iName+"eta_pr3_gen"        ).c_str(),&iJet.eta_pr3_gen );
-  iTree->Branch((iName+"eta_pr4_gen"        ).c_str(),&iJet.eta_pr4_gen );
-  iTree->Branch((iName+"eta_pr1_safe_gen"        ).c_str(),&iJet.eta_pr1_safe_gen );
-  iTree->Branch((iName+"eta_pr2_safe_gen"        ).c_str(),&iJet.eta_pr2_safe_gen );
-  iTree->Branch((iName+"eta_pr3_safe_gen"        ).c_str(),&iJet.eta_pr3_safe_gen );
-  iTree->Branch((iName+"eta_pr4_safe_gen"        ).c_str(),&iJet.eta_pr4_safe_gen );
-  iTree->Branch((iName+"eta_sd1_safe_gen"        ).c_str(),&iJet.eta_sd1_safe_gen );
-  iTree->Branch((iName+"eta_sd2_safe_gen"        ).c_str(),&iJet.eta_sd2_safe_gen );
-  iTree->Branch((iName+"eta_sd3_safe_gen"        ).c_str(),&iJet.eta_sd3_safe_gen );
-  iTree->Branch((iName+"eta_sd4_safe_gen"        ).c_str(),&iJet.eta_sd4_safe_gen );
-  iTree->Branch((iName+"eta_sd5_safe_gen"        ).c_str(),&iJet.eta_sd5_safe_gen );
-  iTree->Branch((iName+"eta_sd1_gen"        ).c_str(),&iJet.eta_sd1_gen );
-  iTree->Branch((iName+"eta_sd2_gen"        ).c_str(),&iJet.eta_sd2_gen );
-  iTree->Branch((iName+"eta_sd3_gen"        ).c_str(),&iJet.eta_sd3_gen );
-  iTree->Branch((iName+"eta_sd4_gen"        ).c_str(),&iJet.eta_sd4_gen );
-  iTree->Branch((iName+"eta_sd5_gen"        ).c_str(),&iJet.eta_sd5_gen );
-
   iTree->Branch((iName+"phigen"      ).c_str(),&iJet.phigen      );
-
-
-  iTree->Branch((iName+"phi_tr1_gen"        ).c_str(),&iJet.phi_tr1_gen );
-  iTree->Branch((iName+"phi_tr2_gen"        ).c_str(),&iJet.phi_tr2_gen );
-  iTree->Branch((iName+"phi_tr3_gen"        ).c_str(),&iJet.phi_tr3_gen );
-  iTree->Branch((iName+"phi_tr4_gen"        ).c_str(),&iJet.phi_tr4_gen );
-  iTree->Branch((iName+"phi_tr1_safe_gen"        ).c_str(),&iJet.phi_tr1_safe_gen );
-  iTree->Branch((iName+"phi_tr2_safe_gen"        ).c_str(),&iJet.phi_tr2_safe_gen );
-  iTree->Branch((iName+"phi_tr3_safe_gen"        ).c_str(),&iJet.phi_tr3_safe_gen );
-  iTree->Branch((iName+"phi_tr4_safe_gen"        ).c_str(),&iJet.phi_tr4_safe_gen );
-  iTree->Branch((iName+"phi_pr1_gen"        ).c_str(),&iJet.phi_pr1_gen );
-  iTree->Branch((iName+"phi_pr2_gen"        ).c_str(),&iJet.phi_pr2_gen );
-  iTree->Branch((iName+"phi_pr3_gen"        ).c_str(),&iJet.phi_pr3_gen );
-  iTree->Branch((iName+"phi_pr4_gen"        ).c_str(),&iJet.phi_pr4_gen );
-  iTree->Branch((iName+"phi_pr1_safe_gen"        ).c_str(),&iJet.phi_pr1_safe_gen );
-  iTree->Branch((iName+"phi_pr2_safe_gen"        ).c_str(),&iJet.phi_pr2_safe_gen );
-  iTree->Branch((iName+"phi_pr3_safe_gen"        ).c_str(),&iJet.phi_pr3_safe_gen );
-  iTree->Branch((iName+"phi_pr4_safe_gen"        ).c_str(),&iJet.phi_pr4_safe_gen );
-  iTree->Branch((iName+"phi_sd1_safe_gen"        ).c_str(),&iJet.phi_sd1_safe_gen );
-  iTree->Branch((iName+"phi_sd2_safe_gen"        ).c_str(),&iJet.phi_sd2_safe_gen );
-  iTree->Branch((iName+"phi_sd3_safe_gen"        ).c_str(),&iJet.phi_sd3_safe_gen );
-  iTree->Branch((iName+"phi_sd4_safe_gen"        ).c_str(),&iJet.phi_sd4_safe_gen );
-  iTree->Branch((iName+"phi_sd5_safe_gen"        ).c_str(),&iJet.phi_sd5_safe_gen );
-  iTree->Branch((iName+"phi_sd1_gen"        ).c_str(),&iJet.phi_sd1_gen );
-  iTree->Branch((iName+"phi_sd2_gen"        ).c_str(),&iJet.phi_sd2_gen );
-  iTree->Branch((iName+"phi_sd3_gen"        ).c_str(),&iJet.phi_sd3_gen );
-  iTree->Branch((iName+"phi_sd4_gen"        ).c_str(),&iJet.phi_sd4_gen );
-  iTree->Branch((iName+"phi_sd5_gen"        ).c_str(),&iJet.phi_sd5_gen );
-
-
   iTree->Branch((iName+"mgen"        ).c_str(),&iJet.mgen        );
-  iTree->Branch((iName+"mass_tr1_gen"        ).c_str(),&iJet.mass_tr1_gen );
-  iTree->Branch((iName+"mass_tr2_gen"        ).c_str(),&iJet.mass_tr2_gen );
-  iTree->Branch((iName+"mass_tr3_gen"        ).c_str(),&iJet.mass_tr3_gen );
-  iTree->Branch((iName+"mass_tr4_gen"        ).c_str(),&iJet.mass_tr4_gen );
-  iTree->Branch((iName+"mass_tr1_safe_gen"        ).c_str(),&iJet.mass_tr1_safe_gen );
-  iTree->Branch((iName+"mass_tr2_safe_gen"        ).c_str(),&iJet.mass_tr2_safe_gen );
-  iTree->Branch((iName+"mass_tr3_safe_gen"        ).c_str(),&iJet.mass_tr3_safe_gen );
-  iTree->Branch((iName+"mass_tr4_safe_gen"        ).c_str(),&iJet.mass_tr4_safe_gen );
-  iTree->Branch((iName+"mass_pr1_gen"        ).c_str(),&iJet.mass_pr1_gen );
-  iTree->Branch((iName+"mass_pr2_gen"        ).c_str(),&iJet.mass_pr2_gen );
-  iTree->Branch((iName+"mass_pr3_gen"        ).c_str(),&iJet.mass_pr3_gen );
-  iTree->Branch((iName+"mass_pr4_gen"        ).c_str(),&iJet.mass_pr4_gen );
-  iTree->Branch((iName+"mass_pr1_safe_gen"        ).c_str(),&iJet.mass_pr1_safe_gen );
-  iTree->Branch((iName+"mass_pr2_safe_gen"        ).c_str(),&iJet.mass_pr2_safe_gen );
-  iTree->Branch((iName+"mass_pr3_safe_gen"        ).c_str(),&iJet.mass_pr3_safe_gen );
-  iTree->Branch((iName+"mass_pr4_safe_gen"        ).c_str(),&iJet.mass_pr4_safe_gen );
-  iTree->Branch((iName+"mass_sd1_safe_gen"        ).c_str(),&iJet.mass_sd1_safe_gen );
-  iTree->Branch((iName+"mass_sd2_safe_gen"        ).c_str(),&iJet.mass_sd2_safe_gen );
-  iTree->Branch((iName+"mass_sd3_safe_gen"        ).c_str(),&iJet.mass_sd3_safe_gen );
-  iTree->Branch((iName+"mass_sd4_safe_gen"        ).c_str(),&iJet.mass_sd4_safe_gen );
-  iTree->Branch((iName+"mass_sd5_safe_gen"        ).c_str(),&iJet.mass_sd5_safe_gen );
-  iTree->Branch((iName+"mass_sd1_gen"        ).c_str(),&iJet.mass_sd1_gen );
-  iTree->Branch((iName+"mass_sd2_gen"        ).c_str(),&iJet.mass_sd2_gen );
-  iTree->Branch((iName+"mass_sd3_gen"        ).c_str(),&iJet.mass_sd3_gen );
-  iTree->Branch((iName+"mass_sd4_gen"        ).c_str(),&iJet.mass_sd4_gen );
-  iTree->Branch((iName+"mass_sd5_gen"        ).c_str(),&iJet.mass_sd5_gen );
-
-
-
   iTree->Branch((iName+"mrawgen"     ).c_str(),&iJet.mrawgen     );//needed?
   iTree->Branch((iName+"mtrimgen"    ).c_str(),&iJet.mtrimgen    );//needed?
   iTree->Branch((iName+"mtrimsafegen").c_str(),&iJet.mtrimsafegen);//needed?
   iTree->Branch((iName+"mcleangen"   ).c_str(),&iJet.mcleangen   );//needed?
   iTree->Branch((iName+"mconstgen"   ).c_str(),&iJet.mconstgen   );//needed?
-
   iTree->Branch((iName+"imatch"      ).c_str(),&iJet.imatch      );
 }
 
@@ -711,132 +231,14 @@ void clear(JetInfo &iJet) {
   iJet.npu  = -1;
 
   iJet.pt         .clear();
-  iJet.pt_tr1 .clear();
-  iJet.pt_tr2 .clear();
-  iJet.pt_tr3 .clear();
-  iJet.pt_tr4 .clear();
-  iJet.pt_tr1_safe .clear();
-  iJet.pt_tr2_safe .clear();
-  iJet.pt_tr3_safe .clear();
-  iJet.pt_tr4_safe .clear();
-  iJet.pt_pr1 .clear();
-  iJet.pt_pr2 .clear();
-  iJet.pt_pr3 .clear();
-  iJet.pt_pr4 .clear();
-  iJet.pt_pr1_safe .clear();
-  iJet.pt_pr2_safe .clear();
-  iJet.pt_pr3_safe .clear();
-  iJet.pt_pr4_safe .clear();
-  iJet.pt_sd1 .clear();
-  iJet.pt_sd2 .clear();
-  iJet.pt_sd3 .clear();
-  iJet.pt_sd4 .clear();
-  iJet.pt_sd5 .clear();
-  iJet.pt_sd1_safe .clear();
-  iJet.pt_sd2_safe .clear();
-  iJet.pt_sd3_safe .clear();
-  iJet.pt_sd4_safe .clear();
-  iJet.pt_sd5_safe .clear();  
-
-
-
-
-
-
   iJet.ptcorr     .clear();
   iJet.ptraw      .clear();
   iJet.ptclean    .clear();
   iJet.pttrim     .clear();
   iJet.pttrimsafe .clear();
   iJet.eta        .clear();
-
- iJet.eta_tr1 .clear();
-  iJet.eta_tr2 .clear();
-  iJet.eta_tr3 .clear();
-  iJet.eta_tr4 .clear();
-  iJet.eta_tr1_safe .clear();
-  iJet.eta_tr2_safe .clear();
-  iJet.eta_tr3_safe .clear();
-  iJet.eta_tr4_safe .clear();
-  iJet.eta_pr1 .clear();
-  iJet.eta_pr2 .clear();
-  iJet.eta_pr3 .clear();
-  iJet.eta_pr4 .clear();
-  iJet.eta_pr1_safe .clear();
-  iJet.eta_pr2_safe .clear();
-  iJet.eta_pr3_safe .clear();
-  iJet.eta_pr4_safe .clear();
-  iJet.eta_sd1 .clear();
-  iJet.eta_sd2 .clear();
-  iJet.eta_sd3 .clear();
-  iJet.eta_sd4 .clear();
-  iJet.eta_sd5 .clear();
-  iJet.eta_sd1_safe .clear();
-  iJet.eta_sd2_safe .clear();
-  iJet.eta_sd3_safe .clear();
-  iJet.eta_sd4_safe .clear();
-  iJet.eta_sd5_safe .clear();
-
   iJet.phi        .clear();
-
-  iJet.phi_tr1 .clear();
-  iJet.phi_tr2 .clear();
-  iJet.phi_tr3 .clear();
-  iJet.phi_tr4 .clear();
-  iJet.phi_tr1_safe .clear();
-  iJet.phi_tr2_safe .clear();
-  iJet.phi_tr3_safe .clear();
-  iJet.phi_tr4_safe .clear();
-  iJet.phi_pr1 .clear();
-  iJet.phi_pr2 .clear();
-  iJet.phi_pr3 .clear();
-  iJet.phi_pr4 .clear();
-  iJet.phi_pr1_safe .clear();
-  iJet.phi_pr2_safe .clear();
-  iJet.phi_pr3_safe .clear();
-  iJet.phi_pr4_safe .clear();
-  iJet.phi_sd1 .clear();
-  iJet.phi_sd2 .clear();
-  iJet.phi_sd3 .clear();
-  iJet.phi_sd4 .clear();
-  iJet.phi_sd5 .clear();
-  iJet.phi_sd1_safe .clear();
-  iJet.phi_sd2_safe .clear();
-  iJet.phi_sd3_safe .clear();
-  iJet.phi_sd4_safe .clear();
-  iJet.phi_sd5_safe .clear();
-
-
   iJet.m          .clear();
-  iJet.mass_tr1 .clear();
-  iJet.mass_tr2 .clear();
-  iJet.mass_tr3 .clear();
-  iJet.mass_tr4 .clear();
-  iJet.mass_tr1_safe .clear();
-  iJet.mass_tr2_safe .clear();
-  iJet.mass_tr3_safe .clear();
-  iJet.mass_tr4_safe .clear();
-  iJet.mass_pr1 .clear();
-  iJet.mass_pr2 .clear();
-  iJet.mass_pr3 .clear();
-  iJet.mass_pr4 .clear();
-  iJet.mass_pr1_safe .clear();
-  iJet.mass_pr2_safe .clear();
-  iJet.mass_pr3_safe .clear();
-  iJet.mass_pr4_safe .clear();
-  iJet.mass_sd1 .clear();
-  iJet.mass_sd2 .clear();
-  iJet.mass_sd3 .clear();
-  iJet.mass_sd4 .clear();
-  iJet.mass_sd5 .clear();
-  iJet.mass_sd1_safe .clear();
-  iJet.mass_sd2_safe .clear();
-  iJet.mass_sd3_safe .clear();
-  iJet.mass_sd4_safe .clear();
-  iJet.mass_sd5_safe .clear();
-
-
-
   iJet.mraw       .clear();
   iJet.mtrim      .clear();
   iJet.mtrimsafe  .clear();
@@ -849,123 +251,10 @@ void clear(JetInfo &iJet) {
   iJet.nparticles .clear();
   iJet.nneutrals  .clear();
   iJet.ncharged   .clear();
-
   iJet.ptgen       .clear();
-  iJet.pt_tr1_gen .clear();
-  iJet.pt_tr2_gen .clear();
-  iJet.pt_tr3_gen .clear();
-  iJet.pt_tr4_gen .clear();
-  iJet.pt_tr1_safe_gen .clear();
-  iJet.pt_tr2_safe_gen .clear();
-  iJet.pt_tr3_safe_gen .clear();
-  iJet.pt_tr4_safe_gen .clear();
-  iJet.pt_pr1_gen .clear();
-  iJet.pt_pr2_gen .clear();
-  iJet.pt_pr3_gen .clear();
-  iJet.pt_pr4_gen .clear();
-  iJet.pt_pr1_safe_gen .clear();
-  iJet.pt_pr2_safe_gen .clear();
-  iJet.pt_pr3_safe_gen .clear();
-  iJet.pt_pr4_safe_gen .clear();
-  iJet.pt_sd1_gen .clear();
-  iJet.pt_sd2_gen .clear();
-  iJet.pt_sd3_gen .clear();
-  iJet.pt_sd4_gen .clear();
-  iJet.pt_sd5_gen .clear();
-  iJet.pt_sd1_safe_gen .clear();
-  iJet.pt_sd2_safe_gen .clear();
-  iJet.pt_sd3_safe_gen .clear();
-  iJet.pt_sd4_safe_gen .clear();
-  iJet.pt_sd5_safe_gen .clear();
-
-
-
   iJet.etagen      .clear();
-  iJet.eta_tr1_gen .clear();
-  iJet.eta_tr2_gen .clear();
-  iJet.eta_tr3_gen .clear();
-  iJet.eta_tr4_gen .clear();
-  iJet.eta_tr1_safe_gen .clear();
-  iJet.eta_tr2_safe_gen .clear();
-  iJet.eta_tr3_safe_gen .clear();
-  iJet.eta_tr4_safe_gen .clear();
-  iJet.eta_pr1_gen .clear();
-  iJet.eta_pr2_gen .clear();
-  iJet.eta_pr3_gen .clear();
-  iJet.eta_pr4_gen .clear();
-  iJet.eta_pr1_safe_gen .clear();
-  iJet.eta_pr2_safe_gen .clear();
-  iJet.eta_pr3_safe_gen .clear();
-  iJet.eta_pr4_safe_gen .clear();
-  iJet.eta_sd1_gen .clear();
-  iJet.eta_sd2_gen .clear();
-  iJet.eta_sd3_gen .clear();
-  iJet.eta_sd4_gen .clear();
-  iJet.eta_sd5_gen .clear();
-  iJet.eta_sd1_safe_gen .clear();
-  iJet.eta_sd2_safe_gen .clear();
-  iJet.eta_sd3_safe_gen .clear();
-  iJet.eta_sd4_safe_gen .clear();
-  iJet.eta_sd5_safe_gen .clear();
-
   iJet.phigen      .clear();
-  iJet.phi_tr1_gen .clear();
-  iJet.phi_tr2_gen .clear();
-  iJet.phi_tr3_gen .clear();
-  iJet.phi_tr4_gen .clear();
-  iJet.phi_tr1_safe_gen .clear();
-  iJet.phi_tr2_safe_gen .clear();
-  iJet.phi_tr3_safe_gen .clear();
-  iJet.phi_tr4_safe_gen .clear();
-  iJet.phi_pr1_gen .clear();
-  iJet.phi_pr2_gen .clear();
-  iJet.phi_pr3_gen .clear();
-  iJet.phi_pr4_gen .clear();
-  iJet.phi_pr1_safe_gen .clear();
-  iJet.phi_pr2_safe_gen .clear();
-  iJet.phi_pr3_safe_gen .clear();
-  iJet.phi_pr4_safe_gen .clear();
-  iJet.phi_sd1_gen .clear();
-  iJet.phi_sd2_gen .clear();
-  iJet.phi_sd3_gen .clear();
-  iJet.phi_sd4_gen .clear();
-  iJet.phi_sd5_gen .clear();
-  iJet.phi_sd1_safe_gen .clear();
-  iJet.phi_sd2_safe_gen .clear();
-  iJet.phi_sd3_safe_gen .clear();
-  iJet.phi_sd4_safe_gen .clear();
-  iJet.phi_sd5_safe_gen .clear();
-
-
   iJet.mgen        .clear();
-  iJet.mass_tr1_gen .clear();
-  iJet.mass_tr2_gen .clear();
-  iJet.mass_tr3_gen .clear();
-  iJet.mass_tr4_gen .clear();
-  iJet.mass_tr1_safe_gen .clear();
-  iJet.mass_tr2_safe_gen .clear();
-  iJet.mass_tr3_safe_gen .clear();
-  iJet.mass_tr4_safe_gen .clear();
-  iJet.mass_pr1_gen .clear();
-  iJet.mass_pr2_gen .clear();
-  iJet.mass_pr3_gen .clear();
-  iJet.mass_pr4_gen .clear();
-  iJet.mass_pr1_safe_gen .clear();
-  iJet.mass_pr2_safe_gen .clear();
-  iJet.mass_pr3_safe_gen .clear();
-  iJet.mass_pr4_safe_gen .clear();
-  iJet.mass_sd1_gen .clear();
-  iJet.mass_sd2_gen .clear();
-  iJet.mass_sd3_gen .clear();
-  iJet.mass_sd4_gen .clear();
-  iJet.mass_sd5_gen .clear();
-  iJet.mass_sd1_safe_gen .clear();
-  iJet.mass_sd2_safe_gen .clear();
-  iJet.mass_sd3_safe_gen .clear();
-  iJet.mass_sd4_safe_gen .clear();
-  iJet.mass_sd5_safe_gen .clear();
-
-
   iJet.mrawgen     .clear();
   iJet.mtrimgen    .clear();
   iJet.mtrimsafegen.clear();
@@ -999,114 +288,24 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedianBa
   
   // -- trimming
   fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.05)));
-  fastjet::Filter trimmer1( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.03)));
-  fastjet::Filter trimmer2( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.05)));
-  fastjet::Filter trimmer3( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.3), fastjet::SelectorPtFractionMin(0.03)));
-  fastjet::Filter trimmer4( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.1), fastjet::SelectorPtFractionMin(0.03)));
-
-  PseudoJet lTrim     = (trimmer)(iJet);
-  PseudoJet lTrim1     = (trimmer1)(iJet);
-  PseudoJet lTrim2     = (trimmer2)(iJet);
-  PseudoJet lTrim3     = (trimmer3)(iJet);
-  PseudoJet lTrim4     = (trimmer4)(iJet);
-
-
-
-
-  trimmer.set_subtractor(area_subtractor);
-  trimmer1.set_subtractor(area_subtractor);
-  trimmer2.set_subtractor(area_subtractor);
-  trimmer3.set_subtractor(area_subtractor);
-  trimmer4.set_subtractor(area_subtractor);
-
-
-
-
-
-  PseudoJet lTrimSafe = (trimmer)(iJet);
-  PseudoJet lTrimSafe1 = (trimmer1)(iJet);
-  PseudoJet lTrimSafe2 = (trimmer2)(iJet);
-  PseudoJet lTrimSafe3 = (trimmer3)(iJet);
-  PseudoJet lTrimSafe4 = (trimmer4)(iJet);
-
-
-
-
   
-
-
+  PseudoJet lTrim     = (trimmer)(iJet);
+  trimmer.set_subtractor(area_subtractor);
+  
+  PseudoJet lTrimSafe = (trimmer)(iJet);
  
     //pruning
   double RCut= 0.5;
   Pruner pruner(jet_def_, 0.1,RCut);
-  Pruner pruner1(jet_def_, 0.1,0.5);
-  Pruner pruner2(jet_def_, 0.05,0.5);
-  Pruner pruner3(jet_def_, 0.1,0.75);
-  Pruner pruner4(jet_def_, 0.05,0.75);
-  
-
-
-
-
   PseudoJet lPruned = pruner(iJet);
-  PseudoJet lPruned1 = pruner1(iJet);
-  PseudoJet lPruned2 = pruner2(iJet);
-  PseudoJet lPruned3 = pruner3(iJet);
-  PseudoJet lPruned4 = pruner4(iJet);
-
-
-
-
   PseudoJet lPrunedSafe = pruner(lCorr);
-  PseudoJet lPrunedSafe1 = pruner1(lCorr);
-  PseudoJet lPrunedSafe2 = pruner2(lCorr);
-  PseudoJet lPrunedSafe3 = pruner3(lCorr);
-  PseudoJet lPrunedSafe4 = pruner4(lCorr); 
-
-
-
-
-
-
+ 
   //softdrop
   contrib::SoftDrop softdrop(2., 0.1, 1.0);
-  contrib::SoftDrop softdrop1(-1.0, 0.1, 1.0);
-  contrib::SoftDrop softdrop2(0.0, 0.1, 1.0);
-  contrib::SoftDrop softdrop3(0.66, 0.1, 1.0);
-  contrib::SoftDrop softdrop4(1.0, 0.1, 1.0);
-  contrib::SoftDrop softdrop5(2.0, 0.1, 1.0);
-
-
-
-
   PseudoJet lSoftDropped = softdrop(iJet);
-  PseudoJet lSoftDropped1 = softdrop1(iJet);
-  PseudoJet lSoftDropped2 = softdrop2(iJet);
-  PseudoJet lSoftDropped3 = softdrop3(iJet);
-  PseudoJet lSoftDropped4 = softdrop4(iJet);
-  PseudoJet lSoftDropped5 = softdrop5(iJet);  
-
-
-
-
   softdrop.set_subtractor(area_subtractor);
-  softdrop1.set_subtractor(area_subtractor);
-  softdrop2.set_subtractor(area_subtractor);
-  softdrop3.set_subtractor(area_subtractor);
-  softdrop4.set_subtractor(area_subtractor);
-  softdrop5.set_subtractor(area_subtractor);
-
-
-
-
-
   PseudoJet lSoftDroppedSafe = softdrop(iJet);
-  PseudoJet lSoftDroppedSafe1 = softdrop1(iJet);
-  PseudoJet lSoftDroppedSafe2 = softdrop2(iJet);
-  PseudoJet lSoftDroppedSafe3 = softdrop3(iJet);
-  PseudoJet lSoftDroppedSafe4 = softdrop4(iJet);
-  PseudoJet lSoftDroppedSafe5 = softdrop5(iJet);  
-
+  
 
 
 
@@ -1125,44 +324,7 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedianBa
   
   // -- fill jet info
   (iJetI.pt        ).push_back(lCorr     .pt());
-  
-
-
-
   (iJetI.ptcorr    ).push_back(iJet      .pt()*lJEC);
-  (iJetI.pt_tr1  ).push_back(lTrim1      .pt());
-  (iJetI.pt_tr2    ).push_back(lTrim2      .pt());
-  (iJetI.pt_tr3    ).push_back(lTrim3      .pt());
-  (iJetI.pt_tr4    ).push_back(lTrim4      .pt());
-  (iJetI.pt_tr1_safe  ).push_back(lTrimSafe1      .pt());
-  (iJetI.pt_tr2_safe    ).push_back(lTrimSafe2      .pt());
-  (iJetI.pt_tr3_safe    ).push_back(lTrimSafe3      .pt());
-  (iJetI.pt_tr4_safe    ).push_back(lTrimSafe4      .pt());
-  (iJetI.pt_pr1  ).push_back(lPruned1      .pt());
-  (iJetI.pt_pr2    ).push_back(lPruned2      .pt());
-  (iJetI.pt_pr3    ).push_back(lPruned3      .pt());
-  (iJetI.pt_pr4    ).push_back(lPruned4      .pt());
-  (iJetI.pt_pr1_safe  ).push_back(lPrunedSafe1      .pt());
-  (iJetI.pt_pr2_safe    ).push_back(lPrunedSafe2      .pt());
-  (iJetI.pt_pr3_safe    ).push_back(lPrunedSafe3      .pt());
-  (iJetI.pt_pr4_safe    ).push_back(lPrunedSafe4      .pt());
-  (iJetI.pt_sd1  ).push_back(lSoftDropped1      .pt());
-  (iJetI.pt_sd2    ).push_back(lSoftDropped2      .pt());
-  (iJetI.pt_sd3    ).push_back(lSoftDropped3      .pt());
-  (iJetI.pt_sd4    ).push_back(lSoftDropped4      .pt());
-  (iJetI.pt_sd5    ).push_back(lSoftDropped5      .pt());
-  (iJetI.pt_sd1_safe  ).push_back(lSoftDroppedSafe1      .pt());
-  (iJetI.pt_sd2_safe    ).push_back(lSoftDroppedSafe2      .pt());
-  (iJetI.pt_sd3_safe    ).push_back(lSoftDroppedSafe3      .pt());
-  (iJetI.pt_sd4_safe    ).push_back(lSoftDroppedSafe4      .pt());
-  (iJetI.pt_sd5_safe    ).push_back(lSoftDroppedSafe5      .pt());
-
-
-
-
-
-
-
   (iJetI.ptraw     ).push_back(iJet      .pt());
   (iJetI.ptclean   ).push_back(lClean    .pt());
   (iJetI.pttrim    ).push_back(lTrim     .pt());
@@ -1170,93 +332,9 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedianBa
   (iJetI.ptconst   ).push_back(lConstit  .pt());
   (iJetI.ptunc     ).push_back(lUnc);
   (iJetI.eta       ).push_back(iJet      .eta());
-
-  (iJetI.eta_tr1  ).push_back(lTrim1      .eta());
-  (iJetI.eta_tr2    ).push_back(lTrim2      .eta());
-  (iJetI.eta_tr3    ).push_back(lTrim3      .eta());
-  (iJetI.eta_tr4    ).push_back(lTrim4      .eta());
-  (iJetI.eta_tr1_safe  ).push_back(lTrimSafe1      .eta());
-  (iJetI.eta_tr2_safe    ).push_back(lTrimSafe2      .eta());
-  (iJetI.eta_tr3_safe    ).push_back(lTrimSafe3      .eta());
-  (iJetI.eta_tr4_safe    ).push_back(lTrimSafe4      .eta());
-  (iJetI.eta_pr1  ).push_back(lPruned1      .eta());
-  (iJetI.eta_pr2    ).push_back(lPruned2      .eta());
-  (iJetI.eta_pr3    ).push_back(lPruned3      .eta());
-  (iJetI.eta_pr4    ).push_back(lPruned4      .eta());
-  (iJetI.eta_pr1_safe  ).push_back(lPrunedSafe1      .eta());
-  (iJetI.eta_pr2_safe    ).push_back(lPrunedSafe2      .eta());
-  (iJetI.eta_pr3_safe    ).push_back(lPrunedSafe3      .eta());
-  (iJetI.eta_pr4_safe    ).push_back(lPrunedSafe4      .eta());
-  (iJetI.eta_sd1  ).push_back(lSoftDropped1      .eta());
-  (iJetI.eta_sd2    ).push_back(lSoftDropped2      .eta());
-  (iJetI.eta_sd3    ).push_back(lSoftDropped3      .eta());
-  (iJetI.eta_sd4    ).push_back(lSoftDropped4      .eta());
-  (iJetI.eta_sd5    ).push_back(lSoftDropped5      .eta());
-  (iJetI.eta_sd1_safe  ).push_back(lSoftDroppedSafe1      .eta());
-  (iJetI.eta_sd2_safe    ).push_back(lSoftDroppedSafe2      .eta());
-  (iJetI.eta_sd3_safe    ).push_back(lSoftDroppedSafe3      .eta());
-  (iJetI.eta_sd4_safe    ).push_back(lSoftDroppedSafe4      .eta());
-  (iJetI.eta_sd5_safe    ).push_back(lSoftDroppedSafe5      .eta());
-
   (iJetI.phi       ).push_back(iJet      .phi());
-  (iJetI.phi_tr1  ).push_back(lTrim1      .phi());
-  (iJetI.phi_tr2    ).push_back(lTrim2      .phi());
-  (iJetI.phi_tr3    ).push_back(lTrim3      .phi());
-  (iJetI.phi_tr4    ).push_back(lTrim4      .phi());
-  (iJetI.phi_tr1_safe  ).push_back(lTrimSafe1      .phi());
-  (iJetI.phi_tr2_safe    ).push_back(lTrimSafe2      .phi());
-  (iJetI.phi_tr3_safe    ).push_back(lTrimSafe3      .phi());
-  (iJetI.phi_tr4_safe    ).push_back(lTrimSafe4      .phi());
-  (iJetI.phi_pr1  ).push_back(lPruned1      .phi());
-  (iJetI.phi_pr2    ).push_back(lPruned2      .phi());
-  (iJetI.phi_pr3    ).push_back(lPruned3      .phi());
-  (iJetI.phi_pr4    ).push_back(lPruned4      .phi());
-  (iJetI.phi_pr1_safe  ).push_back(lPrunedSafe1      .phi());
-  (iJetI.phi_pr2_safe    ).push_back(lPrunedSafe2      .phi());
-  (iJetI.phi_pr3_safe    ).push_back(lPrunedSafe3      .phi());
-  (iJetI.phi_pr4_safe    ).push_back(lPrunedSafe4      .phi());
-  (iJetI.phi_sd1  ).push_back(lSoftDropped1      .phi());
-  (iJetI.phi_sd2    ).push_back(lSoftDropped2      .phi());
-  (iJetI.phi_sd3    ).push_back(lSoftDropped3      .phi());
-  (iJetI.phi_sd4    ).push_back(lSoftDropped4      .phi());
-  (iJetI.phi_sd5    ).push_back(lSoftDropped5      .phi());
-  (iJetI.phi_sd1_safe  ).push_back(lSoftDroppedSafe1      .phi());
-  (iJetI.phi_sd2_safe    ).push_back(lSoftDroppedSafe2      .phi());
-  (iJetI.phi_sd3_safe    ).push_back(lSoftDroppedSafe3      .phi());
-  (iJetI.phi_sd4_safe    ).push_back(lSoftDroppedSafe4      .phi());
-  (iJetI.phi_sd5_safe    ).push_back(lSoftDroppedSafe5      .phi()); 
-
-
- (iJetI.mraw      ).push_back(iJet      .m());
+  (iJetI.mraw      ).push_back(iJet      .m());
   (iJetI.m         ).push_back(lCorr     .m());
-  (iJetI.mass_tr1  ).push_back(lTrim1      .m());
-  (iJetI.mass_tr2    ).push_back(lTrim2      .m());
-  (iJetI.mass_tr3    ).push_back(lTrim3      .m());
-  (iJetI.mass_tr4    ).push_back(lTrim4      .m());
-  (iJetI.mass_tr1_safe  ).push_back(lTrimSafe1      .m());
-  (iJetI.mass_tr2_safe    ).push_back(lTrimSafe2      .m());
-  (iJetI.mass_tr3_safe    ).push_back(lTrimSafe3      .m());
-  (iJetI.mass_tr4_safe    ).push_back(lTrimSafe4      .m());
-  (iJetI.mass_pr1  ).push_back(lPruned1      .m());
-  (iJetI.mass_pr2    ).push_back(lPruned2      .m());
-  (iJetI.mass_pr3    ).push_back(lPruned3      .m());
-  (iJetI.mass_pr4    ).push_back(lPruned4      .m());
-  (iJetI.mass_pr1_safe  ).push_back(lPrunedSafe1      .m());
-  (iJetI.mass_pr2_safe    ).push_back(lPrunedSafe2      .m());
-  (iJetI.mass_pr3_safe    ).push_back(lPrunedSafe3      .m());
-  (iJetI.mass_pr4_safe    ).push_back(lPrunedSafe4      .m());
-  (iJetI.mass_sd1  ).push_back(lSoftDropped1      .m());
-  (iJetI.mass_sd2    ).push_back(lSoftDropped2      .m());
-  (iJetI.mass_sd3    ).push_back(lSoftDropped3      .m());
-  (iJetI.mass_sd4    ).push_back(lSoftDropped4      .m());
-  (iJetI.mass_sd5    ).push_back(lSoftDropped5      .m());
-  (iJetI.mass_sd1_safe  ).push_back(lSoftDroppedSafe1      .m());
-  (iJetI.mass_sd2_safe    ).push_back(lSoftDroppedSafe2      .m());
-  (iJetI.mass_sd3_safe    ).push_back(lSoftDroppedSafe3      .m());
-  (iJetI.mass_sd4_safe    ).push_back(lSoftDroppedSafe4      .m());
-  (iJetI.mass_sd5_safe    ).push_back(lSoftDroppedSafe5      .m());
-
-
   (iJetI.mclean    ).push_back(lClean    .m());
   (iJetI.mtrim     ).push_back(lTrim     .m());
   (iJetI.mtrimsafe ).push_back(lTrimSafe .m());
@@ -1272,11 +350,9 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedianBa
   if (imatch > -1){
     (iJetI.imatch  ).push_back(imatch);
     (iJetI.ptgen    ).push_back(genJets[imatch].pt());
- 
-
-  (iJetI.etagen   ).push_back(genJets[imatch].eta());
-  (iJetI.phigen   ).push_back(genJets[imatch].phi());
-  (iJetI.mgen     ).push_back(genJets[imatch].m());
+    (iJetI.etagen   ).push_back(genJets[imatch].eta());
+    (iJetI.phigen   ).push_back(genJets[imatch].phi());
+    (iJetI.mgen     ).push_back(genJets[imatch].m());
 
 
 
@@ -1318,108 +394,22 @@ void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI,JetDefinition 
    
 // -- trimming
   fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.05)));
-  fastjet::Filter trimmer1( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.03)));
-  fastjet::Filter trimmer2( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.05)));
-  fastjet::Filter trimmer3( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.3), fastjet::SelectorPtFractionMin(0.03)));
-  fastjet::Filter trimmer4( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.1), fastjet::SelectorPtFractionMin(0.03)));
-
+  
   PseudoJet lTrim     = (trimmer)(iJet);
-  PseudoJet lTrim1     = (trimmer1)(iJet);
-  PseudoJet lTrim2     = (trimmer2)(iJet);
-  PseudoJet lTrim3     = (trimmer3)(iJet);
-  PseudoJet lTrim4     = (trimmer4)(iJet);
-
-
-
-
   trimmer.set_subtractor(area_subtractor);
-  trimmer1.set_subtractor(area_subtractor);
-  trimmer2.set_subtractor(area_subtractor);
-  trimmer3.set_subtractor(area_subtractor);
-  trimmer4.set_subtractor(area_subtractor);
-
-
-
-
-
   PseudoJet lTrimSafe = (trimmer)(iJet);
-  PseudoJet lTrimSafe1 = (trimmer1)(iJet);
-  PseudoJet lTrimSafe2 = (trimmer2)(iJet);
-  PseudoJet lTrimSafe3 = (trimmer3)(iJet);
-  PseudoJet lTrimSafe4 = (trimmer4)(iJet);
-
-
-
-
-
-
-
-
+ 
     //pruning
   double RCut= 0.5;
   Pruner pruner(jet_def_, 0.1,RCut);
-  Pruner pruner1(jet_def_, 0.1,0.5);
-  Pruner pruner2(jet_def_, 0.05,0.5);
-  Pruner pruner3(jet_def_, 0.1,0.75);
-  Pruner pruner4(jet_def_, 0.05,0.75);
-
-
-
-PseudoJet lPruned = pruner(iJet);
-  PseudoJet lPruned1 = pruner1(iJet);
-  PseudoJet lPruned2 = pruner2(iJet);
-  PseudoJet lPruned3 = pruner3(iJet);
-  PseudoJet lPruned4 = pruner4(iJet);
-
-
-
-
+  PseudoJet lPruned = pruner(iJet);
   PseudoJet lPrunedSafe = pruner(lCorr);
-  PseudoJet lPrunedSafe1 = pruner1(lCorr);
-  PseudoJet lPrunedSafe2 = pruner2(lCorr);
-  PseudoJet lPrunedSafe3 = pruner3(lCorr);
-  PseudoJet lPrunedSafe4 = pruner4(lCorr);
-
-
-
-
-
-
-  //softdrop
+   //softdrop
   contrib::SoftDrop softdrop(2., 0.1, 1.0);
-  contrib::SoftDrop softdrop1(-1.0, 0.1, 1.0);
-  contrib::SoftDrop softdrop2(0.0, 0.1, 1.0);
-  contrib::SoftDrop softdrop3(0.66, 0.1, 1.0);
-  contrib::SoftDrop softdrop4(1.0, 0.1, 1.0);
-  contrib::SoftDrop softdrop5(2.0, 0.1, 1.0);
-
-
-
-
   PseudoJet lSoftDropped = softdrop(iJet);
-  PseudoJet lSoftDropped1 = softdrop1(iJet);
-  PseudoJet lSoftDropped2 = softdrop2(iJet);
-  PseudoJet lSoftDropped3 = softdrop3(iJet);
-  PseudoJet lSoftDropped4 = softdrop4(iJet);
-  PseudoJet lSoftDropped5 = softdrop5(iJet);
-
-
-
-
   softdrop.set_subtractor(area_subtractor);
-  softdrop1.set_subtractor(area_subtractor);
-  softdrop2.set_subtractor(area_subtractor);
-  softdrop3.set_subtractor(area_subtractor);
-  softdrop4.set_subtractor(area_subtractor);
-  softdrop5.set_subtractor(area_subtractor);
-
-   PseudoJet lSoftDroppedSafe = softdrop(iJet);
-  PseudoJet lSoftDroppedSafe1 = softdrop1(iJet);
-  PseudoJet lSoftDroppedSafe2 = softdrop2(iJet);
-  PseudoJet lSoftDroppedSafe3 = softdrop3(iJet);
-  PseudoJet lSoftDroppedSafe4 = softdrop4(iJet);
-  PseudoJet lSoftDroppedSafe5 = softdrop5(iJet);
-
+  PseudoJet lSoftDroppedSafe = softdrop(iJet);
+ 
 
  
   // -- apply the JEC
@@ -1434,33 +424,7 @@ PseudoJet lPruned = pruner(iJet);
   // -- fill jet info
   (iJetI.pt        ).push_back(lCorr     .pt());
   (iJetI.ptcorr    ).push_back(iJet      .pt()*lJEC);
-  (iJetI.pt_tr1  ).push_back(lTrim1      .pt());
-  (iJetI.pt_tr2    ).push_back(lTrim2      .pt());
-  (iJetI.pt_tr3    ).push_back(lTrim3      .pt());
-  (iJetI.pt_tr4    ).push_back(lTrim4      .pt());
-  (iJetI.pt_tr1_safe  ).push_back(lTrimSafe1      .pt());
-  (iJetI.pt_tr2_safe    ).push_back(lTrimSafe2      .pt());
-  (iJetI.pt_tr3_safe    ).push_back(lTrimSafe3      .pt());
-  (iJetI.pt_tr4_safe    ).push_back(lTrimSafe4      .pt());
-  (iJetI.pt_pr1  ).push_back(lPruned1      .pt());
-  (iJetI.pt_pr2    ).push_back(lPruned2      .pt());
-  (iJetI.pt_pr3    ).push_back(lPruned3      .pt());
-  (iJetI.pt_pr4    ).push_back(lPruned4      .pt());
-  (iJetI.pt_pr1_safe  ).push_back(lPrunedSafe1      .pt());
-  (iJetI.pt_pr2_safe    ).push_back(lPrunedSafe2      .pt());
-  (iJetI.pt_pr3_safe    ).push_back(lPrunedSafe3      .pt());
-  (iJetI.pt_pr4_safe    ).push_back(lPrunedSafe4      .pt());
-  (iJetI.pt_sd1  ).push_back(lSoftDropped1      .pt());
-  (iJetI.pt_sd2    ).push_back(lSoftDropped2      .pt());
-  (iJetI.pt_sd3    ).push_back(lSoftDropped3      .pt());
-  (iJetI.pt_sd4    ).push_back(lSoftDropped4      .pt());
-  (iJetI.pt_sd5    ).push_back(lSoftDropped5      .pt());
-  (iJetI.pt_sd1_safe  ).push_back(lSoftDroppedSafe1      .pt());
-  (iJetI.pt_sd2_safe    ).push_back(lSoftDroppedSafe2      .pt());
-  (iJetI.pt_sd3_safe    ).push_back(lSoftDroppedSafe3      .pt());
-  (iJetI.pt_sd4_safe    ).push_back(lSoftDroppedSafe4      .pt());
-  (iJetI.pt_sd5_safe    ).push_back(lSoftDroppedSafe5      .pt());
-
+  
   (iJetI.ptraw     ).push_back(iJet      .pt());
   (iJetI.ptclean   ).push_back(lClean    .pt());
   (iJetI.pttrim    ).push_back(lTrim     .pt());
@@ -1468,96 +432,9 @@ PseudoJet lPruned = pruner(iJet);
   (iJetI.ptconst   ).push_back(lConstit  .pt());
   (iJetI.ptunc     ).push_back(lUnc);
   (iJetI.eta       ).push_back(iJet      .eta());
-   (iJetI.eta_tr1  ).push_back(lTrim1      .eta());
-  (iJetI.eta_tr2    ).push_back(lTrim2      .eta());
-  (iJetI.eta_tr3    ).push_back(lTrim3      .eta());
-  (iJetI.eta_tr4    ).push_back(lTrim4      .eta());
-  (iJetI.eta_tr1_safe  ).push_back(lTrimSafe1      .eta());
-  (iJetI.eta_tr2_safe    ).push_back(lTrimSafe2      .eta());
-  (iJetI.eta_tr3_safe    ).push_back(lTrimSafe3      .eta());
-  (iJetI.eta_tr4_safe    ).push_back(lTrimSafe4      .eta());
-  (iJetI.eta_pr1  ).push_back(lPruned1      .eta());
-  (iJetI.eta_pr2    ).push_back(lPruned2      .eta());
-  (iJetI.eta_pr3    ).push_back(lPruned3      .eta());
-  (iJetI.eta_pr4    ).push_back(lPruned4      .eta());
-  (iJetI.eta_pr1_safe  ).push_back(lPrunedSafe1      .eta());
-  (iJetI.eta_pr2_safe    ).push_back(lPrunedSafe2      .eta());
-  (iJetI.eta_pr3_safe    ).push_back(lPrunedSafe3      .eta());
-  (iJetI.eta_pr4_safe    ).push_back(lPrunedSafe4      .eta());
-  (iJetI.eta_sd1  ).push_back(lSoftDropped1      .eta());
-  (iJetI.eta_sd2    ).push_back(lSoftDropped2      .eta());
-  (iJetI.eta_sd3    ).push_back(lSoftDropped3      .eta());
-  (iJetI.eta_sd4    ).push_back(lSoftDropped4      .eta());
-  (iJetI.eta_sd5    ).push_back(lSoftDropped5      .eta());
-  (iJetI.eta_sd1_safe  ).push_back(lSoftDroppedSafe1      .eta());
-  (iJetI.eta_sd2_safe    ).push_back(lSoftDroppedSafe2      .eta());
-  (iJetI.eta_sd3_safe    ).push_back(lSoftDroppedSafe3      .eta());
-  (iJetI.eta_sd4_safe    ).push_back(lSoftDroppedSafe4      .eta());
-  (iJetI.eta_sd5_safe    ).push_back(lSoftDroppedSafe5      .eta());
-
-
-
   (iJetI.phi       ).push_back(iJet      .phi());
-
-  (iJetI.phi_tr1  ).push_back(lTrim1      .phi());
-  (iJetI.phi_tr2    ).push_back(lTrim2      .phi());
-  (iJetI.phi_tr3    ).push_back(lTrim3      .phi());
-  (iJetI.phi_tr4    ).push_back(lTrim4      .phi());
-  (iJetI.phi_tr1_safe  ).push_back(lTrimSafe1      .phi());
-  (iJetI.phi_tr2_safe    ).push_back(lTrimSafe2      .phi());
-  (iJetI.phi_tr3_safe    ).push_back(lTrimSafe3      .phi());
-  (iJetI.phi_tr4_safe    ).push_back(lTrimSafe4      .phi());
-  (iJetI.phi_pr1  ).push_back(lPruned1      .phi());
-  (iJetI.phi_pr2    ).push_back(lPruned2      .phi());
-  (iJetI.phi_pr3    ).push_back(lPruned3      .phi());
-  (iJetI.phi_pr4    ).push_back(lPruned4      .phi());
-  (iJetI.phi_pr1_safe  ).push_back(lPrunedSafe1      .phi());
-  (iJetI.phi_pr2_safe    ).push_back(lPrunedSafe2      .phi());
-  (iJetI.phi_pr3_safe    ).push_back(lPrunedSafe3      .phi());
-  (iJetI.phi_pr4_safe    ).push_back(lPrunedSafe4      .phi());
-  (iJetI.phi_sd1  ).push_back(lSoftDropped1      .phi());
-  (iJetI.phi_sd2    ).push_back(lSoftDropped2      .phi());
-  (iJetI.phi_sd3    ).push_back(lSoftDropped3      .phi());
-  (iJetI.phi_sd4    ).push_back(lSoftDropped4      .phi());
-  (iJetI.phi_sd5    ).push_back(lSoftDropped5      .phi());
-  (iJetI.phi_sd1_safe  ).push_back(lSoftDroppedSafe1      .phi());
-  (iJetI.phi_sd2_safe    ).push_back(lSoftDroppedSafe2      .phi());
-  (iJetI.phi_sd3_safe    ).push_back(lSoftDroppedSafe3      .phi());
-  (iJetI.phi_sd4_safe    ).push_back(lSoftDroppedSafe4      .phi());
-  (iJetI.phi_sd5_safe    ).push_back(lSoftDroppedSafe5      .phi());
-
-
   (iJetI.mraw      ).push_back(iJet      .m());
   (iJetI.m         ).push_back(lCorr     .m());
-  (iJetI.mass_tr1  ).push_back(lTrim1      .m());
-  (iJetI.mass_tr2    ).push_back(lTrim2      .m());
-  (iJetI.mass_tr3    ).push_back(lTrim3      .m());
-  (iJetI.mass_tr4    ).push_back(lTrim4      .m());
-  (iJetI.mass_tr1_safe  ).push_back(lTrimSafe1      .m());
-  (iJetI.mass_tr2_safe    ).push_back(lTrimSafe2      .m());
-  (iJetI.mass_tr3_safe    ).push_back(lTrimSafe3      .m());
-  (iJetI.mass_tr4_safe    ).push_back(lTrimSafe4      .m());
-  (iJetI.mass_pr1  ).push_back(lPruned1      .m());
-  (iJetI.mass_pr2    ).push_back(lPruned2      .m());
-  (iJetI.mass_pr3    ).push_back(lPruned3      .m());
-  (iJetI.mass_pr4    ).push_back(lPruned4      .m());
-  (iJetI.mass_pr1_safe  ).push_back(lPrunedSafe1      .m());
-  (iJetI.mass_pr2_safe    ).push_back(lPrunedSafe2      .m());
-  (iJetI.mass_pr3_safe    ).push_back(lPrunedSafe3      .m());
-  (iJetI.mass_pr4_safe    ).push_back(lPrunedSafe4      .m());
-  (iJetI.mass_sd1  ).push_back(lSoftDropped1      .m());
-  (iJetI.mass_sd2    ).push_back(lSoftDropped2      .m());
-  (iJetI.mass_sd3    ).push_back(lSoftDropped3      .m());
-  (iJetI.mass_sd4    ).push_back(lSoftDropped4      .m());
-  (iJetI.mass_sd5    ).push_back(lSoftDropped5      .m());
-  (iJetI.mass_sd1_safe  ).push_back(lSoftDroppedSafe1      .m());
-  (iJetI.mass_sd2_safe    ).push_back(lSoftDroppedSafe2      .m());
-  (iJetI.mass_sd3_safe    ).push_back(lSoftDroppedSafe3      .m());
-  (iJetI.mass_sd4_safe    ).push_back(lSoftDroppedSafe4      .m());
-  (iJetI.mass_sd5_safe    ).push_back(lSoftDroppedSafe5      .m());
-
-
-
   (iJetI.mclean    ).push_back(lClean    .m());
   (iJetI.mtrim     ).push_back(lTrim     .m());
   (iJetI.mtrimsafe ).push_back(lTrimSafe .m());
@@ -1573,124 +450,9 @@ PseudoJet lPruned = pruner(iJet);
   if (imatch > -1){
     (iJetI.imatch).push_back(imatch);
     (iJetI.ptgen    ).push_back((iGenJetI.pt)[imatch]);
-    (iJetI.pt_tr1_gen     ).push_back((iGenJetI.pt_tr1)[imatch]);
-    (iJetI.pt_tr2_gen     ).push_back((iGenJetI.pt_tr2)[imatch]);
-    (iJetI.pt_tr3_gen     ).push_back((iGenJetI.pt_tr3)[imatch]);
-    (iJetI.pt_tr4_gen     ).push_back((iGenJetI.pt_tr4)[imatch]);
-    (iJetI.pt_tr1_safe_gen     ).push_back((iGenJetI.pt_tr1_safe)[imatch]);
-    (iJetI.pt_tr2_safe_gen     ).push_back((iGenJetI.pt_tr2_safe)[imatch]);
-    (iJetI.pt_tr3_safe_gen     ).push_back((iGenJetI.pt_tr3_safe)[imatch]);
-    (iJetI.pt_tr4_safe_gen     ).push_back((iGenJetI.pt_tr4_safe)[imatch]);
-    (iJetI.pt_pr1_gen     ).push_back((iGenJetI.pt_pr1)[imatch]);
-    (iJetI.pt_pr2_gen     ).push_back((iGenJetI.pt_pr2)[imatch]);
-    (iJetI.pt_pr3_gen     ).push_back((iGenJetI.pt_pr3)[imatch]);
-    (iJetI.pt_pr4_gen     ).push_back((iGenJetI.pt_pr4)[imatch]);
-    (iJetI.pt_pr1_safe_gen     ).push_back((iGenJetI.pt_pr1_safe)[imatch]);
-    (iJetI.pt_pr2_safe_gen     ).push_back((iGenJetI.pt_pr2_safe)[imatch]);
-    (iJetI.pt_pr3_safe_gen     ).push_back((iGenJetI.pt_pr3_safe)[imatch]);
-    (iJetI.pt_pr4_safe_gen     ).push_back((iGenJetI.pt_pr4_safe)[imatch]);
-    (iJetI.pt_sd1_gen     ).push_back((iGenJetI.pt_sd1)[imatch]);
-    (iJetI.pt_sd2_gen     ).push_back((iGenJetI.pt_sd2)[imatch]);
-    (iJetI.pt_sd3_gen     ).push_back((iGenJetI.pt_sd3)[imatch]);
-    (iJetI.pt_sd4_gen     ).push_back((iGenJetI.pt_sd4)[imatch]);
-    (iJetI.pt_sd5_gen     ).push_back((iGenJetI.pt_sd5)[imatch]);
-    (iJetI.pt_sd1_safe_gen     ).push_back((iGenJetI.pt_sd1_safe)[imatch]);
-    (iJetI.pt_sd2_safe_gen     ).push_back((iGenJetI.pt_sd2_safe)[imatch]);
-    (iJetI.pt_sd3_safe_gen     ).push_back((iGenJetI.pt_sd3_safe)[imatch]);
-    (iJetI.pt_sd4_safe_gen     ).push_back((iGenJetI.pt_sd4_safe)[imatch]);
-    (iJetI.pt_sd5_safe_gen     ).push_back((iGenJetI.pt_sd5_safe)[imatch]);
-
-
-
     (iJetI.etagen   ).push_back((iGenJetI.eta)[imatch]);
-    (iJetI.eta_tr1_gen     ).push_back((iGenJetI.eta_tr1)[imatch]);
-    (iJetI.eta_tr2_gen     ).push_back((iGenJetI.eta_tr2)[imatch]);
-    (iJetI.eta_tr3_gen     ).push_back((iGenJetI.eta_tr3)[imatch]);
-    (iJetI.eta_tr4_gen     ).push_back((iGenJetI.eta_tr4)[imatch]);
-    (iJetI.eta_tr1_safe_gen     ).push_back((iGenJetI.eta_tr1_safe)[imatch]);
-    (iJetI.eta_tr2_safe_gen     ).push_back((iGenJetI.eta_tr2_safe)[imatch]);
-    (iJetI.eta_tr3_safe_gen     ).push_back((iGenJetI.eta_tr3_safe)[imatch]);
-    (iJetI.eta_tr4_safe_gen     ).push_back((iGenJetI.eta_tr4_safe)[imatch]);
-    (iJetI.eta_pr1_gen     ).push_back((iGenJetI.eta_pr1)[imatch]);
-    (iJetI.eta_pr2_gen     ).push_back((iGenJetI.eta_pr2)[imatch]);
-    (iJetI.eta_pr3_gen     ).push_back((iGenJetI.eta_pr3)[imatch]);
-    (iJetI.eta_pr4_gen     ).push_back((iGenJetI.eta_pr4)[imatch]);
-    (iJetI.eta_pr1_safe_gen     ).push_back((iGenJetI.eta_pr1_safe)[imatch]);
-    (iJetI.eta_pr2_safe_gen     ).push_back((iGenJetI.eta_pr2_safe)[imatch]);
-    (iJetI.eta_pr3_safe_gen     ).push_back((iGenJetI.eta_pr3_safe)[imatch]);
-    (iJetI.eta_pr4_safe_gen     ).push_back((iGenJetI.eta_pr4_safe)[imatch]);
-    (iJetI.eta_sd1_gen     ).push_back((iGenJetI.eta_sd1)[imatch]);
-    (iJetI.eta_sd2_gen     ).push_back((iGenJetI.eta_sd2)[imatch]);
-    (iJetI.eta_sd3_gen     ).push_back((iGenJetI.eta_sd3)[imatch]);
-    (iJetI.eta_sd4_gen     ).push_back((iGenJetI.eta_sd4)[imatch]);
-    (iJetI.eta_sd5_gen     ).push_back((iGenJetI.eta_sd5)[imatch]);
-    (iJetI.eta_sd1_safe_gen     ).push_back((iGenJetI.eta_sd1_safe)[imatch]);
-    (iJetI.eta_sd2_safe_gen     ).push_back((iGenJetI.eta_sd2_safe)[imatch]);
-    (iJetI.eta_sd3_safe_gen     ).push_back((iGenJetI.eta_sd3_safe)[imatch]);
-    (iJetI.eta_sd4_safe_gen     ).push_back((iGenJetI.eta_sd4_safe)[imatch]);
-    (iJetI.eta_sd5_safe_gen     ).push_back((iGenJetI.eta_sd5_safe)[imatch]);
-
-
-
-
-
     (iJetI.phigen   ).push_back((iGenJetI.phi)[imatch]);
-    (iJetI.phi_tr1_gen     ).push_back((iGenJetI.phi_tr1)[imatch]);
-    (iJetI.phi_tr2_gen     ).push_back((iGenJetI.phi_tr2)[imatch]);
-    (iJetI.phi_tr3_gen     ).push_back((iGenJetI.phi_tr3)[imatch]);
-    (iJetI.phi_tr4_gen     ).push_back((iGenJetI.phi_tr4)[imatch]);
-    (iJetI.phi_tr1_safe_gen     ).push_back((iGenJetI.phi_tr1_safe)[imatch]);
-    (iJetI.phi_tr2_safe_gen     ).push_back((iGenJetI.phi_tr2_safe)[imatch]);
-    (iJetI.phi_tr3_safe_gen     ).push_back((iGenJetI.phi_tr3_safe)[imatch]);
-    (iJetI.phi_tr4_safe_gen     ).push_back((iGenJetI.phi_tr4_safe)[imatch]);
-    (iJetI.phi_pr1_gen     ).push_back((iGenJetI.phi_pr1)[imatch]);
-    (iJetI.phi_pr2_gen     ).push_back((iGenJetI.phi_pr2)[imatch]);
-    (iJetI.phi_pr3_gen     ).push_back((iGenJetI.phi_pr3)[imatch]);
-    (iJetI.phi_pr4_gen     ).push_back((iGenJetI.phi_pr4)[imatch]);
-    (iJetI.phi_pr1_safe_gen     ).push_back((iGenJetI.phi_pr1_safe)[imatch]);
-    (iJetI.phi_pr2_safe_gen     ).push_back((iGenJetI.phi_pr2_safe)[imatch]);
-    (iJetI.phi_pr3_safe_gen     ).push_back((iGenJetI.phi_pr3_safe)[imatch]);
-    (iJetI.phi_pr4_safe_gen     ).push_back((iGenJetI.phi_pr4_safe)[imatch]);
-    (iJetI.phi_sd1_gen     ).push_back((iGenJetI.phi_sd1)[imatch]);
-    (iJetI.phi_sd2_gen     ).push_back((iGenJetI.phi_sd2)[imatch]);
-    (iJetI.phi_sd3_gen     ).push_back((iGenJetI.phi_sd3)[imatch]);
-    (iJetI.phi_sd4_gen     ).push_back((iGenJetI.phi_sd4)[imatch]);
-    (iJetI.phi_sd5_gen     ).push_back((iGenJetI.phi_sd5)[imatch]);
-    (iJetI.phi_sd1_safe_gen     ).push_back((iGenJetI.phi_sd1_safe)[imatch]);
-    (iJetI.phi_sd2_safe_gen     ).push_back((iGenJetI.phi_sd2_safe)[imatch]);
-    (iJetI.phi_sd3_safe_gen     ).push_back((iGenJetI.phi_sd3_safe)[imatch]);
-    (iJetI.phi_sd4_safe_gen     ).push_back((iGenJetI.phi_sd4_safe)[imatch]);
-    (iJetI.phi_sd5_safe_gen     ).push_back((iGenJetI.phi_sd5_safe)[imatch]);
-
-
-    
     (iJetI.mgen     ).push_back((iGenJetI.m)[imatch]);
-    (iJetI.mass_tr1_gen     ).push_back((iGenJetI.mass_tr1)[imatch]);
-    (iJetI.mass_tr2_gen     ).push_back((iGenJetI.mass_tr2)[imatch]);
-    (iJetI.mass_tr3_gen     ).push_back((iGenJetI.mass_tr3)[imatch]);
-    (iJetI.mass_tr4_gen     ).push_back((iGenJetI.mass_tr4)[imatch]);
-    (iJetI.mass_tr1_safe_gen     ).push_back((iGenJetI.mass_tr1_safe)[imatch]);
-    (iJetI.mass_tr2_safe_gen     ).push_back((iGenJetI.mass_tr2_safe)[imatch]);
-    (iJetI.mass_tr3_safe_gen     ).push_back((iGenJetI.mass_tr3_safe)[imatch]);
-    (iJetI.mass_tr4_safe_gen     ).push_back((iGenJetI.mass_tr4_safe)[imatch]);
-    (iJetI.mass_pr1_gen     ).push_back((iGenJetI.mass_pr1)[imatch]);
-    (iJetI.mass_pr2_gen     ).push_back((iGenJetI.mass_pr2)[imatch]);
-    (iJetI.mass_pr3_gen     ).push_back((iGenJetI.mass_pr3)[imatch]);
-    (iJetI.mass_pr4_gen     ).push_back((iGenJetI.mass_pr4)[imatch]);
-    (iJetI.mass_pr1_safe_gen     ).push_back((iGenJetI.mass_pr1_safe)[imatch]);
-    (iJetI.mass_pr2_safe_gen     ).push_back((iGenJetI.mass_pr2_safe)[imatch]);
-    (iJetI.mass_pr3_safe_gen     ).push_back((iGenJetI.mass_pr3_safe)[imatch]);
-    (iJetI.mass_pr4_safe_gen     ).push_back((iGenJetI.mass_pr4_safe)[imatch]);
-    (iJetI.mass_sd1_gen     ).push_back((iGenJetI.mass_sd1)[imatch]);
-    (iJetI.mass_sd2_gen     ).push_back((iGenJetI.mass_sd2)[imatch]);
-    (iJetI.mass_sd3_gen     ).push_back((iGenJetI.mass_sd3)[imatch]);
-    (iJetI.mass_sd4_gen     ).push_back((iGenJetI.mass_sd4)[imatch]);
-    (iJetI.mass_sd5_gen     ).push_back((iGenJetI.mass_sd5)[imatch]);
-    (iJetI.mass_sd1_safe_gen     ).push_back((iGenJetI.mass_sd1_safe)[imatch]);
-    (iJetI.mass_sd2_safe_gen     ).push_back((iGenJetI.mass_sd2_safe)[imatch]);
-    (iJetI.mass_sd3_safe_gen     ).push_back((iGenJetI.mass_sd3_safe)[imatch]);
-    (iJetI.mass_sd4_safe_gen     ).push_back((iGenJetI.mass_sd4_safe)[imatch]);
-    (iJetI.mass_sd5_safe_gen     ).push_back((iGenJetI.mass_sd5_safe)[imatch]);   
     (iJetI.mrawgen     ).push_back((iGenJetI.mraw)[imatch]);
     (iJetI.mtrimgen    ).push_back((iGenJetI.mtrim)[imatch]);
     (iJetI.mtrimsafegen).push_back((iGenJetI.mtrimsafe)[imatch]);
@@ -1700,124 +462,11 @@ PseudoJet lPruned = pruner(iJet);
   else { //dummy values ?
     (iJetI.imatch).push_back(imatch);
     (iJetI.ptgen    ).push_back(-999.);
-    (iJetI.pt_tr1_gen     ).push_back(-999.);
-(iJetI.pt_tr2_gen     ).push_back(-999.);
-(iJetI.pt_tr3_gen     ).push_back(-999.);
-(iJetI.pt_tr4_gen     ).push_back(-999.);
-(iJetI.pt_tr1_safe_gen     ).push_back(-999.);
-(iJetI.pt_tr2_safe_gen     ).push_back(-999.);
-(iJetI.pt_tr3_safe_gen     ).push_back(-999.);
-(iJetI.pt_tr4_safe_gen     ).push_back(-999.);
-(iJetI.pt_pr1_gen     ).push_back(-999.);
-(iJetI.pt_pr2_gen     ).push_back(-999.);
-(iJetI.pt_pr3_gen     ).push_back(-999.);
-(iJetI.pt_pr4_gen     ).push_back(-999.);
-(iJetI.pt_pr1_safe_gen     ).push_back(-999.);
-(iJetI.pt_pr2_safe_gen     ).push_back(-999.);
-(iJetI.pt_pr3_safe_gen     ).push_back(-999.);
-(iJetI.pt_pr4_safe_gen     ).push_back(-999.);
-(iJetI.pt_sd1_gen     ).push_back(-999.);
-(iJetI.pt_sd2_gen     ).push_back(-999.);
-(iJetI.pt_sd3_gen     ).push_back(-999.);
-(iJetI.pt_sd4_gen     ).push_back(-999.);
-(iJetI.pt_sd5_gen     ).push_back(-999.);
-(iJetI.pt_sd1_safe_gen     ).push_back(-999.);
-(iJetI.pt_sd2_safe_gen     ).push_back(-999.);
-(iJetI.pt_sd3_safe_gen     ).push_back(-999.);
-(iJetI.pt_sd4_safe_gen     ).push_back(-999.);
-(iJetI.pt_sd5_safe_gen     ).push_back(-999.);
-
-
-
     (iJetI.etagen   ).push_back(-999.);
-    (iJetI.eta_tr1_gen     ).push_back(-999.);
-(iJetI.eta_tr2_gen     ).push_back(-999.);
-(iJetI.eta_tr3_gen     ).push_back(-999.);
-(iJetI.eta_tr4_gen     ).push_back(-999.);
-(iJetI.eta_tr1_safe_gen     ).push_back(-999.);
-(iJetI.eta_tr2_safe_gen     ).push_back(-999.);
-(iJetI.eta_tr3_safe_gen     ).push_back(-999.);
-(iJetI.eta_tr4_safe_gen     ).push_back(-999.);
-(iJetI.eta_pr1_gen     ).push_back(-999.);
-(iJetI.eta_pr2_gen     ).push_back(-999.);
-(iJetI.eta_pr3_gen     ).push_back(-999.);
-(iJetI.eta_pr4_gen     ).push_back(-999.);
-(iJetI.eta_pr1_safe_gen     ).push_back(-999.);
-(iJetI.eta_pr2_safe_gen     ).push_back(-999.);
-(iJetI.eta_pr3_safe_gen     ).push_back(-999.);
-(iJetI.eta_pr4_safe_gen     ).push_back(-999.);
-(iJetI.eta_sd1_gen     ).push_back(-999.);
-(iJetI.eta_sd2_gen     ).push_back(-999.);
-(iJetI.eta_sd3_gen     ).push_back(-999.);
-(iJetI.eta_sd4_gen     ).push_back(-999.);
-(iJetI.eta_sd5_gen     ).push_back(-999.);
-(iJetI.eta_sd1_safe_gen     ).push_back(-999.);
-(iJetI.eta_sd2_safe_gen     ).push_back(-999.);
-(iJetI.eta_sd3_safe_gen     ).push_back(-999.);
-(iJetI.eta_sd4_safe_gen     ).push_back(-999.);
-(iJetI.eta_sd5_safe_gen     ).push_back(-999.);
-
-
-
     (iJetI.phigen   ).push_back(-999.);
-    (iJetI.phi_tr1_gen     ).push_back(-999.);
-(iJetI.phi_tr2_gen     ).push_back(-999.);
-(iJetI.phi_tr3_gen     ).push_back(-999.);
-(iJetI.phi_tr4_gen     ).push_back(-999.);
-(iJetI.phi_tr1_safe_gen     ).push_back(-999.);
-(iJetI.phi_tr2_safe_gen     ).push_back(-999.);
-(iJetI.phi_tr3_safe_gen     ).push_back(-999.);
-(iJetI.phi_tr4_safe_gen     ).push_back(-999.);
-(iJetI.phi_pr1_gen     ).push_back(-999.);
-(iJetI.phi_pr2_gen     ).push_back(-999.);
-(iJetI.phi_pr3_gen     ).push_back(-999.);
-(iJetI.phi_pr4_gen     ).push_back(-999.);
-(iJetI.phi_pr1_safe_gen     ).push_back(-999.);
-(iJetI.phi_pr2_safe_gen     ).push_back(-999.);
-(iJetI.phi_pr3_safe_gen     ).push_back(-999.);
-(iJetI.phi_pr4_safe_gen     ).push_back(-999.);
-(iJetI.phi_sd1_gen     ).push_back(-999.);
-(iJetI.phi_sd2_gen     ).push_back(-999.);
-(iJetI.phi_sd3_gen     ).push_back(-999.);
-(iJetI.phi_sd4_gen     ).push_back(-999.);
-(iJetI.phi_sd5_gen     ).push_back(-999.);
-(iJetI.phi_sd1_safe_gen     ).push_back(-999.);
-(iJetI.phi_sd2_safe_gen     ).push_back(-999.);
-(iJetI.phi_sd3_safe_gen     ).push_back(-999.);
-(iJetI.phi_sd4_safe_gen     ).push_back(-999.);
-(iJetI.phi_sd5_safe_gen     ).push_back(-999.);
-
-
-
-
+ 
     (iJetI.mgen     ).push_back(-999.);
-    (iJetI.mass_tr1_gen     ).push_back(-999.);
-(iJetI.mass_tr2_gen     ).push_back(-999.);
-(iJetI.mass_tr3_gen     ).push_back(-999.);
-(iJetI.mass_tr4_gen     ).push_back(-999.);
-(iJetI.mass_tr1_safe_gen     ).push_back(-999.);
-(iJetI.mass_tr2_safe_gen     ).push_back(-999.);
-(iJetI.mass_tr3_safe_gen     ).push_back(-999.);
-(iJetI.mass_tr4_safe_gen     ).push_back(-999.);
-(iJetI.mass_pr1_gen     ).push_back(-999.);
-(iJetI.mass_pr2_gen     ).push_back(-999.);
-(iJetI.mass_pr3_gen     ).push_back(-999.);
-(iJetI.mass_pr4_gen     ).push_back(-999.);
-(iJetI.mass_pr1_safe_gen     ).push_back(-999.);
-(iJetI.mass_pr2_safe_gen     ).push_back(-999.);
-(iJetI.mass_pr3_safe_gen     ).push_back(-999.);
-(iJetI.mass_pr4_safe_gen     ).push_back(-999.);
-(iJetI.mass_sd1_gen     ).push_back(-999.);
-(iJetI.mass_sd2_gen     ).push_back(-999.);
-(iJetI.mass_sd3_gen     ).push_back(-999.);
-(iJetI.mass_sd4_gen     ).push_back(-999.);
-(iJetI.mass_sd5_gen     ).push_back(-999.);
-(iJetI.mass_sd1_safe_gen     ).push_back(-999.);
-(iJetI.mass_sd2_safe_gen     ).push_back(-999.);
-(iJetI.mass_sd3_safe_gen     ).push_back(-999.);
-(iJetI.mass_sd4_safe_gen     ).push_back(-999.);
-(iJetI.mass_sd5_safe_gen     ).push_back(-999.);
-
+  
 
     (iJetI.mrawgen     ).push_back(-999.);
     (iJetI.mtrimgen    ).push_back(-999.);
@@ -1849,123 +498,49 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
   
   // -- trimming
   fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.05)));
-  fastjet::Filter trimmer1( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.03)));
-  fastjet::Filter trimmer2( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.05)));
-  fastjet::Filter trimmer3( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.3), fastjet::SelectorPtFractionMin(0.03)));
-  fastjet::Filter trimmer4( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.1), fastjet::SelectorPtFractionMin(0.03)));
-
+  
 
   PseudoJet lTrim     = (trimmer)(iJet);
-  PseudoJet lTrim1     = (trimmer1)(iJet);
-  PseudoJet lTrim2     = (trimmer2)(iJet);
-  PseudoJet lTrim3     = (trimmer3)(iJet);
-  PseudoJet lTrim4     = (trimmer4)(iJet);
-
+  
   trimmer.set_subtractor(area_subtractor);
-  trimmer1.set_subtractor(area_subtractor);
-  trimmer2.set_subtractor(area_subtractor);
-  trimmer3.set_subtractor(area_subtractor);
-  trimmer4.set_subtractor(area_subtractor);
-
+  
 
   PseudoJet lTrimSafe = (trimmer)(iJet);
-  PseudoJet lTrimSafe1 = (trimmer1)(iJet);
-  PseudoJet lTrimSafe2 = (trimmer2)(iJet);
-  PseudoJet lTrimSafe3 = (trimmer3)(iJet);
-  PseudoJet lTrimSafe4 = (trimmer4)(iJet);
-
+ 
 
   
    double RCut= 0.5;
   Pruner pruner(jet_def_, 0.1,RCut);
-   Pruner pruner1(jet_def_, 0.1,0.5);
-  Pruner pruner2(jet_def_, 0.05,0.5);
-  Pruner pruner3(jet_def_, 0.1,0.75);
-  Pruner pruner4(jet_def_, 0.05,0.75);
-
+  
 
 
   PseudoJet lPruned = pruner(iJet);
-  PseudoJet lPruned1 = pruner1(iJet);
-  PseudoJet lPruned2 = pruner2(iJet);
-  PseudoJet lPruned3 = pruner3(iJet);
-  PseudoJet lPruned4 = pruner4(iJet);
-
+ 
   PseudoJet lPrunedSafe = pruner(lCorr);
-  PseudoJet lPrunedSafe1 = pruner1(lCorr);
-  PseudoJet lPrunedSafe2 = pruner2(lCorr);
-  PseudoJet lPrunedSafe3 = pruner3(lCorr);
-  PseudoJet lPrunedSafe4 = pruner4(lCorr);
-
+ 
 
   
   //softdrop
  contrib::SoftDrop softdrop(2., 0.1, 1.0);
- contrib::SoftDrop softdrop1(-1.0, 0.1, 1.0);
-  contrib::SoftDrop softdrop2(0.0, 0.1, 1.0);
-  contrib::SoftDrop softdrop3(0.66, 0.1, 1.0);
-  contrib::SoftDrop softdrop4(1.0, 0.1, 1.0);
-  contrib::SoftDrop softdrop5(2.0, 0.1, 1.0);
-
+ 
 
 
   PseudoJet lSoftDropped = softdrop(iJet);
-  PseudoJet lSoftDropped1 = softdrop1(iJet);
-  PseudoJet lSoftDropped2 = softdrop2(iJet);
-  PseudoJet lSoftDropped3 = softdrop3(iJet);
-  PseudoJet lSoftDropped4 = softdrop4(iJet);
-  PseudoJet lSoftDropped5 = softdrop5(iJet);
-
+ 
 
   softdrop.set_subtractor(area_subtractor);
-  softdrop1.set_subtractor(area_subtractor);
-  softdrop2.set_subtractor(area_subtractor);
-  softdrop3.set_subtractor(area_subtractor);
-  softdrop4.set_subtractor(area_subtractor);
-  softdrop5.set_subtractor(area_subtractor);
-
+ 
 
 
   PseudoJet lSoftDroppedSafe = softdrop(iJet);
-  PseudoJet lSoftDroppedSafe1 = softdrop1(iJet);
-  PseudoJet lSoftDroppedSafe2 = softdrop2(iJet);
-  PseudoJet lSoftDroppedSafe3 = softdrop3(iJet);
-  PseudoJet lSoftDroppedSafe4 = softdrop4(iJet);
-  PseudoJet lSoftDroppedSafe5 = softdrop5(iJet);
-
+  
 
 
 
     
   // -- fill jet info
   (iJetI.pt        ).push_back(lCorr     .pt());
-  (iJetI.pt_tr1  ).push_back(lTrim1      .pt());
-  (iJetI.pt_tr2    ).push_back(lTrim2      .pt());
-  (iJetI.pt_tr3    ).push_back(lTrim3      .pt());
-  (iJetI.pt_tr4    ).push_back(lTrim4      .pt());
-  (iJetI.pt_tr1_safe  ).push_back(lTrimSafe1      .pt());
-  (iJetI.pt_tr2_safe    ).push_back(lTrimSafe2      .pt());
-  (iJetI.pt_tr3_safe    ).push_back(lTrimSafe3      .pt());
-  (iJetI.pt_tr4_safe    ).push_back(lTrimSafe4      .pt());
-  (iJetI.pt_pr1  ).push_back(lPruned1      .pt());
-  (iJetI.pt_pr2    ).push_back(lPruned2      .pt());
-  (iJetI.pt_pr3    ).push_back(lPruned3      .pt());
-  (iJetI.pt_pr4    ).push_back(lPruned4      .pt());
-  (iJetI.pt_pr1_safe  ).push_back(lPrunedSafe1      .pt());
-  (iJetI.pt_pr2_safe    ).push_back(lPrunedSafe2      .pt());
-  (iJetI.pt_pr3_safe    ).push_back(lPrunedSafe3      .pt());
-  (iJetI.pt_pr4_safe    ).push_back(lPrunedSafe4      .pt());
-  (iJetI.pt_sd1  ).push_back(lSoftDropped1      .pt());
-  (iJetI.pt_sd2    ).push_back(lSoftDropped2      .pt());
-  (iJetI.pt_sd3    ).push_back(lSoftDropped3      .pt());
-  (iJetI.pt_sd4    ).push_back(lSoftDropped4      .pt());
-  (iJetI.pt_sd5    ).push_back(lSoftDropped5      .pt());
-  (iJetI.pt_sd1_safe  ).push_back(lSoftDroppedSafe1      .pt());
-  (iJetI.pt_sd2_safe    ).push_back(lSoftDroppedSafe2      .pt());
-  (iJetI.pt_sd3_safe    ).push_back(lSoftDroppedSafe3      .pt());
-  (iJetI.pt_sd4_safe    ).push_back(lSoftDroppedSafe4      .pt());
-  (iJetI.pt_sd5_safe    ).push_back(lSoftDroppedSafe5      .pt()); 
-
+  
 
   (iJetI.ptcorr    ).push_back(iJet      .pt());
   (iJetI.ptraw     ).push_back(iJet      .pt());
@@ -1975,97 +550,9 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
   (iJetI.ptconst   ).push_back(lConstit  .pt());
   (iJetI.ptunc     ).push_back(0.);
   (iJetI.eta       ).push_back(iJet      .eta());
-  (iJetI.eta_tr1  ).push_back(lTrim1      .eta());
-  (iJetI.eta_tr2    ).push_back(lTrim2      .eta());
-  (iJetI.eta_tr3    ).push_back(lTrim3      .eta());
-  (iJetI.eta_tr4    ).push_back(lTrim4      .eta());
-  (iJetI.eta_tr1_safe  ).push_back(lTrimSafe1      .eta());
-  (iJetI.eta_tr2_safe    ).push_back(lTrimSafe2      .eta());
-  (iJetI.eta_tr3_safe    ).push_back(lTrimSafe3      .eta());
-  (iJetI.eta_tr4_safe    ).push_back(lTrimSafe4      .eta());
-  (iJetI.eta_pr1  ).push_back(lPruned1      .eta());
-  (iJetI.eta_pr2    ).push_back(lPruned2      .eta());
-  (iJetI.eta_pr3    ).push_back(lPruned3      .eta());
-  (iJetI.eta_pr4    ).push_back(lPruned4      .eta());
-  (iJetI.eta_pr1_safe  ).push_back(lPrunedSafe1      .eta());
-  (iJetI.eta_pr2_safe    ).push_back(lPrunedSafe2      .eta());
-  (iJetI.eta_pr3_safe    ).push_back(lPrunedSafe3      .eta());
-  (iJetI.eta_pr4_safe    ).push_back(lPrunedSafe4      .eta());
-  (iJetI.eta_sd1  ).push_back(lSoftDropped1      .eta());
-  (iJetI.eta_sd2    ).push_back(lSoftDropped2      .eta());
-  (iJetI.eta_sd3    ).push_back(lSoftDropped3      .eta());
-  (iJetI.eta_sd4    ).push_back(lSoftDropped4      .eta());
-  (iJetI.eta_sd5    ).push_back(lSoftDropped5      .eta());
-  (iJetI.eta_sd1_safe  ).push_back(lSoftDroppedSafe1      .eta());
-  (iJetI.eta_sd2_safe    ).push_back(lSoftDroppedSafe2      .eta());
-  (iJetI.eta_sd3_safe    ).push_back(lSoftDroppedSafe3      .eta());
-  (iJetI.eta_sd4_safe    ).push_back(lSoftDroppedSafe4      .eta());
-  (iJetI.eta_sd5_safe    ).push_back(lSoftDroppedSafe5      .eta());
-
-
-
-
-
   (iJetI.phi       ).push_back(iJet      .phi());
-  (iJetI.phi_tr1  ).push_back(lTrim1      .phi());
-  (iJetI.phi_tr2    ).push_back(lTrim2      .phi());
-  (iJetI.phi_tr3    ).push_back(lTrim3      .phi());
-  (iJetI.phi_tr4    ).push_back(lTrim4      .phi());
-  (iJetI.phi_tr1_safe  ).push_back(lTrimSafe1      .phi());
-  (iJetI.phi_tr2_safe    ).push_back(lTrimSafe2      .phi());
-  (iJetI.phi_tr3_safe    ).push_back(lTrimSafe3      .phi());
-  (iJetI.phi_tr4_safe    ).push_back(lTrimSafe4      .phi());
-  (iJetI.phi_pr1  ).push_back(lPruned1      .phi());
-  (iJetI.phi_pr2    ).push_back(lPruned2      .phi());
-  (iJetI.phi_pr3    ).push_back(lPruned3      .phi());
-  (iJetI.phi_pr4    ).push_back(lPruned4      .phi());
-  (iJetI.phi_pr1_safe  ).push_back(lPrunedSafe1      .phi());
-  (iJetI.phi_pr2_safe    ).push_back(lPrunedSafe2      .phi());
-  (iJetI.phi_pr3_safe    ).push_back(lPrunedSafe3      .phi());
-  (iJetI.phi_pr4_safe    ).push_back(lPrunedSafe4      .phi());
-  (iJetI.phi_sd1  ).push_back(lSoftDropped1      .phi());
-  (iJetI.phi_sd2    ).push_back(lSoftDropped2      .phi());
-  (iJetI.phi_sd3    ).push_back(lSoftDropped3      .phi());
-  (iJetI.phi_sd4    ).push_back(lSoftDropped4      .phi());
-  (iJetI.phi_sd5    ).push_back(lSoftDropped5      .phi());
-  (iJetI.phi_sd1_safe  ).push_back(lSoftDroppedSafe1      .phi());
-  (iJetI.phi_sd2_safe    ).push_back(lSoftDroppedSafe2      .phi());
-  (iJetI.phi_sd3_safe    ).push_back(lSoftDroppedSafe3      .phi());
-  (iJetI.phi_sd4_safe    ).push_back(lSoftDroppedSafe4      .phi());
-  (iJetI.phi_sd5_safe    ).push_back(lSoftDroppedSafe5      .phi());
-
-
-
   (iJetI.mraw      ).push_back(iJet      .m());
   (iJetI.m         ).push_back(lCorr     .m());
-  (iJetI.mass_tr1  ).push_back(lTrim1      .m());
-  (iJetI.mass_tr2    ).push_back(lTrim2      .m());
-  (iJetI.mass_tr3    ).push_back(lTrim3      .m());
-  (iJetI.mass_tr4    ).push_back(lTrim4      .m());
-  (iJetI.mass_tr1_safe  ).push_back(lTrimSafe1      .m());
-  (iJetI.mass_tr2_safe    ).push_back(lTrimSafe2      .m());
-  (iJetI.mass_tr3_safe    ).push_back(lTrimSafe3      .m());
-  (iJetI.mass_tr4_safe    ).push_back(lTrimSafe4      .m());
-  (iJetI.mass_pr1  ).push_back(lPruned1      .m());
-  (iJetI.mass_pr2    ).push_back(lPruned2      .m());
-  (iJetI.mass_pr3    ).push_back(lPruned3      .m());
-  (iJetI.mass_pr4    ).push_back(lPruned4      .m());
-  (iJetI.mass_pr1_safe  ).push_back(lPrunedSafe1      .m());
-  (iJetI.mass_pr2_safe    ).push_back(lPrunedSafe2      .m());
-  (iJetI.mass_pr3_safe    ).push_back(lPrunedSafe3      .m());
-  (iJetI.mass_pr4_safe    ).push_back(lPrunedSafe4      .m());
-  (iJetI.mass_sd1  ).push_back(lSoftDropped1      .m());
-  (iJetI.mass_sd2    ).push_back(lSoftDropped2      .m());
-  (iJetI.mass_sd3    ).push_back(lSoftDropped3      .m());
-  (iJetI.mass_sd4    ).push_back(lSoftDropped4      .m());
-  (iJetI.mass_sd5    ).push_back(lSoftDropped5      .m());
-  (iJetI.mass_sd1_safe  ).push_back(lSoftDroppedSafe1      .m());
-  (iJetI.mass_sd2_safe    ).push_back(lSoftDroppedSafe2      .m());
-  (iJetI.mass_sd3_safe    ).push_back(lSoftDroppedSafe3      .m());
-  (iJetI.mass_sd4_safe    ).push_back(lSoftDroppedSafe4      .m());
-  (iJetI.mass_sd5_safe    ).push_back(lSoftDroppedSafe5      .m());
-
-
   (iJetI.mclean    ).push_back(lClean    .m());
   (iJetI.mtrim     ).push_back(lTrim     .m());
   (iJetI.mtrimsafe ).push_back(lTrimSafe .m());
@@ -2081,125 +568,9 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
   // some duplicate infos.... should be fixed.
   (iJetI.imatch      ).push_back((iJetI.pt).size()-1);
   (iJetI.ptgen       ).push_back(lCorr     .pt());
-  (iJetI.pt_tr1_gen  ).push_back(lTrim1      .pt());
-  (iJetI.pt_tr2_gen    ).push_back(lTrim2      .pt());
-  (iJetI.pt_tr3_gen    ).push_back(lTrim3      .pt());
-  (iJetI.pt_tr4_gen    ).push_back(lTrim4      .pt());
-  (iJetI.pt_tr1_safe_gen  ).push_back(lTrimSafe1      .pt());
-  (iJetI.pt_tr2_safe_gen    ).push_back(lTrimSafe2      .pt());
-  (iJetI.pt_tr3_safe_gen    ).push_back(lTrimSafe3      .pt());
-  (iJetI.pt_tr4_safe_gen    ).push_back(lTrimSafe4      .pt());
-  (iJetI.pt_pr1_gen  ).push_back(lPruned1      .pt());
-  (iJetI.pt_pr2_gen    ).push_back(lPruned2      .pt());
-  (iJetI.pt_pr3_gen    ).push_back(lPruned3      .pt());
-  (iJetI.pt_pr4_gen    ).push_back(lPruned4      .pt());
-  (iJetI.pt_pr1_safe_gen  ).push_back(lPrunedSafe1      .pt());
-  (iJetI.pt_pr2_safe_gen    ).push_back(lPrunedSafe2      .pt());
-  (iJetI.pt_pr3_safe_gen    ).push_back(lPrunedSafe3      .pt());
-  (iJetI.pt_pr4_safe_gen    ).push_back(lPrunedSafe4      .pt());
-  (iJetI.pt_sd1_gen  ).push_back(lSoftDropped1      .pt());
-  (iJetI.pt_sd2_gen    ).push_back(lSoftDropped2      .pt());
-  (iJetI.pt_sd3_gen    ).push_back(lSoftDropped3      .pt());
-  (iJetI.pt_sd4_gen    ).push_back(lSoftDropped4      .pt());
-  (iJetI.pt_sd5_gen    ).push_back(lSoftDropped5      .pt());
-  (iJetI.pt_sd1_safe_gen  ).push_back(lSoftDroppedSafe1      .pt());
-  (iJetI.pt_sd2_safe_gen    ).push_back(lSoftDroppedSafe2      .pt());
-  (iJetI.pt_sd3_safe_gen    ).push_back(lSoftDroppedSafe3      .pt());
-  (iJetI.pt_sd4_safe_gen    ).push_back(lSoftDroppedSafe4      .pt());
-  (iJetI.pt_sd5_safe_gen    ).push_back(lSoftDroppedSafe5      .pt());
-
-
-
-
   (iJetI.etagen      ).push_back(iJet      .eta());
-  (iJetI.eta_tr1_gen  ).push_back(lTrim1      .eta());
-  (iJetI.eta_tr2_gen    ).push_back(lTrim2      .eta());
-  (iJetI.eta_tr3_gen    ).push_back(lTrim3      .eta());
-  (iJetI.eta_tr4_gen    ).push_back(lTrim4      .eta());
-  (iJetI.eta_tr1_safe_gen  ).push_back(lTrimSafe1      .eta());
-  (iJetI.eta_tr2_safe_gen    ).push_back(lTrimSafe2      .eta());
-  (iJetI.eta_tr3_safe_gen    ).push_back(lTrimSafe3      .eta());
-  (iJetI.eta_tr4_safe_gen    ).push_back(lTrimSafe4      .eta());
-  (iJetI.eta_pr1_gen  ).push_back(lPruned1      .eta());
-  (iJetI.eta_pr2_gen    ).push_back(lPruned2      .eta());
-  (iJetI.eta_pr3_gen    ).push_back(lPruned3      .eta());
-  (iJetI.eta_pr4_gen    ).push_back(lPruned4      .eta());
-  (iJetI.eta_pr1_safe_gen  ).push_back(lPrunedSafe1      .eta());
-  (iJetI.eta_pr2_safe_gen    ).push_back(lPrunedSafe2      .eta());
-  (iJetI.eta_pr3_safe_gen    ).push_back(lPrunedSafe3      .eta());
-  (iJetI.eta_pr4_safe_gen    ).push_back(lPrunedSafe4      .eta());
-  (iJetI.eta_sd1_gen  ).push_back(lSoftDropped1      .eta());
-  (iJetI.eta_sd2_gen    ).push_back(lSoftDropped2      .eta());
-  (iJetI.eta_sd3_gen    ).push_back(lSoftDropped3      .eta());
-  (iJetI.eta_sd4_gen    ).push_back(lSoftDropped4      .eta());
-  (iJetI.eta_sd5_gen    ).push_back(lSoftDropped5      .eta());
-  (iJetI.eta_sd1_safe_gen  ).push_back(lSoftDroppedSafe1      .eta());
-  (iJetI.eta_sd2_safe_gen    ).push_back(lSoftDroppedSafe2      .eta());
-  (iJetI.eta_sd3_safe_gen    ).push_back(lSoftDroppedSafe3      .eta());
-  (iJetI.eta_sd4_safe_gen    ).push_back(lSoftDroppedSafe4      .eta());
-  (iJetI.eta_sd5_safe_gen    ).push_back(lSoftDroppedSafe5      .eta());
-
-
-
   (iJetI.phigen      ).push_back(iJet      .phi());
-  (iJetI.phi_tr1_gen  ).push_back(lTrim1      .phi());
-  (iJetI.phi_tr2_gen    ).push_back(lTrim2      .phi());
-  (iJetI.phi_tr3_gen    ).push_back(lTrim3      .phi());
-  (iJetI.phi_tr4_gen    ).push_back(lTrim4      .phi());
-  (iJetI.phi_tr1_safe_gen  ).push_back(lTrimSafe1      .phi());
-  (iJetI.phi_tr2_safe_gen    ).push_back(lTrimSafe2      .phi());
-  (iJetI.phi_tr3_safe_gen    ).push_back(lTrimSafe3      .phi());
-  (iJetI.phi_tr4_safe_gen    ).push_back(lTrimSafe4      .phi());
-  (iJetI.phi_pr1_gen  ).push_back(lPruned1      .phi());
-  (iJetI.phi_pr2_gen    ).push_back(lPruned2      .phi());
-  (iJetI.phi_pr3_gen    ).push_back(lPruned3      .phi());
-  (iJetI.phi_pr4_gen    ).push_back(lPruned4      .phi());
-  (iJetI.phi_pr1_safe_gen  ).push_back(lPrunedSafe1      .phi());
-  (iJetI.phi_pr2_safe_gen    ).push_back(lPrunedSafe2      .phi());
-  (iJetI.phi_pr3_safe_gen    ).push_back(lPrunedSafe3      .phi());
-  (iJetI.phi_pr4_safe_gen    ).push_back(lPrunedSafe4      .phi());
-  (iJetI.phi_sd1_gen  ).push_back(lSoftDropped1      .phi());
-  (iJetI.phi_sd2_gen    ).push_back(lSoftDropped2      .phi());
-  (iJetI.phi_sd3_gen    ).push_back(lSoftDropped3      .phi());
-  (iJetI.phi_sd4_gen    ).push_back(lSoftDropped4      .phi());
-  (iJetI.phi_sd5_gen    ).push_back(lSoftDropped5      .phi());
-  (iJetI.phi_sd1_safe_gen  ).push_back(lSoftDroppedSafe1      .phi());
-  (iJetI.phi_sd2_safe_gen    ).push_back(lSoftDroppedSafe2      .phi());
-  (iJetI.phi_sd3_safe_gen    ).push_back(lSoftDroppedSafe3      .phi());
-  (iJetI.phi_sd4_safe_gen    ).push_back(lSoftDroppedSafe4      .phi());
-  (iJetI.phi_sd5_safe_gen    ).push_back(lSoftDroppedSafe5      .phi());
-
-
   (iJetI.mgen        ).push_back(lCorr     .m());
-  (iJetI.mass_tr1_gen  ).push_back(lTrim1      .m());
-  (iJetI.mass_tr2_gen    ).push_back(lTrim2      .m());
-  (iJetI.mass_tr3_gen    ).push_back(lTrim3      .m());
-  (iJetI.mass_tr4_gen    ).push_back(lTrim4      .m());
-  (iJetI.mass_tr1_safe_gen  ).push_back(lTrimSafe1      .m());
-  (iJetI.mass_tr2_safe_gen    ).push_back(lTrimSafe2      .m());
-  (iJetI.mass_tr3_safe_gen    ).push_back(lTrimSafe3      .m());
-  (iJetI.mass_tr4_safe_gen    ).push_back(lTrimSafe4      .m());
-  (iJetI.mass_pr1_gen  ).push_back(lPruned1      .m());
-  (iJetI.mass_pr2_gen    ).push_back(lPruned2      .m());
-  (iJetI.mass_pr3_gen    ).push_back(lPruned3      .m());
-  (iJetI.mass_pr4_gen    ).push_back(lPruned4      .m());
-  (iJetI.mass_pr1_safe_gen  ).push_back(lPrunedSafe1      .m());
-  (iJetI.mass_pr2_safe_gen    ).push_back(lPrunedSafe2      .m());
-  (iJetI.mass_pr3_safe_gen    ).push_back(lPrunedSafe3      .m());
-  (iJetI.mass_pr4_safe_gen    ).push_back(lPrunedSafe4      .m());
-  (iJetI.mass_sd1_gen  ).push_back(lSoftDropped1      .m());
-  (iJetI.mass_sd2_gen    ).push_back(lSoftDropped2      .m());
-  (iJetI.mass_sd3_gen    ).push_back(lSoftDropped3      .m());
-  (iJetI.mass_sd4_gen    ).push_back(lSoftDropped4      .m());
-  (iJetI.mass_sd5_gen    ).push_back(lSoftDropped5      .m());
-  (iJetI.mass_sd1_safe_gen  ).push_back(lSoftDroppedSafe1      .m());
-  (iJetI.mass_sd2_safe_gen    ).push_back(lSoftDroppedSafe2      .m());
-  (iJetI.mass_sd3_safe_gen    ).push_back(lSoftDroppedSafe3      .m());
-  (iJetI.mass_sd4_safe_gen    ).push_back(lSoftDroppedSafe4      .m());
-  (iJetI.mass_sd5_safe_gen    ).push_back(lSoftDroppedSafe5      .m()); 
-
-
-
   (iJetI.mrawgen     ).push_back(iJet      .m());
   (iJetI.mtrimgen    ).push_back(lTrim     .m());
   (iJetI.mtrimsafegen).push_back(lTrimSafe .m());
@@ -2538,3 +909,6 @@ int main (int argc, char ** argv) {
 
   if (doCMSSWJets)  cmsswTree->Write();
 }  
+
+ 
+ 
