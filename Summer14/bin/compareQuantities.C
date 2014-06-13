@@ -1,19 +1,20 @@
-void compareQuantities(string filename, string var1, string var2, int nbins, float min, float max){
+void compareQuantities(string filename1, string filename2, string var1, string var2, int nbins, float min, float max){
 
 
-	TFile *inputFile = new TFile(filename.c_str());
+	TFile *inputFile1 = new TFile(filename1.c_str());
+	TFile *inputFile2 = new TFile(filename2.c_str());
 
-	TTree *jetTree = (TTree *) inputFile->Get("JetTree");
+	TTree *jetTree1 = (TTree *) inputFile1->Get("JetTree");
+	TTree *jetTree2 = (TTree *) inputFile2->Get("JetTree");
 
 	TH1F *var1H = new TH1F("var1H", "var1H", nbins, min, max);
 	TH1F *var2H = new TH1F("var2H", "var2H", nbins, min, max);
 	
-	cout << "The tree has " << jetTree->GetEntries() << " entries." << endl;
 
 	cout << var1 << "  " << var2 << endl;	
 
-	jetTree->Draw(Form("%s>>var1H",var1.c_str()), "", "goff");
-	jetTree->Draw(Form("%s>>var2H",var2.c_str()), "", "goff");
+	jetTree1->Draw(Form("%s>>var1H",var1.c_str()), "", "goff");
+	jetTree2->Draw(Form("%s>>var2H",var2.c_str()), "", "goff");
 
 	cout << var1H->GetEntries() << " " << var2H->GetEntries() << endl;
 
