@@ -42,8 +42,8 @@
 #include "QjetsPlugin.h"
 #include "Qjets.h"
 #include "fastjet/contrib/EnergyCorrelator.hh"
-//#include "HEPTopTagger.hh"
-
+// #include "HEPTopTagger.hh"
+//#include "HEPTopTaggerWrapper.hh"
 
 // Jet Corrections
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
@@ -146,15 +146,54 @@ double calculate_minmass(vector<PseudoJet> subjets)
   return mmin;
 }
 
+double deltaR(PseudoJet &iJet,PseudoJet &jJet) {
+   
+        double pEta = fabs(iJet.eta()-jJet.eta());
+        double pPhi = fabs(iJet.phi()-jJet.phi());
+        if(pPhi > 2.*TMath::Pi()-pPhi) pPhi =  2.*TMath::Pi()-pPhi;
+        double deltaR = sqrt(pEta*pEta+pPhi*pPhi);
+        return deltaR;
+}
 PseudoJet match(PseudoJet &iJet,vector<PseudoJet> &iJets) {
-    for(unsigned int i0 = 0; i0 < iJets.size(); i0++) {
-        double pEta = fabs(iJet.eta()-iJets[i0].eta());
+    for(unsigned int i0 = 0; i0 < iJets.size(); i0++) { 
+        double pEta = fabs(iJet.eta()-iJets[i0].eta()); 
         double pPhi = fabs(iJet.phi() - iJets[i0].phi());
         if(pPhi > 2.*TMath::Pi()-pPhi) pPhi =  2.*TMath::Pi()-pPhi;
         if(sqrt(pEta*pEta+pPhi*pPhi) > 0.3) continue;
         return iJets[i0];
     }
     return PseudoJet();
+}
+// returns a vector containing: [0] uncorr mmdt mass [1] corr mmdt mass [2] uncorr mmdt filtered mass [3] corr mmdt filtered mass
+vector<double> mmdt_corr_and_filter(PseudoJet &iJet, FactorizedJetCorrector *iJetCorr,double iRho)
+{
+  vector<double> vec;
+  if (iJet!=0)
+    {
+      // if (verbose) cout<<"mmdt jet pt "<<mmdtjet.perp()<<" mass "<<mmdtjet.m()<<endl;
+      // if (verbose) cout << "  delta_R between subjets: " << mmdtjet.structure_of<MMDT>().delta_R() << endl;
+      // if (verbose) cout << "  symmetry measure(z):     " << mmdtjet.structure_of<MMDT>().symmetry() << endl;
+      // if (verbose) cout << "  mass drop(mu):           " << mmdtjet.structure_of<MMDT>().mu() << endl;
+      
+      double mass_mmdt_corr    = iJet.m() * correction(iJet,iJetCorr,iRho); 
+
+      // filter jet dynamically based on deltaR between subjets (arXiv:0802.2470)
+      double dyn_Rfilt = min(0.3, iJet.structure_of<contrib::ModifiedMassDropTagger>().delta_R()*0.5);
+      int    dyn_nfilt = 3;
+      Filter filter(dyn_Rfilt, SelectorNHardest(dyn_nfilt));
+      PseudoJet filtered_mmdtjet = filter(iJet);
+      double mass_mmdt_filtered_corr    = filtered_mmdtjet.m() * correction(filtered_mmdtjet,iJetCorr,iRho); 
+      
+
+      vec.push_back( iJet.m() );
+      vec.push_back( mass_mmdt_corr );
+      vec.push_back( filtered_mmdtjet.m() );
+      vec.push_back( mass_mmdt_filtered_corr );
+    }
+    // else {
+    //   cout<<" mmdt_corr_and_filter failed to get jet"<<endl;
+    // }
+    return vec;
 }
 
 //Q jets stuff
@@ -218,9 +257,9 @@ int main( int argc, char *argv[] ){
   /////////////////////////////////////////////////////////////////////
 
 
-  if (argc <= 4)
+  if (argc <= 5)
   {
-    cout << "Usage: " << argv[0] << " <Cone size>  <clustering algorithm (kt, ca, ak)>  <first event> <number of events>"<< endl; 
+    cout << "Usage: " << argv[0] << " <Cone size>  <clustering algorithm (kt, ca, ak)>  <first event> <number of events> <1 for ttbar 0 for qcd>"<< endl; 
     exit(1);
   }
 
@@ -228,10 +267,12 @@ int main( int argc, char *argv[] ){
   std::string algo(argv[2]);
   char *FirstEventChar = argv[3];
   char *NeventsChar = argv[4];
+  char *SampleTypeChar = argv[5];
 
   double R = atof (ConeSize);
   int FirstEvent = atoi (FirstEventChar);
   int Nevents = atoi (NeventsChar);
+  int Sample = atoi (SampleTypeChar);  //top 1 qcd 0
 
   bool verbose = false;
   cout<<"Cluster jets with algorithm = "<<algo<<", R = "<<R<<endl;
@@ -269,10 +310,6 @@ int main( int argc, char *argv[] ){
   Float_t CHSjetMass                         ;        
   Float_t PUPjetMass                         ;        
   Float_t GENjetMass                         ;        
-  Float_t PFjetArea                          ;        
-  Float_t CHSjetArea                         ;        
-  Float_t PUPjetArea                         ;        
-  Float_t GENjetArea                         ;        
   Float_t PFjetPt                            ;        
   Float_t CHSjetPt                           ;        
   Float_t PUPjetPt                           ;        
@@ -305,22 +342,22 @@ int main( int argc, char *argv[] ){
   Float_t CHSjetMassFiltered                 ;      
   Float_t PUPjetMassFiltered                 ;      
   Float_t GENjetMassFiltered                 ;      
-  Float_t PFjetMassMDMTUncorr                ;        
-  Float_t PFjetMassMDMT                      ;        
-  Float_t PFjetMassMDMTFilteredUncorr        ;        
-  Float_t PFjetMassMDMTFiltered              ;        
-  Float_t CHSjetMassMDMTUncorr               ;         
-  Float_t CHSjetMassMDMT                     ;         
-  Float_t CHSjetMassMDMTFilteredUncorr       ;         
-  Float_t CHSjetMassMDMTFiltered             ;         
-  Float_t PUPjetMassMDMTUncorr               ;         
-  Float_t PUPjetMassMDMT                     ;         
-  Float_t PUPjetMassMDMTFilteredUncorr       ;         
-  Float_t PUPjetMassMDMTFiltered             ;         
-  Float_t GENjetMassMDMTUncorr               ;         
-  Float_t GENjetMassMDMT                     ;         
-  Float_t GENjetMassMDMTFilteredUncorr       ; 
-  Float_t GENjetMassMDMTFiltered             ;  
+  Float_t PFjetMassMMDTUncorr                ;        
+  Float_t PFjetMassMMDT                      ;        
+  Float_t PFjetMassMMDTFilteredUncorr        ;        
+  Float_t PFjetMassMMDTFiltered              ;        
+  Float_t CHSjetMassMMDTUncorr               ;         
+  Float_t CHSjetMassMMDT                     ;         
+  Float_t CHSjetMassMMDTFilteredUncorr       ;         
+  Float_t CHSjetMassMMDTFiltered             ;         
+  Float_t PUPjetMassMMDTUncorr               ;         
+  Float_t PUPjetMassMMDT                     ;         
+  Float_t PUPjetMassMMDTFilteredUncorr       ;         
+  Float_t PUPjetMassMMDTFiltered             ;         
+  Float_t GENjetMassMMDTUncorr               ;         
+  Float_t GENjetMassMMDT                     ;         
+  Float_t GENjetMassMMDTFilteredUncorr       ; 
+  Float_t GENjetMassMMDTFiltered             ;  
   Float_t PFjetMassSoftDropUncorr            ;           
   Float_t PFjetMassSoftDrop                  ;           
   Float_t PFjetSoftDropSymmetry              ;           
@@ -344,7 +381,71 @@ int main( int argc, char *argv[] ){
   Float_t GENjetSoftDropSymmetry             ;           
   Float_t GENjetSoftDropDR                   ;           
   Float_t GENjetSoftDropMassDrop             ;           
-  Float_t GENjetSoftDropEnergyLoss           ;           
+  Float_t GENjetSoftDropEnergyLoss           ;   
+
+
+
+  Float_t PFjetArea                          ;        
+  Float_t CHSjetArea                         ;        
+  Float_t PUPjetArea                         ;        
+  Float_t GENjetArea                         ;                              
+  Float_t PFjetAreaTrimmed                   ;               
+  Float_t CHSjetAreaTrimmed                  ;               
+  Float_t PUPjetAreaTrimmed                  ;               
+  Float_t GENjetAreaTrimmed                  ;                           
+  Float_t PFjetAreaPruned                    ;              
+  Float_t CHSjetAreaPruned                   ;              
+  Float_t PUPjetAreaPruned                   ;              
+  Float_t GENjetAreaPruned                   ;                          
+  Float_t PFjetAreaFiltered                  ;      
+  Float_t CHSjetAreaFiltered                 ;      
+  Float_t PUPjetAreaFiltered                 ;      
+  Float_t GENjetAreaFiltered                 ;      
+  Float_t PFjetAreaMMDT                      ;   
+  Float_t CHSjetAreaMMDT                     ;         
+  Float_t PUPjetAreaMMDT                     ;         
+  Float_t GENjetAreaMMDT                     ;         
+  Float_t PFjetAreaMMDTFiltered              ;        
+  Float_t CHSjetAreaMMDTFiltered             ;         
+  Float_t PUPjetAreaMMDTFiltered             ;         
+  Float_t GENjetAreaMMDTFiltered             ;  
+  Float_t PFjetAreaSoftDrop                  ;              
+  Float_t CHSjetAreaSoftDrop                 ;                   
+  Float_t PUPjetAreaSoftDrop                 ;                 
+  Float_t GENjetAreaSoftDrop                 ;     
+
+      
+  Float_t PFjetNconst                          ;        
+  Float_t CHSjetNconst                         ;        
+  Float_t PUPjetNconst                         ;        
+  Float_t GENjetNconst                         ;                              
+  Float_t PFjetNconstTrimmed                   ;               
+  Float_t CHSjetNconstTrimmed                  ;               
+  Float_t PUPjetNconstTrimmed                  ;               
+  Float_t GENjetNconstTrimmed                  ;                           
+  Float_t PFjetNconstPruned                    ;              
+  Float_t CHSjetNconstPruned                   ;              
+  Float_t PUPjetNconstPruned                   ;              
+  Float_t GENjetNconstPruned                   ;                          
+  Float_t PFjetNconstFiltered                  ;      
+  Float_t CHSjetNconstFiltered                 ;      
+  Float_t PUPjetNconstFiltered                 ;      
+  Float_t GENjetNconstFiltered                 ;      
+  Float_t PFjetNconstMMDT                      ;   
+  Float_t CHSjetNconstMMDT                     ;         
+  Float_t PUPjetNconstMMDT                     ;         
+  Float_t GENjetNconstMMDT                     ;         
+  Float_t PFjetNconstMMDTFiltered              ;        
+  Float_t CHSjetNconstMMDTFiltered             ;         
+  Float_t PUPjetNconstMMDTFiltered             ;         
+  Float_t GENjetNconstMMDTFiltered             ;  
+  Float_t PFjetNconstSoftDrop                  ;              
+  Float_t CHSjetNconstSoftDrop                 ;                   
+  Float_t PUPjetNconstSoftDrop                 ;                 
+  Float_t GENjetNconstSoftDrop                 ;           
+        
+
+
   Float_t PFtau1                             ;   
   Float_t PFtau2                             ;   
   Float_t PFtau3                             ;   
@@ -390,27 +491,19 @@ int main( int argc, char *argv[] ){
   templ << FirstEvent+Nevents-1;
   string LastEventString = templ.str();
 
-  //string outname = "out_RS3000T_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
-  string outname = "out_QCD_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
+  string outname;
+  if (Sample==1) outname = "out_0610_RS3000T_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
+  if (Sample==0) outname = "out_0610_QCD_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
   TFile *outfile = new TFile(outname.c_str(), "RECREATE");
   TTree * JetTree = new TTree("JetTree","Tree for saving jet info");
-  
-  JetTree->Branch("PFjetMassUncorr"                 ,&PFjetMassUncorr              ,"PFjetMassUncorr"              );
-  JetTree->Branch("CHSjetMassUncorr"                ,&CHSjetMassUncorr             ,"CHSjetMassUncorr"             );
-  JetTree->Branch("PUPjetMassUncorr"                ,&PUPjetMassUncorr             ,"PUPjetMassUncorr"             );
-  JetTree->Branch("GENjetMassUncorr"                ,&GENjetMassUncorr             ,"GENjetMassUncorr"             );
-  JetTree->Branch("PFjetMass"                       ,&PFjetMass                    ,"PFjetMass"                    );
-  JetTree->Branch("CHSjetMass"                      ,&CHSjetMass                   ,"CHSjetMass"                   );
-  JetTree->Branch("PUPjetMass"                      ,&PUPjetMass                   ,"PUPjetMass"                   );
-  JetTree->Branch("GENjetMass"                      ,&GENjetMass                   ,"GENjetMass"                   );
-  JetTree->Branch("PFjetArea"                       ,&PFjetArea                    ,"PFjetArea"                    );
-  JetTree->Branch("CHSjetArea"                      ,&CHSjetArea                   ,"CHSjetArea"                   );
-  JetTree->Branch("PUPjetArea"                      ,&PUPjetArea                   ,"PUPjetArea"                   );
-  JetTree->Branch("GENjetArea"                      ,&GENjetArea                   ,"GENjetArea"                   );
   JetTree->Branch("PFjetPt"                         ,&PFjetPt                      ,"PFjetPt"                      );
   JetTree->Branch("CHSjetPt"                        ,&CHSjetPt                     ,"CHSjetPt"                     );
   JetTree->Branch("PUPjetPt"                        ,&PUPjetPt                     ,"PUPjetPt"                     );
   JetTree->Branch("GENjetPt"                        ,&GENjetPt                     ,"GENjetPt"                     );
+  JetTree->Branch("PFjetMassUncorr"                 ,&PFjetMassUncorr              ,"PFjetMassUncorr"              );
+  JetTree->Branch("CHSjetMassUncorr"                ,&CHSjetMassUncorr             ,"CHSjetMassUncorr"             );
+  JetTree->Branch("PUPjetMassUncorr"                ,&PUPjetMassUncorr             ,"PUPjetMassUncorr"             );
+  JetTree->Branch("GENjetMassUncorr"                ,&GENjetMassUncorr             ,"GENjetMassUncorr"             );
   JetTree->Branch("PFjetPtUnc"                      ,&PFjetPtUnc                   ,"PFjetPtUnc"                   );
   JetTree->Branch("CHSjetPtUnc"                     ,&CHSjetPtUnc                  ,"CHSjetPtUnc"                  );
   JetTree->Branch("PUPjetPtUnc"                     ,&PUPjetPtUnc                  ,"PUPjetPtUnc"                  );
@@ -419,66 +512,126 @@ int main( int argc, char *argv[] ){
   JetTree->Branch("CHSjetMassTrimmedUncorr"         ,&CHSjetMassTrimmedUncorr      ,"CHSjetMassTrimmedUncorr"      );
   JetTree->Branch("PUPjetMassTrimmedUncorr"         ,&PUPjetMassTrimmedUncorr      ,"PUPjetMassTrimmedUncorr"      );
   JetTree->Branch("GENjetMassTrimmedUncorr"         ,&GENjetMassTrimmedUncorr      ,"GENjetMassTrimmedUncorr"      );
-  JetTree->Branch("PFjetMassTrimmed"                ,&PFjetMassTrimmed             ,"PFjetMassTrimmed"             );
-  JetTree->Branch("CHSjetMassTrimmed"               ,&CHSjetMassTrimmed            ,"CHSjetMassTrimmed"            );
-  JetTree->Branch("PUPjetMassTrimmed"               ,&PUPjetMassTrimmed            ,"PUPjetMassTrimmed"            );
-  JetTree->Branch("GENjetMassTrimmed"               ,&GENjetMassTrimmed            ,"GENjetMassTrimmed"            );
   JetTree->Branch("PFjetMassPrunedUncorr"           ,&PFjetMassPrunedUncorr        ,"PFjetMassPrunedUncorr"        );
   JetTree->Branch("CHSjetMassPrunedUncorr"          ,&CHSjetMassPrunedUncorr       ,"CHSjetMassPrunedUncorr"       );
   JetTree->Branch("PUPjetMassPrunedUncorr"          ,&PUPjetMassPrunedUncorr       ,"PUPjetMassPrunedUncorr"       );
   JetTree->Branch("GENjetMassPrunedUncorr"          ,&GENjetMassPrunedUncorr       ,"GENjetMassPrunedUncorr"       );
-  JetTree->Branch("PFjetMassPruned"                 ,&PFjetMassPruned              ,"PFjetMassPruned"              );
-  JetTree->Branch("CHSjetMassPruned"                ,&CHSjetMassPruned             ,"CHSjetMassPruned"             );
-  JetTree->Branch("PUPjetMassPruned"                ,&PUPjetMassPruned             ,"PUPjetMassPruned"             );
-  JetTree->Branch("GENjetMassPruned"                ,&GENjetMassPruned             ,"GENjetMassPruned"             );
   JetTree->Branch("PFjetMassFilteredUncorr"         ,&PFjetMassFilteredUncorr      ,"PFjetMassFilteredUncorr"      );
   JetTree->Branch("CHSjetMassFilteredUncorr"        ,&CHSjetMassFilteredUncorr     ,"CHSjetMassFilteredUncorr"     );
   JetTree->Branch("PUPjetMassFilteredUncorr"        ,&PUPjetMassFilteredUncorr     ,"PUPjetMassFilteredUncorr"     );
   JetTree->Branch("GENjetMassFilteredUncorr"        ,&GENjetMassFilteredUncorr     ,"GENjetMassFilteredUncorr"     );
+  JetTree->Branch("PFjetMassMMDTUncorr"             ,&PFjetMassMMDTUncorr          ,"PFjetMassMMDTUncorr"          );
+  JetTree->Branch("CHSjetMassMMDTUncorr"            ,&CHSjetMassMMDTUncorr         ,"CHSjetMassMMDTUncorr"         );
+  JetTree->Branch("PUPjetMassMMDTUncorr"            ,&PUPjetMassMMDTUncorr         ,"PUPjetMassMMDTUncorr"         );
+  JetTree->Branch("GENjetMassMMDTUncorr"            ,&GENjetMassMMDTUncorr         ,"GENjetMassMMDTUncorr"         );
+  JetTree->Branch("PFjetMassMMDTFilteredUncorr"     ,&PFjetMassMMDTFilteredUncorr  ,"PFjetMassMMDTFilteredUncorr"  );
+  JetTree->Branch("CHSjetMassMMDTFilteredUncorr"    ,&CHSjetMassMMDTFilteredUncorr ,"CHSjetMassMMDTFilteredUncorr" );
+  JetTree->Branch("PUPjetMassMMDTFilteredUncorr"    ,&PUPjetMassMMDTFilteredUncorr ,"PUPjetMassMMDTFilteredUncorr" );
+  JetTree->Branch("GENjetMassMMDTFilteredUncorr"    ,&GENjetMassMMDTFilteredUncorr ,"GENjetMassMMDTFilteredUncorr" );
+  JetTree->Branch("PFjetMassSoftDropUncorr"         ,&PFjetMassSoftDropUncorr      ,"PFjetMassSoftDropUncorr"      );
+  JetTree->Branch("CHSjetMassSoftDropUncorr"        ,&CHSjetMassSoftDropUncorr     ,"CHSjetMassSoftDropUncorr"     );
+  JetTree->Branch("PUPjetMassSoftDropUncorr"        ,&PUPjetMassSoftDropUncorr     ,"PUPjetMassSoftDropUncorr"     );
+  JetTree->Branch("GENjetMassSoftDropUncorr"        ,&GENjetMassSoftDropUncorr     ,"GENjetMassSoftDropUncorr"     );
+  JetTree->Branch("PFjetMass"                       ,&PFjetMass                    ,"PFjetMass"                    );
+  JetTree->Branch("CHSjetMass"                      ,&CHSjetMass                   ,"CHSjetMass"                   );
+  JetTree->Branch("PUPjetMass"                      ,&PUPjetMass                   ,"PUPjetMass"                   );
+  JetTree->Branch("GENjetMass"                      ,&GENjetMass                   ,"GENjetMass"                   );
+  JetTree->Branch("PFjetMassTrimmed"                ,&PFjetMassTrimmed             ,"PFjetMassTrimmed"             );
+  JetTree->Branch("CHSjetMassTrimmed"               ,&CHSjetMassTrimmed            ,"CHSjetMassTrimmed"            );
+  JetTree->Branch("PUPjetMassTrimmed"               ,&PUPjetMassTrimmed            ,"PUPjetMassTrimmed"            );
+  JetTree->Branch("GENjetMassTrimmed"               ,&GENjetMassTrimmed            ,"GENjetMassTrimmed"            );
+  JetTree->Branch("PFjetMassPruned"                 ,&PFjetMassPruned              ,"PFjetMassPruned"              );
+  JetTree->Branch("CHSjetMassPruned"                ,&CHSjetMassPruned             ,"CHSjetMassPruned"             );
+  JetTree->Branch("PUPjetMassPruned"                ,&PUPjetMassPruned             ,"PUPjetMassPruned"             );
+  JetTree->Branch("GENjetMassPruned"                ,&GENjetMassPruned             ,"GENjetMassPruned"             );
   JetTree->Branch("PFjetMassFiltered"               ,&PFjetMassFiltered            ,"PFjetMassFiltered"            );
   JetTree->Branch("CHSjetMassFiltered"              ,&CHSjetMassFiltered           ,"CHSjetMassFiltered"           );
   JetTree->Branch("PUPjetMassFiltered"              ,&PUPjetMassFiltered           ,"PUPjetMassFiltered"           );
   JetTree->Branch("GENjetMassFiltered"              ,&GENjetMassFiltered           ,"GENjetMassFiltered"           );
-  JetTree->Branch("PFjetMassMDMTUncorr"             ,&PFjetMassMDMTUncorr          ,"PFjetMassMDMTUncorr"          );
-  JetTree->Branch("PFjetMassMDMT"                   ,&PFjetMassMDMT                ,"PFjetMassMDMT"                );
-  JetTree->Branch("PFjetMassMDMTFilteredUncorr"     ,&PFjetMassMDMTFilteredUncorr  ,"PFjetMassMDMTFilteredUncorr"  );
-  JetTree->Branch("PFjetMassMDMTFiltered"           ,&PFjetMassMDMTFiltered        ,"PFjetMassMDMTFiltered"        );
-  JetTree->Branch("CHSjetMassMDMTUncorr"            ,&CHSjetMassMDMTUncorr         ,"CHSjetMassMDMTUncorr"         );
-  JetTree->Branch("CHSjetMassMDMT"                  ,&CHSjetMassMDMT               ,"CHSjetMassMDMT"               );
-  JetTree->Branch("CHSjetMassMDMTFilteredUncorr"    ,&CHSjetMassMDMTFilteredUncorr ,"CHSjetMassMDMTFilteredUncorr" );
-  JetTree->Branch("CHSjetMassMDMTFiltered"          ,&CHSjetMassMDMTFiltered       ,"CHSjetMassMDMTFiltered"       );
-  JetTree->Branch("PUPjetMassMDMTUncorr"            ,&PUPjetMassMDMTUncorr         ,"PUPjetMassMDMTUncorr"         );
-  JetTree->Branch("PUPjetMassMDMT"                  ,&PUPjetMassMDMT               ,"PUPjetMassMDMT"               );
-  JetTree->Branch("PUPjetMassMDMTFilteredUncorr"    ,&PUPjetMassMDMTFilteredUncorr ,"PUPjetMassMDMTFilteredUncorr" );
-  JetTree->Branch("PUPjetMassMDMTFiltered"          ,&PUPjetMassMDMTFiltered       ,"PUPjetMassMDMTFiltered"       );
-  JetTree->Branch("GENjetMassMDMTUncorr"            ,&GENjetMassMDMTUncorr         ,"GENjetMassMDMTUncorr"         );
-  JetTree->Branch("GENjetMassMDMT"                  ,&GENjetMassMDMT               ,"GENjetMassMDMT"               );
-  JetTree->Branch("GENjetMassMDMTFilteredUncorr"    ,&GENjetMassMDMTFilteredUncorr ,"GENjetMassMDMTFilteredUncorr" );
-  JetTree->Branch("GENjetMassMDMTFiltered"          ,&GENjetMassMDMTFiltered       ,"GENjetMassMDMTFiltered"       );
-  JetTree->Branch("PFjetMassSoftDropUncorr"         ,&PFjetMassSoftDropUncorr      ,"PFjetMassSoftDropUncorr"      );
+  JetTree->Branch("PFjetMassMMDT"                   ,&PFjetMassMMDT                ,"PFjetMassMMDT"                );
+  JetTree->Branch("CHSjetMassMMDT"                  ,&CHSjetMassMMDT               ,"CHSjetMassMMDT"               );
+  JetTree->Branch("PUPjetMassMMDT"                  ,&PUPjetMassMMDT               ,"PUPjetMassMMDT"               );
+  JetTree->Branch("GENjetMassMMDT"                  ,&GENjetMassMMDT               ,"GENjetMassMMDT"               );
+  JetTree->Branch("PFjetMassMMDTFiltered"           ,&PFjetMassMMDTFiltered        ,"PFjetMassMMDTFiltered"        );
+  JetTree->Branch("CHSjetMassMMDTFiltered"          ,&CHSjetMassMMDTFiltered       ,"CHSjetMassMMDTFiltered"       );
+  JetTree->Branch("PUPjetMassMMDTFiltered"          ,&PUPjetMassMMDTFiltered       ,"PUPjetMassMMDTFiltered"       );
+  JetTree->Branch("GENjetMassMMDTFiltered"          ,&GENjetMassMMDTFiltered       ,"GENjetMassMMDTFiltered"       );
   JetTree->Branch("PFjetMassSoftDrop"               ,&PFjetMassSoftDrop            ,"PFjetMassSoftDrop"            );
+  JetTree->Branch("CHSjetMassSoftDrop"              ,&CHSjetMassSoftDrop           ,"CHSjetMassSoftDrop"           );
+  JetTree->Branch("PUPjetMassSoftDrop"              ,&PUPjetMassSoftDrop           ,"PUPjetMassSoftDrop"           );
+  JetTree->Branch("GENjetMassSoftDrop"              ,&GENjetMassSoftDrop           ,"GENjetMassSoftDrop"           );
   JetTree->Branch("PFjetSoftDropSymmetry"           ,&PFjetSoftDropSymmetry        ,"PFjetSoftDropSymmetry"        );
   JetTree->Branch("PFjetSoftDropDR"                 ,&PFjetSoftDropDR              ,"PFjetSoftDropDR"              );
   JetTree->Branch("PFjetSoftDropMassDrop"           ,&PFjetSoftDropMassDrop        ,"PFjetSoftDropMassDrop"        );
   JetTree->Branch("PFjetSoftDropEnergyLoss"         ,&PFjetSoftDropEnergyLoss      ,"PFjetSoftDropEnergyLoss"      );
-  JetTree->Branch("CHSjetMassSoftDropUncorr"        ,&CHSjetMassSoftDropUncorr     ,"CHSjetMassSoftDropUncorr"     );
-  JetTree->Branch("CHSjetMassSoftDrop"              ,&CHSjetMassSoftDrop           ,"CHSjetMassSoftDrop"           );
   JetTree->Branch("CHSjetSoftDropSymmetry"          ,&CHSjetSoftDropSymmetry       ,"CHSjetSoftDropSymmetry"       );
   JetTree->Branch("CHSjetSoftDropDR"                ,&CHSjetSoftDropDR             ,"CHSjetSoftDropDR"             );
   JetTree->Branch("CHSjetSoftDropMassDrop"          ,&CHSjetSoftDropMassDrop       ,"CHSjetSoftDropMassDrop"       );
   JetTree->Branch("CHSjetSoftDropEnergyLoss"        ,&CHSjetSoftDropEnergyLoss     ,"CHSjetSoftDropEnergyLoss"     );
-  JetTree->Branch("PUPjetMassSoftDropUncorr"        ,&PUPjetMassSoftDropUncorr     ,"PUPjetMassSoftDropUncorr"     );
-  JetTree->Branch("PUPjetMassSoftDrop"              ,&PUPjetMassSoftDrop           ,"PUPjetMassSoftDrop"           );
   JetTree->Branch("PUPjetSoftDropSymmetry"          ,&PUPjetSoftDropSymmetry       ,"PUPjetSoftDropSymmetry"       );
   JetTree->Branch("PUPjetSoftDropDR"                ,&PUPjetSoftDropDR             ,"PUPjetSoftDropDR"             );
   JetTree->Branch("PUPjetSoftDropMassDrop"          ,&PUPjetSoftDropMassDrop       ,"PUPjetSoftDropMassDrop"       );
   JetTree->Branch("PUPjetSoftDropEnergyLoss"        ,&PUPjetSoftDropEnergyLoss     ,"PUPjetSoftDropEnergyLoss"     );
-  JetTree->Branch("GENjetMassSoftDropUncorr"        ,&GENjetMassSoftDropUncorr     ,"GENjetMassSoftDropUncorr"     );
-  JetTree->Branch("GENjetMassSoftDrop"              ,&GENjetMassSoftDrop           ,"GENjetMassSoftDrop"           );
   JetTree->Branch("GENjetSoftDropSymmetry"          ,&GENjetSoftDropSymmetry       ,"GENjetSoftDropSymmetry"       );
   JetTree->Branch("GENjetSoftDropDR"                ,&GENjetSoftDropDR             ,"GENjetSoftDropDR"             );
   JetTree->Branch("GENjetSoftDropMassDrop"          ,&GENjetSoftDropMassDrop       ,"GENjetSoftDropMassDrop"       );
   JetTree->Branch("GENjetSoftDropEnergyLoss"        ,&GENjetSoftDropEnergyLoss     ,"GENjetSoftDropEnergyLoss"     );
+  JetTree->Branch("PFjetArea"                       ,&PFjetArea                    ,"PFjetArea"                    );
+  JetTree->Branch("CHSjetArea"                      ,&CHSjetArea                   ,"CHSjetArea"                   );
+  JetTree->Branch("PUPjetArea"                      ,&PUPjetArea                   ,"PUPjetArea"                   );
+  JetTree->Branch("GENjetArea"                      ,&GENjetArea                   ,"GENjetArea"                   );
+  JetTree->Branch("PFjetAreaTrimmed"                ,&PFjetAreaTrimmed             ,"PFjetAreaTrimmed"             );
+  JetTree->Branch("CHSjetAreaTrimmed"               ,&CHSjetAreaTrimmed            ,"CHSjetAreaTrimmed"            );
+  JetTree->Branch("PUPjetAreaTrimmed"               ,&PUPjetAreaTrimmed            ,"PUPjetAreaTrimmed"            );
+  JetTree->Branch("GENjetAreaTrimmed"               ,&GENjetAreaTrimmed            ,"GENjetAreaTrimmed"            );
+  JetTree->Branch("PFjetAreaPruned"                 ,&PFjetAreaPruned              ,"PFjetAreaPruned"              );
+  JetTree->Branch("CHSjetAreaPruned"                ,&CHSjetAreaPruned             ,"CHSjetAreaPruned"             );
+  JetTree->Branch("PUPjetAreaPruned"                ,&PUPjetAreaPruned             ,"PUPjetAreaPruned"             );
+  JetTree->Branch("GENjetAreaPruned"                ,&GENjetAreaPruned             ,"GENjetAreaPruned"             );
+  JetTree->Branch("PFjetAreaFiltered"               ,&PFjetAreaFiltered            ,"PFjetAreaFiltered"            );
+  JetTree->Branch("CHSjetAreaFiltered"              ,&CHSjetAreaFiltered           ,"CHSjetAreaFiltered"           );
+  JetTree->Branch("PUPjetAreaFiltered"              ,&PUPjetAreaFiltered           ,"PUPjetAreaFiltered"           );
+  JetTree->Branch("GENjetAreaFiltered"              ,&GENjetAreaFiltered           ,"GENjetAreaFiltered"           );
+  JetTree->Branch("PFjetAreaMMDT"                   ,&PFjetAreaMMDT                ,"PFjetAreaMMDT"                );
+  JetTree->Branch("CHSjetAreaMMDT"                  ,&CHSjetAreaMMDT               ,"CHSjetAreaMMDT"               );
+  JetTree->Branch("PUPjetAreaMMDT"                  ,&PUPjetAreaMMDT               ,"PUPjetAreaMMDT"               );
+  JetTree->Branch("GENjetAreaMMDT"                  ,&GENjetAreaMMDT               ,"GENjetAreaMMDT"               );
+  JetTree->Branch("PFjetAreaMMDTFiltered"           ,&PFjetAreaMMDTFiltered        ,"PFjetAreaMMDTFiltered"        );
+  JetTree->Branch("CHSjetAreaMMDTFiltered"          ,&CHSjetAreaMMDTFiltered       ,"CHSjetAreaMMDTFiltered"       );
+  JetTree->Branch("PUPjetAreaMMDTFiltered"          ,&PUPjetAreaMMDTFiltered       ,"PUPjetAreaMMDTFiltered"       );
+  JetTree->Branch("GENjetAreaMMDTFiltered"          ,&GENjetAreaMMDTFiltered       ,"GENjetAreaMMDTFiltered"       );
+  JetTree->Branch("PFjetAreaSoftDrop"               ,&PFjetAreaSoftDrop            ,"PFjetAreaSoftDrop"            );
+  JetTree->Branch("CHSjetAreaSoftDrop"              ,&CHSjetAreaSoftDrop           ,"CHSjetAreaSoftDrop"           );
+  JetTree->Branch("PUPjetAreaSoftDrop"              ,&PUPjetAreaSoftDrop           ,"PUPjetAreaSoftDrop"           );
+  JetTree->Branch("GENjetAreaSoftDrop"              ,&GENjetAreaSoftDrop           ,"GENjetAreaSoftDrop"           );
+  JetTree->Branch("PFjetNconst"                     ,&PFjetNconst                  ,"PFjetNconst"                  );
+  JetTree->Branch("CHSjetNconst"                    ,&CHSjetNconst                 ,"CHSjetNconst"                 );
+  JetTree->Branch("PUPjetNconst"                    ,&PUPjetNconst                 ,"PUPjetNconst"                 );
+  JetTree->Branch("GENjetNconst"                    ,&GENjetNconst                 ,"GENjetNconst"                 );
+  JetTree->Branch("PFjetNconstTrimmed"              ,&PFjetNconstTrimmed           ,"PFjetNconstTrimmed"           );
+  JetTree->Branch("CHSjetNconstTrimmed"             ,&CHSjetNconstTrimmed          ,"CHSjetNconstTrimmed"          );
+  JetTree->Branch("PUPjetNconstTrimmed"             ,&PUPjetNconstTrimmed          ,"PUPjetNconstTrimmed"          );
+  JetTree->Branch("GENjetNconstTrimmed"             ,&GENjetNconstTrimmed          ,"GENjetNconstTrimmed"          );
+  JetTree->Branch("PFjetNconstPruned"               ,&PFjetNconstPruned            ,"PFjetNconstPruned"            );
+  JetTree->Branch("CHSjetNconstPruned"              ,&CHSjetNconstPruned           ,"CHSjetNconstPruned"           );
+  JetTree->Branch("PUPjetNconstPruned"              ,&PUPjetNconstPruned           ,"PUPjetNconstPruned"           );
+  JetTree->Branch("GENjetNconstPruned"              ,&GENjetNconstPruned           ,"GENjetNconstPruned"           );
+  JetTree->Branch("PFjetNconstFiltered"             ,&PFjetNconstFiltered          ,"PFjetNconstFiltered"          );
+  JetTree->Branch("CHSjetNconstFiltered"            ,&CHSjetNconstFiltered         ,"CHSjetNconstFiltered"         );
+  JetTree->Branch("PUPjetNconstFiltered"            ,&PUPjetNconstFiltered         ,"PUPjetNconstFiltered"         );
+  JetTree->Branch("GENjetNconstFiltered"            ,&GENjetNconstFiltered         ,"GENjetNconstFiltered"         );
+  JetTree->Branch("PFjetNconstMMDT"                 ,&PFjetNconstMMDT              ,"PFjetNconstMMDT"              );
+  JetTree->Branch("CHSjetNconstMMDT"                ,&CHSjetNconstMMDT             ,"CHSjetNconstMMDT"             );
+  JetTree->Branch("PUPjetNconstMMDT"                ,&PUPjetNconstMMDT             ,"PUPjetNconstMMDT"             );
+  JetTree->Branch("GENjetNconstMMDT"                ,&GENjetNconstMMDT             ,"GENjetNconstMMDT"             );
+  JetTree->Branch("PFjetNconstMMDTFiltered"         ,&PFjetNconstMMDTFiltered      ,"PFjetNconstMMDTFiltered"      );
+  JetTree->Branch("CHSjetNconstMMDTFiltered"        ,&CHSjetNconstMMDTFiltered     ,"CHSjetNconstMMDTFiltered"     );
+  JetTree->Branch("PUPjetNconstMMDTFiltered"        ,&PUPjetNconstMMDTFiltered     ,"PUPjetNconstMMDTFiltered"     );
+  JetTree->Branch("GENjetNconstMMDTFiltered"        ,&GENjetNconstMMDTFiltered     ,"GENjetNconstMMDTFiltered"     );
+  JetTree->Branch("PFjetNconstSoftDrop"             ,&PFjetNconstSoftDrop          ,"PFjetNconstSoftDrop"          );
+  JetTree->Branch("CHSjetNconstSoftDrop"            ,&CHSjetNconstSoftDrop         ,"CHSjetNconstSoftDrop"         );
+  JetTree->Branch("PUPjetNconstSoftDrop"            ,&PUPjetNconstSoftDrop         ,"PUPjetNconstSoftDrop"         );
+  JetTree->Branch("GENjetNconstSoftDrop"            ,&GENjetNconstSoftDrop         ,"GENjetNconstSoftDrop"         );
   JetTree->Branch("PFtau1"                          ,&PFtau1                       ,"PFtau1"                       );
   JetTree->Branch("PFtau2"                          ,&PFtau2                       ,"PFtau2"                       );
   JetTree->Branch("PFtau3"                          ,&PFtau3                       ,"PFtau3"                       );
@@ -518,8 +671,9 @@ int main( int argc, char *argv[] ){
   /////////////////////////////////////////////////////////////////////
 
   TChain fIn("Events");  
-  std::ifstream input_file_list("fileListRS3000.txt");
-  //std::ifstream input_file_list("fileListQCD.txt");
+  std::ifstream input_file_list;
+  if (Sample==1) input_file_list.open("fileListRS3000.txt");
+  if (Sample==0) input_file_list.open("fileListQCD.txt");
   std::string tmp;
 
   if(!input_file_list.is_open())
@@ -579,6 +733,7 @@ int main( int argc, char *argv[] ){
 
   std::vector<PseudoJet> particles;
   std::vector<PseudoJet> genparticles;  
+  std::vector<PseudoJet> gentops;  
 
   int nEventsInChain = fIn.GetEntries();
   cout<<" nEventsInChain "<<nEventsInChain<<" FirstEvent "<<FirstEvent<<" Nevents "<<Nevents<<endl;
@@ -590,7 +745,8 @@ int main( int argc, char *argv[] ){
     fIn.GetEntry(i0);
     particles   .clear();
     genparticles.clear();
-      
+    gentops.clear();
+
     if (i0%100==0) std::cout <<"Event: "<< i0 <<"  (Running from "<< FirstEvent << " -> " <<Nevents+FirstEvent-1 <<") - (total # of events in chain = "<<nEventsInChain<<")"<< std::endl;
     if (verbose) std::cout <<"Event: "<< i0 <<"  (Running from "<< FirstEvent << " -> " <<Nevents+FirstEvent-1 <<") - (total # of events in chain = "<<nEventsInChain<<") -  N PF candidates = " << fPFPart->GetEntriesFast() << std::endl;
 
@@ -606,18 +762,28 @@ int main( int argc, char *argv[] ){
     //Get the Gen Particles
     for( int i1 = 0; i1 < fGenPart->GetEntriesFast(); i1++){
       baconhep::TGenParticle *pPartTmp = (baconhep::TGenParticle*)((*fGenPart)[i1]);
-
-      // if ( fabs(pPartTmp->pdgId)  ==6 && pPartTmp->status >20 && pPartTmp->status<30) //pythia 8 top quark "particles of the hardest subprocess"
-      // {
-      //   cout<<"  found top quark. Particle "<<i1<<" pdgId "<<pPartTmp->pdgId<<" status "<<pPartTmp->status<<" parent "<<pPartTmp->parent<<" pt "<<pPartTmp->pt<<" eta "<<pPartTmp->eta<<" phi "<<pPartTmp->phi<<endl;
-      // }
-
+      if ( fabs(pPartTmp->pdgId)  ==6 && pPartTmp->status >20 && pPartTmp->status<30 )
+      {
+        fastjet::PseudoJet topholder = convert(pPartTmp);
+        gentops.push_back(topholder);
+      }  
       if(pPartTmp->status != 1) continue;
       //Convert gen particle to PseudoJet
       fastjet::PseudoJet pFastJet = convert(pPartTmp);
       //Build the collection 
       genparticles.push_back(pFastJet);
     }
+    if (verbose) cout<<"found "<<genparticles.size()<<" final state gen particles and "<<gentops.size() <<" initial tops "<<endl;
+
+    if (Sample==1 && gentops.size()<1 )
+    {
+      if (verbose) cout << "************************ Did not find tops - Event "<<i0<<" ************************" << endl;
+      for( int i1 = 0; i1 < fGenPart->GetEntriesFast(); i1++){
+        baconhep::TGenParticle *pPartTmp = (baconhep::TGenParticle*)((*fGenPart)[i1]);
+        if (pPartTmp->pt>1000 && verbose) cout<<"     Particle "<<i1<<" pdgId "<<pPartTmp->pdgId<<" status "<<pPartTmp->status<<" parent "<<pPartTmp->parent<<" pt "<<pPartTmp->pt<<" eta "<<pPartTmp->eta<<" phi "<<pPartTmp->phi<<endl;
+      }
+      continue;
+    } 
 
     /////////////////////////////////////////////////////////////////////
     //  Event PF particles
@@ -645,7 +811,7 @@ int main( int argc, char *argv[] ){
     vector<PseudoJet> chs_event2GeV   = curEvent.pfchsFetch( 2.);
     vector<PseudoJet> soft_event      = soft_killer   (pf_event);
     //vector<PseudoJet> softCHS_event   = soft_killerCHS(chs_event);
-    
+    if (verbose ) cout<<"got particle collections"<<endl;
     // for(unsigned int i0 = 0; i0 < genJets.size(); i0++) {
     //   lIndex = i0;
     //   PseudoJet puppiJet   = match(genJets[i0],puppiJets);
@@ -675,29 +841,76 @@ int main( int argc, char *argv[] ){
 
     // Do the actual clustering 
     //    - > get CHS collection first and apply pT cuts (just to speed things up)
-    ClusterSequenceArea clus_seq_CHS     (chs_event    , jet_def  , area_def);
+    ClusterSequenceArea clus_seq_Gen     (gen_event    , jet_def  , area_def);
+
     Selector selectorquick = SelectorNHardest(1); 
-    vector<PseudoJet> quickjets      = selectorquick(sorted_by_pt(clus_seq_CHS    .inclusive_jets()));
-    if (quickjets[0].pt()<400) continue;
+    vector<PseudoJet> quickjets      = selectorquick(sorted_by_pt(clus_seq_Gen    .inclusive_jets()));
     
+    if (quickjets[0].pt()<400){  
+      if (verbose) cout<<"Event failed minimum Pt cut. genjet pt = "<< quickjets[0].pt() << endl;
+      continue;
+    }
     //    - > now cluster the rest
     ClusterSequenceArea clus_seq_PF      (pf_event     , jet_def  , area_def);
     ClusterSequenceArea clus_seq_Pup     (puppi_event  , jet_def  , area_def);
-    ClusterSequenceArea clus_seq_Gen     (gen_event    , jet_def  , area_def);
+    //ClusterSequenceArea clus_seq_Gen     (gen_event    , jet_def  , area_def);
+    ClusterSequenceArea clus_seq_CHS     (chs_event    , jet_def  , area_def);
     ClusterSequenceArea clus_seq_CHS2GeV (chs_event2GeV, jet_def  , area_def);
     ClusterSequenceArea clus_seq_Soft    (soft_event   , jet_def  , area_def);
     //lusterSequenceArea pSoftCHS (softCHS_event, jet_def  , area_def);
     
 
     //Now lets define a selector to get the leading jet
-    Selector selector = SelectorNHardest(1); 
+    Selector selector = SelectorNHardest(4); 
 
     //And lets select the leading jet from the above collections
+    vector<PseudoJet> genJets       = selector(sorted_by_pt(clus_seq_Gen   .inclusive_jets()));
     vector<PseudoJet>  pfJets       = selector(sorted_by_pt(clus_seq_PF    .inclusive_jets()));
     vector<PseudoJet> chsJets       = selector(sorted_by_pt(clus_seq_CHS   .inclusive_jets()));
     vector<PseudoJet> pupJets       = selector(sorted_by_pt(clus_seq_Pup   .inclusive_jets()));
-    vector<PseudoJet> genJets       = selector(sorted_by_pt(clus_seq_Gen   .inclusive_jets()));
+    vector<PseudoJet> sofJets       = selector(sorted_by_pt(clus_seq_Soft  .inclusive_jets()));
+    // vector<PseudoJet> genJets       = sorted_by_pt(clus_seq_Gen   .inclusive_jets());
+    // vector<PseudoJet>  pfJets       = sorted_by_pt(clus_seq_PF    .inclusive_jets());
+    // vector<PseudoJet> chsJets       = sorted_by_pt(clus_seq_CHS   .inclusive_jets());
+    // vector<PseudoJet> pupJets       = sorted_by_pt(clus_seq_Pup   .inclusive_jets());
 
+    if (verbose ) cout<<"clustered jets"<<endl;
+
+    // find gen jet matched top top quark
+    PseudoJet genJet0 ;
+    gentops       = sorted_by_pt(gentops);
+    if (Sample==1) genJet0 = match(gentops[0],genJets);  
+    else genJet0 = genJets[0];
+
+
+
+    if(genJet0.pt() < 1) 
+    {
+      cout<<"************************  did not find genjet matched to top ************************"<<endl;
+      cout<<"   gentops.size() "<<gentops.size()<<" pt0 "<<gentops[0].perp()<<" pt1 "<<gentops[1].perp()<<endl;
+      cout<<"   genJets.size() "<<genJets.size()<<" pt0 "<<genJets[0].perp()<<" pt1 "<<genJets[1].perp()<<" dr1 "<< deltaR(gentops[0],genJets[0])<<" dr2 "<<deltaR(gentops[0],genJets[1])<<endl;
+      continue;
+    }
+
+
+    // find reco jets matched to gen jets
+    PseudoJet chsJet0 = match(genJet0,chsJets);
+    PseudoJet pfJet0  = match(genJet0,pfJets);
+    PseudoJet pupJet0 = match(genJet0,pupJets);
+
+    if( pfJet0.pt() < 1  || chsJet0.pt() < 1  ||  pupJet0.pt() < 1 ) 
+    {
+      if (verbose) cout<<"************************  did not find genjet matched to recojets ************************"<<endl;
+      continue;
+    }
+
+    if(verbose ) {
+      cout<<"genJet0 mass  "<<genJet0 .m()<<endl;
+      cout<<"chsJet0  mass "<<chsJet0 .m()<<endl;
+      cout<<"pfJet0   mass "<<pfJet0  .m()<<endl;
+      cout<<"pupJet0  mass "<<pupJet0 .m()<<endl;
+    }
+   
     //Now we've got jets so lets calculate rho for the two that need it (CHS/PF)
     AreaDefinition area_def_for_rho(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
     JetDefinition jet_def_for_rho(kt_algorithm, 0.6);
@@ -712,43 +925,36 @@ int main( int argc, char *argv[] ){
     JetMedianBackgroundEstimator rhoCHS(rho_range, clust_seq_rhoCHS);
 
     //Finally we can run the JEC on the first jet
-    double pfPt    = pfJets[0].pt()  * correction(pfJets[0] ,jetCorr,rho.rho()); 
-    double chsPt   = chsJets[0].pt() * correction(chsJets[0],jetCorr,rhoCHS.rho()); 
-    double pupPt   = pupJets[0].pt() * correction(pupJets[0],jetCorr,0);         //Assume rho is zero for this
-    double genPt   = genJets[0].pt() * 1.;
+    double pfPt    =  pfJet0.pt() * correction( pfJet0 ,jetCorr,rho.rho()); 
+    double chsPt   = chsJet0.pt() * correction(chsJet0,jetCorr,rhoCHS.rho()); 
+    double pupPt   = pupJet0.pt() * correction(pupJet0,jetCorr,0);         //Assume rho is zero for this
+    double genPt   = genJet0.pt() * 1.;
 
-    double pfPtUnc  = unc(pfJets[0] ,jetUnc);
-    double chsPtUnc = unc(chsJets[0],jetUnc);
-    double pupPtUnc = unc(chsJets[0],jetUnc);
-    double genPtUnc = unc(chsJets[0],jetUnc);
+    double pfPtUnc  = unc( pfJet0,jetUnc);
+    double chsPtUnc = unc(chsJet0,jetUnc);
+    double pupPtUnc = unc(chsJet0,jetUnc);
+    double genPtUnc = unc(chsJet0,jetUnc);
 
-    double pfMass    = pfJets[0].m()  * correction(pfJets[0], jetCorr,rho.rho()); 
-    double chsMass   = chsJets[0].m() * correction(chsJets[0],jetCorr,rhoCHS.rho()); 
-    double pupMass   = pupJets[0].m() * correction(pupJets[0],jetCorr,0);         //Assume rho is zero for this
-    double genMass   = genJets[0].m() * 1.;
+    double pfMass    =  pfJet0.m() * correction( pfJet0, jetCorr,rho.rho()); 
+    double chsMass   = chsJet0.m() * correction(chsJet0,jetCorr,rhoCHS.rho()); 
+    double pupMass   = pupJet0.m() * correction(pupJet0,jetCorr,0);         //Assume rho is zero for this
+    double genMass   = genJet0.m() * 1.;
 
-    double pfArea    = pfJets[0].area();
-    double chsArea    = chsJets[0].area();
-    double pupArea    = pupJets[0].area();
-    double genArea    = genJets[0].area();
-
-
+    vector<PseudoJet> pfConstituents   = pfJet0.constituents();
+    vector<PseudoJet> chsConstituents = chsJet0.constituents();
+    vector<PseudoJet> pupConstituents = pupJet0.constituents();
+    vector<PseudoJet> genConstituents = genJet0.constituents();
 
     // Fill tree and output some info
-    PFjetMassUncorr  = pfJets[0].m() ;
-    CHSjetMassUncorr = chsJets[0].m();
-    PUPjetMassUncorr = pupJets[0].m();
-    GENjetMassUncorr = genJets[0].m();
+    PFjetMassUncorr  =  pfJet0.m() ;
+    CHSjetMassUncorr = chsJet0.m();
+    PUPjetMassUncorr = pupJet0.m();
+    GENjetMassUncorr = genJet0.m();
 
     PFjetMass        = pfMass  ;
     CHSjetMass       = chsMass ;
     PUPjetMass       = pupMass ;
     GENjetMass       = genMass ;
-    
-    PFjetArea        = pfArea  ;
-    CHSjetArea       = chsArea ;
-    PUPjetArea       = pupArea ;
-    GENjetArea       = genArea ;
 
     PFjetPt          = pfPt   ;
     CHSjetPt         = chsPt  ;
@@ -760,6 +966,16 @@ int main( int argc, char *argv[] ){
     PUPjetPtUnc      = pupPtUnc ;
     GENjetPtUnc      = genPtUnc ;
 
+     PFjetArea       =  pfJet0.area() ;
+    CHSjetArea       = chsJet0.area() ;
+    PUPjetArea       = pupJet0.area() ;
+    GENjetArea       = genJet0.area() ;
+
+     PFjetNconst       = pfConstituents .size() ;
+    CHSjetNconst       = chsConstituents.size() ;
+    PUPjetNconst       = pupConstituents.size() ;
+    GENjetNconst       = genConstituents.size() ;
+    
     if (verbose ) cout<<" pfPt     "<<pfPt    <<endl;
     if (verbose ) cout<<" chsPt    "<<chsPt   <<endl;
     if (verbose ) cout<<" pupPt    "<<pupPt   <<endl;
@@ -788,15 +1004,15 @@ int main( int argc, char *argv[] ){
     double Rtrim = 0.2;
     double ptfrac = 0.05;
     Filter trimmer1(JetDefinition(cambridge_algorithm, Rtrim), SelectorPtFractionMin(ptfrac) );
-    PseudoJet trimmed_pfJet  = trimmer1(pfJets[0] );
-    PseudoJet trimmed_chsJet = trimmer1(chsJets[0] );
-    PseudoJet trimmed_pupJet = trimmer1(pupJets[0] );
-    PseudoJet trimmed_genJet = trimmer1(genJets[0] );
+    PseudoJet trimmed_pfJet  = trimmer1( pfJet0 );
+    PseudoJet trimmed_chsJet = trimmer1(chsJet0 );
+    PseudoJet trimmed_pupJet = trimmer1(pupJet0 );
+    PseudoJet trimmed_genJet = trimmer1(genJet0 );
 
-    double mass_corr_trimmed_pfJet     = trimmed_pfJet.m() * correction(trimmed_pfJet ,jetCorr,rho.rho()); 
-    double mass_corr_trimmed_chsJet    = trimmed_pfJet.m() * correction(trimmed_chsJet,jetCorr,rho.rho()); 
-    double mass_corr_trimmed_pupJet    = trimmed_pfJet.m() * correction(trimmed_pupJet,jetCorr,rho.rho()); 
-    double mass_corr_trimmed_genJet    = trimmed_pfJet.m() * correction(trimmed_genJet,jetCorr,rho.rho()); 
+    double mass_corr_trimmed_pfJet     = trimmed_pfJet .m() * correction(trimmed_pfJet ,jetCorr,rho.rho()); 
+    double mass_corr_trimmed_chsJet    = trimmed_chsJet.m() * correction(trimmed_chsJet,jetCorr,rho.rho()); 
+    double mass_corr_trimmed_pupJet    = trimmed_pupJet.m() * correction(trimmed_pupJet,jetCorr,rho.rho()); 
+    double mass_corr_trimmed_genJet    = trimmed_genJet.m() * correction(trimmed_genJet,jetCorr,rho.rho()); 
 
     PFjetMassTrimmedUncorr  = trimmed_pfJet .m();
     CHSjetMassTrimmedUncorr = trimmed_chsJet.m();
@@ -808,21 +1024,33 @@ int main( int argc, char *argv[] ){
     PUPjetMassTrimmed       = mass_corr_trimmed_pupJet ;
     GENjetMassTrimmed       = mass_corr_trimmed_genJet ;
 
+     PFjetAreaTrimmed       = trimmed_pfJet .area() ;
+    CHSjetAreaTrimmed       = trimmed_chsJet.area() ;
+    PUPjetAreaTrimmed       = trimmed_pupJet.area() ;
+    GENjetAreaTrimmed       = trimmed_genJet.area() ;
+
+     PFjetNconstTrimmed       = trimmed_pfJet .constituents().size() ;
+    CHSjetNconstTrimmed       = trimmed_chsJet.constituents().size() ;
+    PUPjetNconstTrimmed       = trimmed_pupJet.constituents().size() ;
+    GENjetNconstTrimmed       = trimmed_genJet.constituents().size() ;
+
+    if (verbose) cout<<"done trimming"<<endl;
     // -- Pruning ------------------------------------------
-    double  prune_zcut=1.0;
-    double Dcut_pfJets  = pfJets[0]  .m() / pfJets[0] .perp();
-    double Dcut_chsJets = chsJets[0] .m() / chsJets[0].perp();
-    double Dcut_pupJets = pupJets[0] .m() / pupJets[0].perp();
-    double Dcut_genJets = genJets[0] .m() / genJets[0].perp();
+    double  prune_zcut=0.1;
+    double Dcut_pfJets  =  pfJet0 .m() /  pfJet0 .perp();
+    double Dcut_chsJets = chsJet0 .m() / chsJet0.perp();
+    double Dcut_pupJets = pupJet0 .m() / pupJet0.perp();
+    double Dcut_genJets = genJet0 .m() / genJet0.perp();
+
     Pruner prune_Dcut_pfJets (cambridge_algorithm, prune_zcut, Dcut_pfJets);
     Pruner prune_Dcut_chsJets(cambridge_algorithm, prune_zcut, Dcut_chsJets);
     Pruner prune_Dcut_pupJets(cambridge_algorithm, prune_zcut, Dcut_pupJets);
     Pruner prune_Dcut_genJets(cambridge_algorithm, prune_zcut, Dcut_genJets);
 
-    PseudoJet pruned_pfJet  = prune_Dcut_pfJets (pfJets[0]);
-    PseudoJet pruned_chsJet = prune_Dcut_chsJets(chsJets[0]);
-    PseudoJet pruned_pupJet = prune_Dcut_pupJets(pupJets[0]);
-    PseudoJet pruned_genJet = prune_Dcut_genJets(genJets[0]);
+    PseudoJet pruned_pfJet  = prune_Dcut_pfJets ( pfJet0);
+    PseudoJet pruned_chsJet = prune_Dcut_chsJets(chsJet0);
+    PseudoJet pruned_pupJet = prune_Dcut_pupJets(pupJet0);
+    PseudoJet pruned_genJet = prune_Dcut_genJets(genJet0);
 
     double mass_corr_pruned_pfJet     = pruned_pfJet .m() * correction(pruned_pfJet ,jetCorr,rho.rho()); 
     double mass_corr_pruned_chsJet    = pruned_chsJet.m() * correction(pruned_chsJet,jetCorr,rho.rho()); 
@@ -834,20 +1062,31 @@ int main( int argc, char *argv[] ){
     PUPjetMassPrunedUncorr = pruned_pupJet.m();
     GENjetMassPrunedUncorr = pruned_genJet.m();
 
-    PFjetMassPruned        = mass_corr_pruned_pfJet  ;
+     PFjetMassPruned        = mass_corr_pruned_pfJet  ;
     CHSjetMassPruned       = mass_corr_pruned_chsJet ;
     PUPjetMassPruned       = mass_corr_pruned_pupJet ;
     GENjetMassPruned       = mass_corr_pruned_genJet ;
+
+     PFjetAreaPruned       = pruned_pfJet .area() ;
+    CHSjetAreaPruned       = pruned_chsJet.area() ;
+    PUPjetAreaPruned       = pruned_pupJet.area() ;
+    GENjetAreaPruned       = pruned_genJet.area() ;
+
+     PFjetNconstPruned       = pruned_pfJet .constituents().size() ;
+    CHSjetNconstPruned       = pruned_chsJet.constituents().size() ;
+    PUPjetNconstPruned       = pruned_pupJet.constituents().size() ;
+    GENjetNconstPruned       = pruned_genJet.constituents().size() ;
+
 
     // -- Filtering ------------------------------------------
     double Rfilt = 0.3;
     unsigned int nfilt = 3;
     Filter filter_CA3(JetDefinition(cambridge_algorithm, Rfilt), SelectorNHardest(nfilt));
     
-    PseudoJet filtered_pfJet  = filter_CA3(pfJets[0]);
-    PseudoJet filtered_chsJet = filter_CA3(chsJets[0]);
-    PseudoJet filtered_pupJet = filter_CA3(pupJets[0]);
-    PseudoJet filtered_genJet = filter_CA3(genJets[0]);
+    PseudoJet filtered_pfJet  = filter_CA3( pfJet0);
+    PseudoJet filtered_chsJet = filter_CA3(chsJet0);
+    PseudoJet filtered_pupJet = filter_CA3(pupJet0);
+    PseudoJet filtered_genJet = filter_CA3(genJet0);
 
     double mass_corr_filtered_pfJet     = filtered_pfJet .m() * correction(filtered_pfJet ,jetCorr,rho.rho()); 
     double mass_corr_filtered_chsJet    = filtered_chsJet.m() * correction(filtered_chsJet,jetCorr,rho.rho()); 
@@ -864,90 +1103,65 @@ int main( int argc, char *argv[] ){
     PUPjetMassFiltered       = mass_corr_filtered_pupJet ;
     GENjetMassFiltered       = mass_corr_filtered_genJet ;
 
+     PFjetAreaFiltered       = filtered_pfJet .area() ;
+    CHSjetAreaFiltered       = filtered_chsJet.area() ;
+    PUPjetAreaFiltered       = filtered_pupJet.area() ;
+    GENjetAreaFiltered       = filtered_genJet.area() ;
+
+     PFjetNconstFiltered       = filtered_pfJet .constituents().size() ;
+    CHSjetNconstFiltered       = filtered_chsJet.constituents().size() ;
+    PUPjetNconstFiltered       = filtered_pupJet.constituents().size() ;
+    GENjetNconstFiltered       = filtered_genJet.constituents().size() ;
+
+
+
     // -- Modified mass drop ------------------------------------------
-    typedef contrib::ModifiedMassDropTagger MMDT;
+    //typedef contrib::ModifiedMassDropTagger MMDT;
     
     // use just a symmetry cut, with no mass-drop requirement
     double z_cut = 0.10;
-    MMDT mmdt(z_cut);
+    contrib::ModifiedMassDropTagger mmdt(z_cut);
 
-    PseudoJet mmdt_pfJet  = mmdt(pfJets[0]);
-    PseudoJet mmdt_chsJet = mmdt(chsJets[0]);
-    PseudoJet mmdt_pupJet = mmdt(pupJets[0]);
-    PseudoJet mmdt_genJet = mmdt(genJets[0]);
+    PseudoJet mmdt_pfJet  = mmdt( pfJet0 );
+    PseudoJet mmdt_chsJet = mmdt(chsJet0 );
+    PseudoJet mmdt_pupJet = mmdt(pupJet0 );
+    PseudoJet mmdt_genJet = mmdt(genJet0 );
+        if (verbose) cout<<"somemmdt"<<endl;
+
+    //returns [0] uncorr mmdt mass [1] corr mmdt mass [2] uncorr mmdt filtered mass [3] corr mmdt filtered mass
+    vector<double> masses_mmdt_pfJet  = mmdt_corr_and_filter(mmdt_pfJet, jetCorr,rho.rho());
+    vector<double> masses_mmdt_chsJet = mmdt_corr_and_filter(mmdt_chsJet, jetCorr,rho.rho());
+    vector<double> masses_mmdt_pupJet = mmdt_corr_and_filter(mmdt_pupJet, jetCorr,rho.rho());
+    vector<double> masses_mmdt_genJet = mmdt_corr_and_filter(mmdt_genJet, jetCorr,rho.rho());
     
-    if (mmdt_pfJet!=0)
-    {
-      // if (verbose) cout<<"mmdt jet pt "<<mmdtjet.perp()<<" mass "<<mmdtjet.m()<<endl;
-      // if (verbose) cout << "  delta_R between subjets: " << mmdtjet.structure_of<MMDT>().delta_R() << endl;
-      // if (verbose) cout << "  symmetry measure(z):     " << mmdtjet.structure_of<MMDT>().symmetry() << endl;
-      // if (verbose) cout << "  mass drop(mu):           " << mmdtjet.structure_of<MMDT>().mu() << endl;
-      
-      double mass_mmdt_corr    = mmdt_pfJet.m() * correction(mmdt_pfJet,jetCorr,rho.rho()); 
+    if (verbose) cout<<"mmdt func"<<endl;
+    if (verbose) cout<<" masses_mmdt_chsJet.size() "<< masses_mmdt_chsJet.size() <<endl;
+    if (verbose) cout<<" masses_mmdt_pupJet.size() "<< masses_mmdt_pupJet.size() <<endl;
+    if (verbose) cout<<" masses_mmdt_genJet.size() "<< masses_mmdt_genJet.size() <<endl;
+    if (verbose) cout<<" masses_mmdt_pfJet .size() "<< masses_mmdt_pfJet .size() <<endl;
 
-      // filter jet dynamically based on deltaR between subjets (arXiv:0802.2470)
-      double dyn_Rfilt = min(0.3, mmdt_pfJet.structure_of<MMDT>().delta_R()*0.5);
-      int    dyn_nfilt = 3;
-      Filter filter(dyn_Rfilt, SelectorNHardest(dyn_nfilt));
-      PseudoJet filtered_mmdtjet = filter(mmdt_pfJet);
-      if (verbose) cout<<"mmdt filtered jet pt "<<filtered_mmdtjet.perp()<<" mass "<<filtered_mmdtjet.m()<<endl;
-      double mass_mmdt_filtered_corr    = filtered_mmdtjet.m() * correction(filtered_mmdtjet,jetCorr,rho.rho()); 
-      PFjetMassMDMTUncorr         = mmdt_pfJet.m();
-      PFjetMassMDMT               = mass_mmdt_corr;
-      PFjetMassMDMTFilteredUncorr = filtered_mmdtjet.m();
-      PFjetMassMDMTFiltered       = mass_mmdt_filtered_corr;
+    if (masses_mmdt_pfJet.size() >0 && masses_mmdt_chsJet.size() >0  && masses_mmdt_pupJet.size() >0 && masses_mmdt_genJet.size() >0 )
+   { // save to tree
+    PFjetMassMMDTUncorr           = masses_mmdt_pfJet[0];
+    PFjetMassMMDT                 = masses_mmdt_pfJet[1];
+    PFjetMassMMDTFilteredUncorr   = masses_mmdt_pfJet[2];
+    PFjetMassMMDTFiltered         = masses_mmdt_pfJet[3];
+
+    CHSjetMassMMDTUncorr          = masses_mmdt_chsJet[0];
+    CHSjetMassMMDT                = masses_mmdt_chsJet[1];
+    CHSjetMassMMDTFilteredUncorr  = masses_mmdt_chsJet[2];
+    CHSjetMassMMDTFiltered        = masses_mmdt_chsJet[3];
+
+    PUPjetMassMMDTUncorr          = masses_mmdt_pupJet[0];
+    PUPjetMassMMDT                = masses_mmdt_pupJet[1];
+    PUPjetMassMMDTFilteredUncorr  = masses_mmdt_pupJet[2];
+    PUPjetMassMMDTFiltered        = masses_mmdt_pupJet[3];
+
+    GENjetMassMMDT                = masses_mmdt_genJet[0];
+    GENjetMassMMDTFiltered        = masses_mmdt_genJet[2];
+
+    if (verbose) cout<<"mmdt  "<<masses_mmdt_pfJet[0]<<" "<<masses_mmdt_pfJet[1]<<" "<<masses_mmdt_pfJet[2]<<" "<<masses_mmdt_pfJet[3]<<" "<<endl;
     }
-    if (mmdt_chsJet!=0)
-    {
-      double mass_mmdt_corr    = mmdt_chsJet.m() * correction(mmdt_chsJet,jetCorr,rho.rho()); 
-
-      
-      // filter jet dynamically based on deltaR between subjets (arXiv:0802.2470)
-      double dyn_Rfilt = min(0.3, mmdt_chsJet.structure_of<MMDT>().delta_R()*0.5);
-      int    dyn_nfilt = 3;
-      Filter filter(dyn_Rfilt, SelectorNHardest(dyn_nfilt));
-      PseudoJet filtered_mmdtjet = filter(mmdt_chsJet);
-      double mass_mmdt_filtered_corr    = filtered_mmdtjet.m() * correction(filtered_mmdtjet,jetCorr,rho.rho()); 
-
-      CHSjetMassMDMTUncorr         = mmdt_chsJet.m();
-      CHSjetMassMDMT               = mass_mmdt_corr;
-      CHSjetMassMDMTFilteredUncorr = filtered_mmdtjet.m();
-      CHSjetMassMDMTFiltered       = mass_mmdt_filtered_corr;
-    }
-    if (mmdt_pupJet!=0)
-    {
-      double mass_mmdt_corr    = mmdt_pupJet.m() * correction(mmdt_pupJet,jetCorr,rho.rho()); 
-
-      // filter jet dynamically based on deltaR between subjets (arXiv:0802.2470)
-      double dyn_Rfilt = min(0.3, mmdt_pupJet.structure_of<MMDT>().delta_R()*0.5);
-      int    dyn_nfilt = 3;
-      Filter filter(dyn_Rfilt, SelectorNHardest(dyn_nfilt));
-      PseudoJet filtered_mmdtjet = filter(mmdt_pupJet);
-      double mass_mmdt_filtered_corr    = filtered_mmdtjet.m() * correction(filtered_mmdtjet,jetCorr,rho.rho()); 
-
-      PUPjetMassMDMTUncorr         = mmdt_pupJet.m();
-      PUPjetMassMDMT               = mass_mmdt_corr;
-      PUPjetMassMDMTFilteredUncorr = filtered_mmdtjet.m();
-      PUPjetMassMDMTFiltered       = mass_mmdt_filtered_corr;
-    }
-    if (mmdt_genJet!=0)
-    {
-      double mass_mmdt_corr    = mmdt_genJet.m() * correction(mmdt_genJet,jetCorr,rho.rho()); 
- 
-      
-      // filter jet dynamically based on deltaR between subjets (arXiv:0802.2470)
-      double dyn_Rfilt = min(0.3, mmdt_genJet.structure_of<MMDT>().delta_R()*0.5);
-      int    dyn_nfilt = 3;
-      Filter filter(dyn_Rfilt, SelectorNHardest(dyn_nfilt));
-      PseudoJet filtered_mmdtjet = filter(mmdt_genJet);
-      double mass_mmdt_filtered_corr    = filtered_mmdtjet.m() * correction(filtered_mmdtjet,jetCorr,rho.rho());
-
-      GENjetMassMDMTUncorr         = mmdt_genJet.m();
-      GENjetMassMDMT               = mass_mmdt_corr; 
-      GENjetMassMDMTFilteredUncorr = filtered_mmdtjet.m();
-      GENjetMassMDMTFiltered       = mass_mmdt_filtered_corr;
-    }
-
 
     // -- Soft drop ------------------------------------------
     double beta = 1.0;
@@ -970,6 +1184,9 @@ int main( int argc, char *argv[] ){
       PFjetSoftDropDR         = sd_pfJet.structure_of<contrib::SoftDrop>().delta_R();
       PFjetSoftDropMassDrop   = sd_pfJet.structure_of<contrib::SoftDrop>().mu();
       PFjetSoftDropEnergyLoss = 1-sd_pfJet.pt()/pfJets[0].pt();
+      PFjetAreaSoftDrop       = sd_pfJet .area() ;
+      PFjetNconstSoftDrop     = sd_pfJet .constituents().size() ;
+
     }
     if (sd_chsJet!=0)
     {
@@ -980,6 +1197,8 @@ int main( int argc, char *argv[] ){
       CHSjetSoftDropDR         = sd_chsJet.structure_of<contrib::SoftDrop>().delta_R();
       CHSjetSoftDropMassDrop   = sd_chsJet.structure_of<contrib::SoftDrop>().mu();
       CHSjetSoftDropEnergyLoss = 1-sd_chsJet.pt()/chsJets[0].pt();
+      CHSjetAreaSoftDrop       = sd_chsJet .area() ;
+      CHSjetNconstSoftDrop     = sd_chsJet .constituents().size() ;
     } 
     if (sd_pupJet!=0)
     {
@@ -990,6 +1209,8 @@ int main( int argc, char *argv[] ){
       PUPjetSoftDropDR         = sd_pupJet.structure_of<contrib::SoftDrop>().delta_R();
       PUPjetSoftDropMassDrop   = sd_pupJet.structure_of<contrib::SoftDrop>().mu();
       PUPjetSoftDropEnergyLoss = 1-sd_pupJet.pt()/pupJets[0].pt();
+      PUPjetAreaSoftDrop       = sd_pupJet .area() ;
+      PUPjetNconstSoftDrop     = sd_pupJet .constituents().size() ;
     }
     if (sd_genJet!=0)
     {
@@ -1000,8 +1221,10 @@ int main( int argc, char *argv[] ){
       GENjetSoftDropDR         = sd_genJet.structure_of<contrib::SoftDrop>().delta_R();
       GENjetSoftDropMassDrop   = sd_genJet.structure_of<contrib::SoftDrop>().mu();
       GENjetSoftDropEnergyLoss = 1-sd_genJet.pt()/genJets[0].pt();
+      GENjetAreaSoftDrop       = sd_genJet .area() ;
+      GENjetNconstSoftDrop     = sd_genJet .constituents().size() ;
     }   
-
+    if (verbose) cout<<" done soft drop"<<endl;
 
     /////////////////////////////////////////////////////////////////////
     //  Jet tagging 
@@ -1020,6 +1243,7 @@ int main( int argc, char *argv[] ){
     vector<PseudoJet> jet_constituents_chs = chsJets[0].constituents();      
     vector<PseudoJet> jet_constituents_pup = pupJets[0].constituents();      
     vector<PseudoJet> jet_constituents_gen = genJets[0].constituents(); 
+    if (verbose) cout<<" N-subjett"<<endl;
 
     double tau1_pf  = nSubOnePass.getTau(1,jet_constituents_pf );
     double tau1_chs = nSubOnePass.getTau(1,jet_constituents_chs);
@@ -1092,6 +1316,8 @@ int main( int argc, char *argv[] ){
     //   if (verbose) cout<<" JHU Nsubjets1 "<<kept_subjets1.size()<<endl;
     //   if (verbose) cout<<" JHU mass "<<jhu_top_mass <<" jhu_W_mass "<<jhu_W_mass<<" jhu_cosTheta "<< jhu_cosTheta<<endl;
     // } 
+
+    if (verbose) cout<<" start CMS tt"<<endl;
 
     // // -- CMS Top Tagger ------------------------------------------
     double cms_delta_p = 0.05;
@@ -1173,27 +1399,27 @@ int main( int argc, char *argv[] ){
 
     // -- HEP Top Tagger ------------------------------------------
 
-//     double topmass=172.3;
-//     double wmass=80.4;
-//     HEPTopTagger::HEPTopTagger cm_toptag(clus_seq_PF,pfJets[0],topmass,wmass);
-//     cm_toptag.set_top_range(150.,200.);
-//     cout<< "========= Top Tagger ============" << endl;
-//     cm_toptag.run_tagger();
-//     cout<< "-------- setting  --------" << endl;
-//     cm_toptag.get_setting();
-//     cout<< "-------- resutls  --------" << endl;
-//     cm_toptag.get_info();
+    //     double topmass=172.3;
+    //     double wmass=80.4;
+    //     HEPTopTagger::HEPTopTagger cm_toptag(clus_seq_PF,pfJets[0],topmass,wmass);
+    //     cm_toptag.set_top_range(150.,200.);
+    //     cout<< "========= Top Tagger ============" << endl;
+    //     cm_toptag.run_tagger();
+    //     cout<< "-------- setting  --------" << endl;
+    //     cm_toptag.get_setting();
+    //     cout<< "-------- resutls  --------" << endl;
+    //     cm_toptag.get_info();
 
-//       if(cm_toptag.is_masscut_passed()){
-//   cout << "### masscut_passed ###" << endl;
-//   PseudoJet top=cm_toptag.top_candidate();
-//   PseudoJet b=cm_toptag.top_subjets().at(0);
-//   PseudoJet W1=cm_toptag.top_subjets().at(1);
-//   PseudoJet W2=cm_toptag.top_subjets().at(2);
-//   cout << "top mass: " << top.m() << endl;
-//   cout << "bottom mass: "<< b.m() << endl;
-//   cout << "W mass: "<< (W1+W2).m() << endl;
-// }
+    //       if(cm_toptag.is_masscut_passed()){
+    //   cout << "### masscut_passed ###" << endl;
+    //   PseudoJet top=cm_toptag.top_candidate();
+    //   PseudoJet b=cm_toptag.top_subjets().at(0);
+    //   PseudoJet W1=cm_toptag.top_subjets().at(1);
+    //   PseudoJet W2=cm_toptag.top_subjets().at(2);
+    //   cout << "top mass: " << top.m() << endl;
+    //   cout << "bottom mass: "<< b.m() << endl;
+    //   cout << "W mass: "<< (W1+W2).m() << endl;
+    // }
     // -- Qjets ------------------------------------------
 
     // int QJetsPreclustering = 999;
