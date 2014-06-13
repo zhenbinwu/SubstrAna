@@ -1,5 +1,6 @@
 <use name="FWCore/PythonParameterSet"/>
 <use name="Dummy/Puppi"/>
+<use name="CondFormats/JetMETObjects"/>
 <use name="BaconAna/DataFormats"/>
 <use name="root"/>
 <use name="fastjet"/>
