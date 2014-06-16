@@ -374,12 +374,12 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt, float maxPt){
 	hptraw_response_vs_pt     -> Fill(ptgen->at(j),ptraw->at(j)/ptgen->at(j)-1); // fill with (pt-ptgen)/ptgen
 	hpt_response_vs_pt        -> Fill(ptgen->at(j),pt->at(j)/ptgen->at(j)-1);    // fill with (pt-ptgen)/ptgen
 	hptcorr_response_vs_pt    -> Fill(ptgen->at(j),ptcorr->at(j)/ptgen->at(j)-1);    // fill with (pt-ptgen)/ptgen
-	hmraw_response_vs_pt      -> Fill(pt->at(j),mraw->at(j)-mrawgen->at(j));
-	hm_response_vs_pt         -> Fill(pt->at(j),m->at(j)-mgen->at(j));
-	hmtrim_response_vs_pt     -> Fill(pt->at(j),mtrim->at(j)-mtrimgen->at(j));
-	hmtrimsafe_response_vs_pt -> Fill(pt->at(j),mtrimsafe->at(j)-mtrimsafegen->at(j));
-	hmclean_response_vs_pt    -> Fill(pt->at(j),mclean->at(j)-mcleangen->at(j));
-	hmconst_response_vs_pt    -> Fill(pt->at(j),mconst->at(j)-mconstgen->at(j));
+	hmraw_response_vs_pt      -> Fill(ptgen->at(j),mraw->at(j)-mrawgen->at(j));
+	hm_response_vs_pt         -> Fill(ptgen->at(j),m->at(j)-mgen->at(j));
+	hmtrim_response_vs_pt     -> Fill(ptgen->at(j),mtrim->at(j)-mtrimgen->at(j));
+	hmtrimsafe_response_vs_pt -> Fill(ptgen->at(j),mtrimsafe->at(j)-mtrimsafegen->at(j));
+	hmclean_response_vs_pt    -> Fill(ptgen->at(j),mclean->at(j)-mcleangen->at(j));
+	hmconst_response_vs_pt    -> Fill(ptgen->at(j),mconst->at(j)-mconstgen->at(j));
 
 	//hptraw_response_vs_eta     -> Fill(eta->at(j),ptraw->at(j)-ptgen->at(j));
 	//hpt_response_vs_eta        -> Fill(eta->at(j),pt->at(j)-ptgen->at(j));
