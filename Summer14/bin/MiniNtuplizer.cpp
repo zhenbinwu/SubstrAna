@@ -1,3 +1,7 @@
+#include "FWCore/ParameterSet/interface/ProcessDesc.h"
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/PythonParameterSet/interface/MakeParameterSets.h"
+
 #include "../include/GenLoader.hh"
 #include "../include/MuonLoader.hh"
 #include "../include/PFLoader.hh"
@@ -792,14 +796,32 @@ bool FillChain(TChain& chain, const std::string& inputFileList)
 //---------------------------------------------------------------------------------------------------------------
 int main (int argc, char ** argv) {
 
-  // args 
-  std::string inputFilesList = argv[1];        // input file name
-  int maxEvents              = atoi(argv[2]);  // max events
-  cout<<"Bibhu Maximum events = "<<maxEvents<<endl;
+  // --- args
+  if (argc<3){
+    cout << "Missing arguments!!!" <<endl;
+    cout << "Usage: MiniNtuplizer <config> <input files list> <output file>" <<endl;
+  }
 
-  std::string fOut           = argv[3];        // output name
-  float jetR                 = atof(argv[4]);  // jet cone size      
-  bool doCMSSWJets           = atoi(argv[5]);  // if want to analyze PF Jets from CMSSW
+  // args 
+  std::string inputFilesList = argv[2]; // input file name
+  std::string fOut           = argv[3]; // output name
+
+  // --- Read configurable parameters from config                                                                                                                                                             
+  std::string configFileName = argv[1];
+  boost::shared_ptr<edm::ParameterSet> parameterSet = edm::readConfig(configFileName);
+  
+  edm::ParameterSet Options  = parameterSet -> getParameter<edm::ParameterSet>("Options");
+  int maxEvents              = Options.getParameter<int>("maxEvents"); // max num of events to analyze
+  double jetR                = Options.getParameter<double>("jetR"); // jet cone size  
+  bool doCMSSWJets           = Options.getParameter<bool>("doCMSSWJets"); // analyze also default CMSSW PF jets
+  std::string puppiConfig    = Options.getParameter<std::string>("puppiConfig"); // Puppi congiguration file
+
+  std::string L1FastJetJEC   = Options.getParameter<std::string>("L1FastJetJEC");  // L1 JEC 
+  std::string L2RelativeJEC  = Options.getParameter<std::string>("L2RelativeJEC"); // L2
+  std::string L3AbsoluteJEC  = Options.getParameter<std::string>("L3AbsoluteJEC"); // L3
+  std::string L2L3ResidualJEC= Options.getParameter<std::string>("L2L3ResidualJEC"); // L2L3 residual (for data only)
+  std::string JECUncertainty = Options.getParameter<std::string>("JECUncertainty"); // Uncertainty
+
 
   // --- Read list of files to be analyzed and fill TChain
   TChain* lTree = new TChain("Events");
@@ -809,7 +831,7 @@ int main (int argc, char ** argv) {
   cout << "This analysis will run on "<< maxEvents << " events" <<endl; 
 
   // --- Load branches
-  fPFCand = new PFLoader (lTree,"Puppi_cff.py");
+  fPFCand = new PFLoader (lTree,puppiConfig.c_str());
   fGen    = new GenLoader(lTree);
   if (doCMSSWJets) setupCMSSWJetReadOut(lTree, jetR);
 
@@ -817,20 +839,29 @@ int main (int argc, char ** argv) {
   lTree->SetBranchAddress("Info",&eventInfo);
 
   // --- Setup JEC on the fly
- // std::string cmsenv = "/afs/cern.ch/user/p/pharris/pharris/public/bacon/prod/CMSSW_6_2_7_patch2/src/";
+  /*
+  // std::string cmsenv = "/afs/cern.ch/user/p/pharris/pharris/public/bacon/prod/CMSSW_6_2_7_patch2/src/";
   std::string cmsenv = "/afs/cern.ch/user/b/bmahakud/public/JEC/";
-
+  
   std::vector<JetCorrectorParameters> corrParams;
- // corrParams.push_back(JetCorrectorParameters(cmsenv+"BaconProd/Utils/data/Summer13_V1_MC_L1FastJet_AK5PF.txt"));
+  // corrParams.push_back(JetCorrectorParameters(cmsenv+"BaconProd/Utils/data/Summer13_V1_MC_L1FastJet_AK5PF.txt"));
   corrParams.push_back(JetCorrectorParameters(cmsenv+"POSTLS162_V5_L1FastJet_AK7PF.txt"));
- // corrParams.push_back(JetCorrectorParameters(cmsenv+"BaconProd/Utils/data/Summer13_V1_MC_L2Relative_AK5PF.txt"));
-   corrParams.push_back(JetCorrectorParameters(cmsenv+"POSTLS162_V5_L2Relative_AK7PF.txt"));
- // corrParams.push_back(JetCorrectorParameters(cmsenv+"BaconProd/Utils/data/Summer13_V1_MC_L3Absolute_AK5PF.txt"));
-    corrParams.push_back(JetCorrectorParameters(cmsenv+"POSTLS162_V5_L3Absolute_AK7PF.txt"));
-
+  // corrParams.push_back(JetCorrectorParameters(cmsenv+"BaconProd/Utils/data/Summer13_V1_MC_L2Relative_AK5PF.txt"));
+  corrParams.push_back(JetCorrectorParameters(cmsenv+"POSTLS162_V5_L2Relative_AK7PF.txt"));
+  // corrParams.push_back(JetCorrectorParameters(cmsenv+"BaconProd/Utils/data/Summer13_V1_MC_L3Absolute_AK5PF.txt"));
+  corrParams.push_back(JetCorrectorParameters(cmsenv+"POSTLS162_V5_L3Absolute_AK7PF.txt"));
+  
   //corrParams.push_back(JetCorrectorParameter(cmsenv+'BaconProd/Utils/data/Summer13_V1_DATA_L2L3Residual_AK5PF.txt'));
- // JetCorrectorParameters     param(cmsenv+"BaconProd/Utils/data/Summer13_V1_DATA_Uncertainty_AK5PF.txt");
+  // JetCorrectorParameters     param(cmsenv+"BaconProd/Utils/data/Summer13_V1_DATA_Uncertainty_AK5PF.txt");
   JetCorrectorParameters     param(cmsenv+"POSTLS162_V5_Uncertainty_AK7PF.txt");
+  */
+ 
+  std::vector<JetCorrectorParameters> corrParams;
+  corrParams.push_back(JetCorrectorParameters(L1FastJetJEC.c_str()));  
+  corrParams.push_back(JetCorrectorParameters(L2RelativeJEC.c_str()));  
+  corrParams.push_back(JetCorrectorParameters(L3AbsoluteJEC.c_str()));  
+  if (L2L3ResidualJEC!="") corrParams.push_back(JetCorrectorParameters(L2L3ResidualJEC.c_str())); // 
+  JetCorrectorParameters param(JECUncertainty.c_str());      
 
   FactorizedJetCorrector   *jetCorr = new FactorizedJetCorrector(corrParams);
   JetCorrectionUncertainty *jetUnc  = new JetCorrectionUncertainty(param);
@@ -867,7 +898,7 @@ int main (int argc, char ** argv) {
 
     if(ientry % 50 == 0) 
       std::cout << "===> Processed " << ientry << " - Done : " << (float(ientry)/float(maxEvents))*100 << "%" << std::endl;
-   if(ientry % 20 == 0) std::cout << ientry << std::endl;
+
     // -- For each event build collections of particles (gen, puppi, etc..) to cluster
     fPFCand->load(ientry);
     fGen   ->load(ientry); 
