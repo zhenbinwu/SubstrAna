@@ -42,7 +42,7 @@
 #include "QjetsPlugin.h"
 #include "Qjets.h"
 #include "fastjet/contrib/EnergyCorrelator.hh"
-// #include "HEPTopTagger.hh"
+//#include "HEPTopTagger.hh"
 //#include "HEPTopTaggerWrapper.hh"
 
 // Jet Corrections
@@ -492,8 +492,9 @@ int main( int argc, char *argv[] ){
   string LastEventString = templ.str();
 
   string outname;
-  if (Sample==1) outname = "out_0610_RS3000T_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
-  if (Sample==0) outname = "out_0610_QCD_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
+  if (Sample==2) outname = "out_0615_WW_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
+  if (Sample==1) outname = "out_0615_RS3000T_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
+  if (Sample==0) outname = "out_0615_QCD_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
   TFile *outfile = new TFile(outname.c_str(), "RECREATE");
   TTree * JetTree = new TTree("JetTree","Tree for saving jet info");
   JetTree->Branch("PFjetPt"                         ,&PFjetPt                      ,"PFjetPt"                      );
@@ -672,6 +673,7 @@ int main( int argc, char *argv[] ){
 
   TChain fIn("Events");  
   std::ifstream input_file_list;
+  if (Sample==2) input_file_list.open("fileListRSGWW1000.txt");
   if (Sample==1) input_file_list.open("fileListRS3000.txt");
   if (Sample==0) input_file_list.open("fileListQCD.txt");
   std::string tmp;
@@ -734,6 +736,7 @@ int main( int argc, char *argv[] ){
   std::vector<PseudoJet> particles;
   std::vector<PseudoJet> genparticles;  
   std::vector<PseudoJet> gentops;  
+  std::vector<PseudoJet> genWs;  
 
   int nEventsInChain = fIn.GetEntries();
   cout<<" nEventsInChain "<<nEventsInChain<<" FirstEvent "<<FirstEvent<<" Nevents "<<Nevents<<endl;
@@ -746,6 +749,7 @@ int main( int argc, char *argv[] ){
     particles   .clear();
     genparticles.clear();
     gentops.clear();
+    genWs.clear();
 
     if (i0%100==0) std::cout <<"Event: "<< i0 <<"  (Running from "<< FirstEvent << " -> " <<Nevents+FirstEvent-1 <<") - (total # of events in chain = "<<nEventsInChain<<")"<< std::endl;
     if (verbose) std::cout <<"Event: "<< i0 <<"  (Running from "<< FirstEvent << " -> " <<Nevents+FirstEvent-1 <<") - (total # of events in chain = "<<nEventsInChain<<") -  N PF candidates = " << fPFPart->GetEntriesFast() << std::endl;
@@ -767,6 +771,11 @@ int main( int argc, char *argv[] ){
         fastjet::PseudoJet topholder = convert(pPartTmp);
         gentops.push_back(topholder);
       }  
+      if ( fabs(pPartTmp->pdgId)  ==24 && pPartTmp->status >20 && pPartTmp->status<30 )
+      {
+        fastjet::PseudoJet Wholder = convert(pPartTmp);
+        genWs.push_back(Wholder);
+      }  
       if(pPartTmp->status != 1) continue;
       //Convert gen particle to PseudoJet
       fastjet::PseudoJet pFastJet = convert(pPartTmp);
@@ -778,6 +787,15 @@ int main( int argc, char *argv[] ){
     if (Sample==1 && gentops.size()<1 )
     {
       if (verbose) cout << "************************ Did not find tops - Event "<<i0<<" ************************" << endl;
+      for( int i1 = 0; i1 < fGenPart->GetEntriesFast(); i1++){
+        baconhep::TGenParticle *pPartTmp = (baconhep::TGenParticle*)((*fGenPart)[i1]);
+        if (pPartTmp->pt>1000 && verbose) cout<<"     Particle "<<i1<<" pdgId "<<pPartTmp->pdgId<<" status "<<pPartTmp->status<<" parent "<<pPartTmp->parent<<" pt "<<pPartTmp->pt<<" eta "<<pPartTmp->eta<<" phi "<<pPartTmp->phi<<endl;
+      }
+      continue;
+    } 
+    if (Sample==2 && genWs.size()<1 )
+    {
+      if (verbose) cout << "************************ Did not find Ws - Event "<<i0<<" ************************" << endl;
       for( int i1 = 0; i1 < fGenPart->GetEntriesFast(); i1++){
         baconhep::TGenParticle *pPartTmp = (baconhep::TGenParticle*)((*fGenPart)[i1]);
         if (pPartTmp->pt>1000 && verbose) cout<<"     Particle "<<i1<<" pdgId "<<pPartTmp->pdgId<<" status "<<pPartTmp->status<<" parent "<<pPartTmp->parent<<" pt "<<pPartTmp->pt<<" eta "<<pPartTmp->eta<<" phi "<<pPartTmp->phi<<endl;
@@ -878,7 +896,9 @@ int main( int argc, char *argv[] ){
 
     // find gen jet matched top top quark
     PseudoJet genJet0 ;
+    genWs       = sorted_by_pt(genWs);
     gentops       = sorted_by_pt(gentops);
+    if (Sample==2) genJet0 = match(genWs[0],genJets);  
     if (Sample==1) genJet0 = match(gentops[0],genJets);  
     else genJet0 = genJets[0];
 
@@ -887,6 +907,7 @@ int main( int argc, char *argv[] ){
     if(genJet0.pt() < 1) 
     {
       cout<<"************************  did not find genjet matched to top ************************"<<endl;
+      cout<<"   genWs.size() "<<genWs.size()<<" pt0 "<<genWs[0].perp()<<" pt1 "<<genWs[1].perp()<<endl;
       cout<<"   gentops.size() "<<gentops.size()<<" pt0 "<<gentops[0].perp()<<" pt1 "<<gentops[1].perp()<<endl;
       cout<<"   genJets.size() "<<genJets.size()<<" pt0 "<<genJets[0].perp()<<" pt1 "<<genJets[1].perp()<<" dr1 "<< deltaR(gentops[0],genJets[0])<<" dr2 "<<deltaR(gentops[0],genJets[1])<<endl;
       continue;

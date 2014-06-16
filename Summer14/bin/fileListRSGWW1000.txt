@@ -1,0 +1,7 @@
+root://cmseos:1094//eos/uscms/store/user/ntran/PUPPI/bacon/rsgww1000_62x_PU40BX50/ntuple_1_1_VQC.root
+root://cmseos:1094//eos/uscms/store/user/ntran/PUPPI/bacon/rsgww1000_62x_PU40BX50/ntuple_2_1_WxV.root
+root://cmseos:1094//eos/uscms/store/user/ntran/PUPPI/bacon/rsgww1000_62x_PU40BX50/ntuple_3_1_12y.root
+root://cmseos:1094//eos/uscms/store/user/ntran/PUPPI/bacon/rsgww1000_62x_PU40BX50/ntuple_4_1_Dks.root
+root://cmseos:1094//eos/uscms/store/user/ntran/PUPPI/bacon/rsgww1000_62x_PU40BX50/ntuple_5_1_oHy.root
+root://cmseos:1094//eos/uscms/store/user/ntran/PUPPI/bacon/rsgww1000_62x_PU40BX50/ntuple_6_1_Moz.root
+root://cmseos:1094//eos/uscms/store/user/ntran/PUPPI/bacon/rsgww1000_62x_PU40BX50/ntuple_7_1_sFX.root
