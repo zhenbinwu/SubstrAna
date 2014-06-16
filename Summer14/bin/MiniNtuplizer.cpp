@@ -900,8 +900,10 @@ int main (int argc, char ** argv) {
       std::cout << "===> Processed " << ientry << " - Done : " << (float(ientry)/float(maxEvents))*100 << "%" << std::endl;
 
     // -- For each event build collections of particles (gen, puppi, etc..) to cluster
-    fPFCand->load(ientry);
-    fGen   ->load(ientry); 
+    Long64_t localEntry = lTree->LoadTree(ientry);
+    fPFCand->load(localEntry);
+    fGen   ->load(localEntry);  
+    
     vector<PseudoJet> gen_event       = fGen   ->genFetch();
     vector<PseudoJet> pf_event        = fPFCand->pfFetch();
     vector<PseudoJet> chs_event       = fPFCand->pfchsFetch(-1);
