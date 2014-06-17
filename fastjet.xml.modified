@@ -7,7 +7,10 @@
     <lib name="siscone_spherical"/>
     <lib name="fastjet"/>
     <client>
-      <environment name="FASTJET_BASE" default="$CMSSW_BASE/src/SubstrAna/fastjet"/>
+      <environment name="FASTJET_BASE" default="/uscms_data/d2/ntran/physics/fastjet/summer14/fastjet"/>
+      <!-- --
+         <environment name="FASTJET_BASE" default="$CMSSW_BASE/src/SubstrAna/fastjet"/>
+      <!-- -->
       <environment name="LIBDIR" default="$FASTJET_BASE/lib"/>
       <environment name="INCLUDE" default="$FASTJET_BASE/include"/>
     </client>
