@@ -68,8 +68,8 @@ private:
   vector<vector<PseudoJet> > _candjets;
 
   void FindHardSubst(const PseudoJet& jet, vector<fastjet::PseudoJet>& t_parts);
-  vector<PseudoJet> Filtering(const vector <PseudoJet> & top_constits, const JetDefinition & filtering_def);
   void store_topsubjets(const vector<PseudoJet>& top_subs);
+  vector<PseudoJet> Filtering(const vector <PseudoJet> & top_constits, const JetDefinition & filtering_def);
   bool check_mass_criteria(const vector<fastjet::PseudoJet> & top_subs) const;
   double check_cos_theta(const PseudoJet & jet, const PseudoJet & subj1,const PseudoJet & subj2) const;
   PseudoJet Sum(const vector<PseudoJet>& );
@@ -169,7 +169,7 @@ void HEPTopTagger::store_topsubjets(const vector<PseudoJet>& top_subs){
   double m12=(top_subs[0]+top_subs[1]).m();
   double m13=(top_subs[0]+top_subs[2]).m();
   double m23=(top_subs[1]+top_subs[2]).m();
-  double m123=(top_subs[0]+top_subs[1]+top_subs[2]).m();
+  //double m123=(top_subs[0]+top_subs[1]+top_subs[2]).m();
   double dm12=abs(m12-_mwmass);
   double dm13=abs(m13-_mwmass);
   double dm23=abs(m23-_mwmass);

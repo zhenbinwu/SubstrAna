@@ -1,14 +1,14 @@
 #include "Qjets.h"
 
 Qjets::Qjets(double zcut, double dcut_fctr, double exp_min, double exp_max, double rigidity, double truncation_fctr)
-  : _zcut(zcut),
+  :  _rand_seed_set(false), 
+	_zcut(zcut),
+    _dcut(-1.),
     _dcut_fctr(dcut_fctr),
     _exp_min(exp_min),
     _exp_max(exp_max),
     _rigidity(rigidity),
-    _dcut(-1.),
-    _truncation_fctr(truncation_fctr),
-    _rand_seed_set(false)
+    _truncation_fctr(truncation_fctr)
 {
 }
 
@@ -149,7 +149,7 @@ _distances.push(jd);
 void Qjets::ComputeNewDistanceMeasures(fastjet::ClusterSequence & cs, int new_jet){
   // jet-jet distances
   for(unsigned int i = 0; i < cs.jets().size(); i++)
-    if(JetUnmerged(i) && i != new_jet){
+    if(JetUnmerged(i) && i !=(unsigned int) new_jet){
       jet_distance jd;
       jd.j1 = new_jet;
       jd.j2 = i;
@@ -162,7 +162,7 @@ double Qjets::d_ij(const fastjet::PseudoJet& v1,const fastjet::PseudoJet& v2) co
   double p1 = v1.perp();
   double p2 = v2.perp();
   double ret = pow(min(p1,p2),_exp_min) * pow(max(p1,p2),_exp_max) * v1.squared_distance(v2);
-  assert(!isnan(ret));
+  assert( !isnan((float)ret));
   return ret;
 }
 

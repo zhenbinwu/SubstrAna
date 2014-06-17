@@ -1,11 +1,10 @@
 <use name="FWCore/PythonParameterSet"/>
 <use name="Dummy/Puppi"/>
-<use name="CondFormats/JetMETObjects"/>
 <use name="BaconAna/DataFormats"/>
 <use name="root"/>
 <use name="fastjet"/>
 <use name="roottmva"/>
-<flags CXXFLAGS="-g -Wall"/>
+<flags CXXFLAGS="-g -Wall -Wno-reorder"/>
 <export>
   <lib   name="1"/>
 </export>
