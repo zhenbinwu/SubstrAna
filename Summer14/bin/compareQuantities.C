@@ -1,6 +1,9 @@
 void compareQuantities(string filename1, string filename2, string var1, string var2, int nbins, float min, float max){
 
 
+	gROOT->SetOptStat(0);
+	gROOT->SetStyl
+
 	TFile *inputFile1 = new TFile(filename1.c_str());
 	TFile *inputFile2 = new TFile(filename2.c_str());
 
@@ -25,9 +28,10 @@ void compareQuantities(string filename1, string filename2, string var1, string v
 	var2H->SetLineColor(kBlue);
 
 
-	//var1H->SetMaximum( TMath::Max(var1H->GetMaximum(), var2H->GetMaximum()) * 1.25 );
+	var1H->SetMaximum( TMath::Max(var1H->GetMaximum(), var2H->GetMaximum()) * 1.25 );
 
-	
+	var1H->GetXaxis()->SetTitle("Quantity");
+	var1H->GetYaxis()->SetTitle("Fraction of Events");
 
 
 	var1H->DrawNormalized();
