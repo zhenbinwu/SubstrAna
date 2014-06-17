@@ -1,4 +1,4 @@
-void compare2DQuantities(string filename1, string var1, string var2, int nbins, float min, float max, int nbinsY, float minY, float maxY){
+void compare2DQuantities(string filename1, string var1, string var2, int nbins, float min, float max, int nbinsY, float minY, float maxY, string cut){
 
 	gStyle->SetOptStat(0);
 	gROOT->SetStyle("Plain");
@@ -12,7 +12,7 @@ void compare2DQuantities(string filename1, string var1, string var2, int nbins, 
 
 	cout << var1 << "  " << var2 << endl;	
 
-	jetTree1->Draw(Form("%s:%s>>var1H",var1.c_str(), var2.c_str()), "", "goff");
+	jetTree1->Draw(Form("%s:%s>>var1H",var1.c_str(), var2.c_str()), cut.c_str(), "goff");
 
 
 

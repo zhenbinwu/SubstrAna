@@ -1,5 +1,6 @@
 void compareQuantities(string filename1, string filename2, string var1, string var2, int nbins, float min, float max, string cut = ""){
 
+	if (filename2 == "") filename2 = filename1;
 
 	gStyle->SetOptStat(0);
 	gROOT->SetStyle("Plain");
