@@ -1,5 +1,7 @@
 void compare2DQuantities(string filename1, string var1, string var2, int nbins, float min, float max, int nbinsY, float minY, float maxY){
 
+	gStyle->SetOptStat(0);
+	gROOT->SetStyle("Plain");
 
 	TFile *inputFile1 = new TFile(filename1.c_str());
 
