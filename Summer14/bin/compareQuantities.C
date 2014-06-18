@@ -34,6 +34,12 @@ void compareQuantities(string filename1, string filename2, string var1, string v
 	var1H->GetXaxis()->SetTitle("Quantity");
 	var1H->GetYaxis()->SetTitle("Fraction of Events");
 
+    if (var1==var2) 
+    {
+        var1H->GetXaxis()->SetTitle(var1.c_str());
+        var1 = filename1;
+        var2 = filename2;
+    }
 
 	var1H->DrawNormalized();
 	var2H->DrawNormalized("same");
