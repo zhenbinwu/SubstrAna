@@ -1,5 +1,9 @@
-void compareQuantities(string filename1, string filename2, string var1, string var2, int nbins, float min, float max){
+void compareQuantities(string filename1, string filename2, string var1, string var2, int nbins, float min, float max, string cut = ""){
 
+	if (filename2 == "") filename2 = filename1;
+
+	gStyle->SetOptStat(0);
+	gROOT->SetStyle("Plain");
 
 	TFile *inputFile1 = new TFile(filename1.c_str());
 	TFile *inputFile2 = new TFile(filename2.c_str());
@@ -13,8 +17,8 @@ void compareQuantities(string filename1, string filename2, string var1, string v
 
 	cout << var1 << "  " << var2 << endl;	
 
-	jetTree1->Draw(Form("%s>>var1H",var1.c_str()), "", "goff");
-	jetTree2->Draw(Form("%s>>var2H",var2.c_str()), "", "goff");
+	jetTree1->Draw(Form("%s>>var1H",var1.c_str()), cut.c_str(), "goff");
+	jetTree2->Draw(Form("%s>>var2H",var2.c_str()), cut.c_str(), "goff");
 
 	cout << var1H->GetEntries() << " " << var2H->GetEntries() << endl;
 
@@ -25,10 +29,17 @@ void compareQuantities(string filename1, string filename2, string var1, string v
 	var2H->SetLineColor(kBlue);
 
 
-	//var1H->SetMaximum( TMath::Max(var1H->GetMaximum(), var2H->GetMaximum()) * 1.25 );
+	var1H->SetMaximum( TMath::Max(var1H->GetMaximum(), var2H->GetMaximum()) * 1.25 );
 
-	
+	var1H->GetXaxis()->SetTitle("Quantity");
+	var1H->GetYaxis()->SetTitle("Fraction of Events");
 
+    if (var1==var2) 
+    {
+        var1H->GetXaxis()->SetTitle(var1.c_str());
+        var1 = filename1;
+        var2 = filename2;
+    }
 
 	var1H->DrawNormalized();
 	var2H->DrawNormalized("same");

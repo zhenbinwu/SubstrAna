@@ -2,14 +2,15 @@
 //
 // runHats.cpp
 // code to run on JMEtuples (Bacon) for HATS tutorial and Boost2014 studies
-// usage: runHats  <Cone size>  <clustering algorithm (kt, ca, ak)>  <first event> <number of events>
-// example: runHats 0.8 ca 0 1000
+// usage: runHats  <Cone size>  <clustering algorithm (kt, ca, ak)>  <first event> <number of events> <sample (0 qcd, 1 ttbar, 2WW)>
+// example: runHats 0.8 ca 0 1000 1
 //
 ///////
 
 // standard
 #include <iostream>
 #include <fstream> 
+#include <ctime>
 
 // Fastjet
 #include "fastjet/PseudoJet.hh"
@@ -39,11 +40,10 @@
 #include "fastjet/contrib/Nsubjettiness.hh"
 #include "CMSTopTagger.hh"
 #include <fastjet/tools/JHTopTagger.hh>
-#include "QjetsPlugin.h"
-#include "Qjets.h"
+#include "SubstrAna/Summer14/src/QjetsPlugin.h"
+#include "SubstrAna/Summer14/src/Qjets.h"
 #include "fastjet/contrib/EnergyCorrelator.hh"
-//#include "HEPTopTagger.hh"
-//#include "HEPTopTaggerWrapper.hh"
+#include "SubstrAna/Summer14/src/HEPTopTaggerWrapper.hh"
 
 // Jet Corrections
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
@@ -60,6 +60,7 @@
 // Bacon (JME tuples)
 #include "BaconAna/DataFormats/interface/TPFPart.hh"
 #include "BaconAna/DataFormats/interface/TGenParticle.hh"
+#include "BaconAna/DataFormats/interface/TEventInfo.hh"
 
 // SoftKiller
 #include "fastjet/contrib/SoftKiller.hh"
@@ -146,6 +147,27 @@ double calculate_minmass(vector<PseudoJet> subjets)
   return mmin;
 }
 
+double calculate_sum_subjet_mass(vector<PseudoJet> subjets)
+{
+  PseudoJet sum_subjets ;
+  for (unsigned int i=0; i< subjets.size(); i++)
+  {
+    sum_subjets+=subjets[i];
+  }
+  double sum_mass =    sum_subjets.m() ;
+  return sum_mass;
+}
+double calculate_mass_drop_pruned( PseudoJet &iJet )
+{
+  vector<PseudoJet> subjets = sorted_by_pt(iJet.exclusive_subjets_up_to(2));
+  double mu=-1;
+  if (subjets.size()>1)
+  {
+    if (subjets[0].m() >  subjets[1].m() ) mu = subjets[0].m()/iJet.m();
+    else mu = subjets[1].m()/iJet.m();
+  }
+  return mu;    
+}
 double deltaR(PseudoJet &iJet,PseudoJet &jJet) {
    
         double pEta = fabs(iJet.eta()-jJet.eta());
@@ -185,10 +207,11 @@ vector<double> mmdt_corr_and_filter(PseudoJet &iJet, FactorizedJetCorrector *iJe
       double mass_mmdt_filtered_corr    = filtered_mmdtjet.m() * correction(filtered_mmdtjet,iJetCorr,iRho); 
       
 
-      vec.push_back( iJet.m() );
       vec.push_back( mass_mmdt_corr );
       vec.push_back( filtered_mmdtjet.m() );
       vec.push_back( mass_mmdt_filtered_corr );
+      vec.push_back( mass_mmdt_filtered_corr );
+      vec.push_back( filtered_mmdtjet.area() );
     }
     // else {
     //   cout<<" mmdt_corr_and_filter failed to get jet"<<endl;
@@ -197,57 +220,68 @@ vector<double> mmdt_corr_and_filter(PseudoJet &iJet, FactorizedJetCorrector *iJe
 }
 
 //Q jets stuff
-// double getQjetVolatility(std::vector < fastjet::PseudoJet > constits, int QJetsN, int seed){
+float FindRMS( std::vector< float > qjetmasses ){
     
-//     std::vector< float > qjetmasses;
+    float total = 0.;
+    float ctr = 0.;
+    for (unsigned int i = 0; i < qjetmasses.size(); i++){
+        total = total + qjetmasses[i];
+        ctr++;
+    }
+    float mean = total/ctr;
     
-//     double zcut(0.1), dcut_fctr(0.5), exp_min(0.), exp_max(0.), rigidity(0.1), truncationFactor(0.01);
-    
-//     for(unsigned int ii = 0 ; ii < (unsigned int) QJetsN ; ii++){
-//         QjetsPlugin qjet_plugin(zcut, dcut_fctr, exp_min, exp_max, rigidity, truncationFactor);
-//         qjet_plugin.SetRandSeed(seed+ii); // new feature in Qjets to set the random seed
-//         fastjet::JetDefinition qjet_def(&qjet_plugin);
-//         fastjet::ClusterSequence qjet_seq(constits, qjet_def);
-//         vector<fastjet::PseudoJet> inclusive_jets2 = sorted_by_pt(qjet_seq.inclusive_jets(5.0));
-        
-//         if (inclusive_jets2.size()>0) { qjetmasses.push_back( inclusive_jets2[0].m() ); }
-        
-//     }
-    
-//     // find RMS of a vector
-//     float qjetsRMS = FindRMS( qjetmasses );
-//     // find mean of a vector
-//     float qjetsMean = FindMean( qjetmasses );
-//     float qjetsVolatility = qjetsRMS/qjetsMean;
-//     return qjetsVolatility;
-// }
-// float FindRMS( std::vector< float > qjetmasses ){
-    
-//     float total = 0.;
-//     float ctr = 0.;
-//     for (unsigned int i = 0; i < qjetmasses.size(); i++){
-//         total = total + qjetmasses[i];
-//         ctr++;
-//     }
-//     float mean = total/ctr;
-    
-//     float totalsquared = 0.;
-//     for (unsigned int i = 0; i < qjetmasses.size(); i++){
-//         totalsquared += (qjetmasses[i] - mean)*(qjetmasses[i] - mean) ;
-//     }
-//     float RMS = sqrt( totalsquared/ctr );
-//     return RMS;
-// }
+    float totalsquared = 0.;
+    for (unsigned int i = 0; i < qjetmasses.size(); i++){
+        totalsquared += (qjetmasses[i] - mean)*(qjetmasses[i] - mean) ;
+    }
+    float RMS = sqrt( totalsquared/ctr );
+    return RMS;
+}
 
-// float FindMean( std::vector< float > qjetmasses ){
-//     float total = 0.;
-//     float ctr = 0.;
-//     for (unsigned int i = 0; i < qjetmasses.size(); i++){
-//         total = total + qjetmasses[i];
-//         ctr++;
-//     }
-//     return total/ctr;
-// }
+float FindMean( std::vector< float > qjetmasses ){
+    float total = 0.;
+    float ctr = 0.;
+    for (unsigned int i = 0; i < qjetmasses.size(); i++){
+        total = total + qjetmasses[i];
+        ctr++;
+    }
+    return total/ctr;
+}
+double getQjetVolatility(std::vector < fastjet::PseudoJet > constits, int QJetsN, int seed){
+    
+    std::vector< float > qjetmasses;
+    
+    double zcut(0.1), dcut_fctr(0.5), exp_min(0.), exp_max(0.), rigidity(0.1), truncationFactor(0.01);
+    
+    for(unsigned int ii = 0 ; ii < (unsigned int) QJetsN ; ii++){
+        QjetsPlugin qjet_plugin(zcut, dcut_fctr, exp_min, exp_max, rigidity, truncationFactor);
+        qjet_plugin.SetRandSeed(seed+ii); // new feature in Qjets to set the random seed
+        fastjet::JetDefinition qjet_def(&qjet_plugin);
+        fastjet::ClusterSequence qjet_seq(constits, qjet_def);
+        vector<fastjet::PseudoJet> inclusive_jets2 = sorted_by_pt(qjet_seq.inclusive_jets(5.0));
+        
+        if (inclusive_jets2.size()>0) { qjetmasses.push_back( inclusive_jets2[0].m() ); }
+        
+    }
+    
+    // find RMS of a vector
+    float qjetsRMS = FindRMS( qjetmasses );
+    // find mean of a vector
+    float qjetsMean = FindMean( qjetmasses );
+    float qjetsVolatility = qjetsRMS/qjetsMean;
+    return qjetsVolatility;
+}
+double run_qjets_get_vol (PseudoJet &iJet, int rand)
+{
+  int QJetsPreclustering = 35;
+  std::vector<fastjet::PseudoJet> constits;
+  unsigned int nqjetconstits = iJet.constituents().size();
+  if (nqjetconstits < (unsigned int) QJetsPreclustering) constits = iJet.constituents();
+  else constits = iJet.associated_cluster_sequence()->exclusive_subjets_up_to(iJet,QJetsPreclustering);
+  double qjet_vol = getQjetVolatility(constits, 25, rand*25) ;
+  constits.clear();
+  return qjet_vol;
+}
 
 
 int main( int argc, char *argv[] ){
@@ -255,11 +289,10 @@ int main( int argc, char *argv[] ){
   /////////////////////////////////////////////////////////////////////
   //  Get input parameters
   /////////////////////////////////////////////////////////////////////
-
-
+    
   if (argc <= 5)
   {
-    cout << "Usage: " << argv[0] << " <Cone size>  <clustering algorithm (kt, ca, ak)>  <first event> <number of events> <1 for ttbar 0 for qcd>"<< endl; 
+    cout << "Usage: " << argv[0] << " <Cone size>  <clustering algorithm (kt, ca, ak)>  <first event> <number of events> <2 for WW 1 for ttbar 0 for qcd>"<< endl; 
     exit(1);
   }
 
@@ -300,7 +333,6 @@ int main( int argc, char *argv[] ){
   /////////////////////////////////////////////////////////////////////
   //  Outfile and ttree
   /////////////////////////////////////////////////////////////////////
-
 
   Float_t PFjetMassUncorr                    ;        
   Float_t CHSjetMassUncorr                   ;        
@@ -383,8 +415,6 @@ int main( int argc, char *argv[] ){
   Float_t GENjetSoftDropMassDrop             ;           
   Float_t GENjetSoftDropEnergyLoss           ;   
 
-
-
   Float_t PFjetArea                          ;        
   Float_t CHSjetArea                         ;        
   Float_t PUPjetArea                         ;        
@@ -414,7 +444,6 @@ int main( int argc, char *argv[] ){
   Float_t PUPjetAreaSoftDrop                 ;                 
   Float_t GENjetAreaSoftDrop                 ;     
 
-      
   Float_t PFjetNconst                          ;        
   Float_t CHSjetNconst                         ;        
   Float_t PUPjetNconst                         ;        
@@ -444,40 +473,105 @@ int main( int argc, char *argv[] ){
   Float_t PUPjetNconstSoftDrop                 ;                 
   Float_t GENjetNconstSoftDrop                 ;           
         
-
+  Float_t  PFjetMassDropPruned                   ;              
+  Float_t CHSjetMassDropPruned                   ;              
+  Float_t PUPjetMassDropPruned                   ;              
+  Float_t GENjetMassDropPruned                   ;  
 
   Float_t PFtau1                             ;   
   Float_t PFtau2                             ;   
   Float_t PFtau3                             ;   
+  Float_t PFtau32                            ;   
+  Float_t PFtau21                            ;   
   Float_t CHStau1                            ;    
   Float_t CHStau2                            ;    
   Float_t CHStau3                            ;    
+  Float_t CHStau32                           ;    
+  Float_t CHStau21                           ;    
   Float_t PUPtau1                            ;    
   Float_t PUPtau2                            ;    
   Float_t PUPtau3                            ;    
+  Float_t PUPtau32                           ;    
+  Float_t PUPtau21                           ;    
   Float_t GENtau1                            ;    
   Float_t GENtau2                            ;    
   Float_t GENtau3                            ;    
+  Float_t GENtau32                           ;    
+  Float_t GENtau21                           ;    
+
+
+
   Float_t PFcmsttJetMass                     ;            
   Float_t PFcmsttWMass                       ;            
   Float_t PFcmsttHelicity                    ;            
   Float_t PFcmsttNsubjets                    ;            
-  Float_t PFcmsttMinMass                     ;            
+  Float_t PFcmsttMinMass                     ;
+  Float_t PFcmsttGroomMass                   ;            
   Float_t CHScmsttJetMass                    ;            
   Float_t CHScmsttWMass                      ;            
   Float_t CHScmsttHelicity                   ;            
   Float_t CHScmsttNsubjets                   ;            
-  Float_t CHScmsttMinMass                    ;            
+  Float_t CHScmsttMinMass                    ; 
+  Float_t CHScmsttGroomMass                  ;           
   Float_t PUPcmsttJetMass                    ;             
   Float_t PUPcmsttWMass                      ;             
   Float_t PUPcmsttHelicity                   ;             
   Float_t PUPcmsttNsubjets                   ;             
-  Float_t PUPcmsttMinMass                    ;             
+  Float_t PUPcmsttMinMass                    ;   
+  Float_t PUPcmsttGroomMass                  ;        
   Float_t GENcmsttJetMass                    ;            
   Float_t GENcmsttWMass                      ;            
   Float_t GENcmsttHelicity                   ;            
   Float_t GENcmsttNsubjets                   ;            
-  Float_t GENcmsttMinMass                    ;            
+  Float_t GENcmsttMinMass                    ;   
+  Float_t GENcmsttGroomMass                  ;
+
+  Float_t GENhepttJetMass    ; 
+  Float_t GENhepttWMass      ; 
+  Float_t GENhepttM01        ; 
+  Float_t GENhepttM02        ; 
+  Float_t GENhepttM12        ; 
+  Float_t GENhepttNsubjets   ; 
+  Float_t GENhepttMinMass    ; 
+  Float_t GENhepttM12M012    ;
+  Float_t GENhepttAtanM02M01 ;
+
+  Float_t PFhepttJetMass    ; 
+  Float_t PFhepttWMass      ; 
+  Float_t PFhepttM01        ; 
+  Float_t PFhepttM02        ; 
+  Float_t PFhepttM12        ; 
+  Float_t PFhepttNsubjets   ; 
+  Float_t PFhepttMinMass    ; 
+  Float_t PFhepttM12M012    ;
+  Float_t PFhepttAtanM02M01 ;
+
+  Float_t CHShepttJetMass    ; 
+  Float_t CHShepttWMass      ; 
+  Float_t CHShepttM01        ; 
+  Float_t CHShepttM02        ; 
+  Float_t CHShepttM12        ; 
+  Float_t CHShepttNsubjets   ; 
+  Float_t CHShepttMinMass    ; 
+  Float_t CHShepttM12M012    ;
+  Float_t CHShepttAtanM02M01 ;
+
+  Float_t PUPhepttJetMass    ; 
+  Float_t PUPhepttWMass      ; 
+  Float_t PUPhepttM01        ; 
+  Float_t PUPhepttM02        ; 
+  Float_t PUPhepttM12        ; 
+  Float_t PUPhepttNsubjets   ; 
+  Float_t PUPhepttMinMass    ; 
+  Float_t PUPhepttM12M012    ;
+  Float_t PUPhepttAtanM02M01 ;
+
+  Float_t PFqjetVol  ;
+  Float_t CHSqjetVol ;
+  Float_t PUPqjetVol ;
+  Float_t GENqjetVol ;
+
+  Float_t nPU                    ;            
 
   stringstream tempj;
   tempj << R*10;
@@ -492,9 +586,10 @@ int main( int argc, char *argv[] ){
   string LastEventString = templ.str();
 
   string outname;
-  if (Sample==2) outname = "out_0615_WW_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
-  if (Sample==1) outname = "out_0615_RS3000T_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
-  if (Sample==0) outname = "out_0615_QCD_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
+  if (Sample==2) outname = "out_hats_RSGrav2000WW_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
+  if (Sample==1) outname = "out_hats_RSGlu3000TT_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
+  if (Sample==0) outname = "out_hats_QCD1000to1400_"+algo+"_R"+Rstring+"_"+FirstEventString+"_"+LastEventString+".root";
+
   TFile *outfile = new TFile(outname.c_str(), "RECREATE");
   TTree * JetTree = new TTree("JetTree","Tree for saving jet info");
   JetTree->Branch("PFjetPt"                         ,&PFjetPt                      ,"PFjetPt"                      );
@@ -633,38 +728,102 @@ int main( int argc, char *argv[] ){
   JetTree->Branch("CHSjetNconstSoftDrop"            ,&CHSjetNconstSoftDrop         ,"CHSjetNconstSoftDrop"         );
   JetTree->Branch("PUPjetNconstSoftDrop"            ,&PUPjetNconstSoftDrop         ,"PUPjetNconstSoftDrop"         );
   JetTree->Branch("GENjetNconstSoftDrop"            ,&GENjetNconstSoftDrop         ,"GENjetNconstSoftDrop"         );
+  JetTree->Branch( "PFjetMassDropPruned"            ,&PFjetMassDropPruned          ,"PFjetMassDropPruned"          );
+  JetTree->Branch("CHSjetMassDropPruned"            ,&CHSjetMassDropPruned         ,"CHSjetMassDropPruned"         );
+  JetTree->Branch("PUPjetMassDropPruned"            ,&PUPjetMassDropPruned         ,"PUPjetMassDropPruned"         );
+  JetTree->Branch("GENjetMassDropPruned"            ,&GENjetMassDropPruned         ,"GENjetMassDropPruned"         );
+
   JetTree->Branch("PFtau1"                          ,&PFtau1                       ,"PFtau1"                       );
   JetTree->Branch("PFtau2"                          ,&PFtau2                       ,"PFtau2"                       );
   JetTree->Branch("PFtau3"                          ,&PFtau3                       ,"PFtau3"                       );
+  JetTree->Branch("PFtau32"                         ,&PFtau32                      ,"PFtau32"                      );
+  JetTree->Branch("PFtau21"                         ,&PFtau21                      ,"PFtau21"                      );
   JetTree->Branch("CHStau1"                         ,&CHStau1                      ,"CHStau1"                      );
   JetTree->Branch("CHStau2"                         ,&CHStau2                      ,"CHStau2"                      );
   JetTree->Branch("CHStau3"                         ,&CHStau3                      ,"CHStau3"                      );
+  JetTree->Branch("CHStau32"                        ,&CHStau32                     ,"CHStau32"                     );
+  JetTree->Branch("CHStau21"                        ,&CHStau21                     ,"CHStau21"                     );
   JetTree->Branch("PUPtau1"                         ,&PUPtau1                      ,"PUPtau1"                      );
   JetTree->Branch("PUPtau2"                         ,&PUPtau2                      ,"PUPtau2"                      );
   JetTree->Branch("PUPtau3"                         ,&PUPtau3                      ,"PUPtau3"                      );
+  JetTree->Branch("PUPtau32"                        ,&PUPtau32                     ,"PUPtau32"                     );
+  JetTree->Branch("PUPtau21"                        ,&PUPtau21                     ,"PUPtau21"                     );
   JetTree->Branch("GENtau1"                         ,&GENtau1                      ,"GENtau1"                      );
   JetTree->Branch("GENtau2"                         ,&GENtau2                      ,"GENtau2"                      );
   JetTree->Branch("GENtau3"                         ,&GENtau3                      ,"GENtau3"                      );
+  JetTree->Branch("GENtau32"                        ,&GENtau32                     ,"GENtau32"                     );
+  JetTree->Branch("GENtau21"                        ,&GENtau21                     ,"GENtau21"                     );
   JetTree->Branch("PFcmsttJetMass"                  ,&PFcmsttJetMass               ,"PFcmsttJetMass"               );
   JetTree->Branch("PFcmsttWMass"                    ,&PFcmsttWMass                 ,"PFcmsttWMass"                 );
   JetTree->Branch("PFcmsttHelicity"                 ,&PFcmsttHelicity              ,"PFcmsttHelicity"              );
   JetTree->Branch("PFcmsttNsubjets"                 ,&PFcmsttNsubjets              ,"PFcmsttNsubjets"              );
   JetTree->Branch("PFcmsttMinMass"                  ,&PFcmsttMinMass               ,"PFcmsttMinMass"               );
+  JetTree->Branch("PFcmsttGroomMass"                ,&PFcmsttGroomMass             ,"PFcmsttGroomMass"             );
   JetTree->Branch("CHScmsttJetMass"                 ,&CHScmsttJetMass              ,"CHScmsttJetMass"              );
   JetTree->Branch("CHScmsttWMass"                   ,&CHScmsttWMass                ,"CHScmsttWMass"                );
   JetTree->Branch("CHScmsttHelicity"                ,&CHScmsttHelicity             ,"CHScmsttHelicity"             );
   JetTree->Branch("CHScmsttNsubjets"                ,&CHScmsttNsubjets             ,"CHScmsttNsubjets"             );
   JetTree->Branch("CHScmsttMinMass"                 ,&CHScmsttMinMass              ,"CHScmsttMinMass"              );
+  JetTree->Branch("CHScmsttGroomMass"               ,&CHScmsttGroomMass            ,"CHScmsttGroomMass"            );
   JetTree->Branch("PUPcmsttJetMass"                 ,&PUPcmsttJetMass              ,"PUPcmsttJetMass"              );
   JetTree->Branch("PUPcmsttWMass"                   ,&PUPcmsttWMass                ,"PUPcmsttWMass"                );
   JetTree->Branch("PUPcmsttHelicity"                ,&PUPcmsttHelicity             ,"PUPcmsttHelicity"             );
   JetTree->Branch("PUPcmsttNsubjets"                ,&PUPcmsttNsubjets             ,"PUPcmsttNsubjets"             );
   JetTree->Branch("PUPcmsttMinMass"                 ,&PUPcmsttMinMass              ,"PUPcmsttMinMass"              );
+  JetTree->Branch("PUPcmsttGroomMass"               ,&PUPcmsttGroomMass            ,"PUPcmsttGroomMass"            );
   JetTree->Branch("GENcmsttJetMass"                 ,&GENcmsttJetMass              ,"GENcmsttJetMass"              );
   JetTree->Branch("GENcmsttWMass"                   ,&GENcmsttWMass                ,"GENcmsttWMass"                );
   JetTree->Branch("GENcmsttHelicity"                ,&GENcmsttHelicity             ,"GENcmsttHelicity"             );
   JetTree->Branch("GENcmsttNsubjets"                ,&GENcmsttNsubjets             ,"GENcmsttNsubjets"             );
   JetTree->Branch("GENcmsttMinMass"                 ,&GENcmsttMinMass              ,"GENcmsttMinMass"              );
+  JetTree->Branch("GENcmsttGroomMass"               ,&GENcmsttGroomMass            ,"GENcmsttGroomMass"            );
+  
+  JetTree->Branch("GENhepttJetMass"     , & GENhepttJetMass     , "GENhepttJetMass"    );                               
+  JetTree->Branch("GENhepttWMass"       , & GENhepttWMass       , "GENhepttWMass"      );                               
+  JetTree->Branch("GENhepttM01"         , & GENhepttM01         , "GENhepttM01"        );                               
+  JetTree->Branch("GENhepttM02"         , & GENhepttM02         , "GENhepttM02"        );                               
+  JetTree->Branch("GENhepttM12"         , & GENhepttM12         , "GENhepttM12"        );                               
+  JetTree->Branch("GENhepttNsubjets"    , & GENhepttNsubjets    , "GENhepttNsubjets"   );                               
+  JetTree->Branch("GENhepttMinMass"     , & GENhepttMinMass     , "GENhepttMinMass"    );  
+  JetTree->Branch("GENhepttM12M012"     , & GENhepttM12M012     , "GENhepttM12M012"    );  
+  JetTree->Branch("GENhepttAtanM02M01"  , & GENhepttAtanM02M01  , "GENhepttAtanM02M01" );  
+                                                  
+  JetTree->Branch("PFhepttJetMass"     , & PFhepttJetMass     , "PFhepttJetMass"    );                               
+  JetTree->Branch("PFhepttWMass"       , & PFhepttWMass       , "PFhepttWMass"      );                               
+  JetTree->Branch("PFhepttM01"         , & PFhepttM01         , "PFhepttM01"        );                               
+  JetTree->Branch("PFhepttM02"         , & PFhepttM02         , "PFhepttM02"        );                               
+  JetTree->Branch("PFhepttM12"         , & PFhepttM12         , "PFhepttM12"        );                               
+  JetTree->Branch("PFhepttNsubjets"    , & PFhepttNsubjets    , "PFhepttNsubjets"   );                               
+  JetTree->Branch("PFhepttMinMass"     , & PFhepttMinMass     , "PFhepttMinMass"    );  
+  JetTree->Branch("PFhepttM12M012"     , & PFhepttM12M012     , "PFhepttM12M012"    );  
+  JetTree->Branch("PFhepttAtanM02M01"  , & PFhepttAtanM02M01  , "PFhepttAtanM02M01" );  
+                             
+  JetTree->Branch("CHShepttJetMass"     , & CHShepttJetMass     , "CHShepttJetMass"    );                               
+  JetTree->Branch("CHShepttWMass"       , & CHShepttWMass       , "CHShepttWMass"      );                               
+  JetTree->Branch("CHShepttM01"         , & CHShepttM01         , "CHShepttM01"        );                               
+  JetTree->Branch("CHShepttM02"         , & CHShepttM02         , "CHShepttM02"        );                               
+  JetTree->Branch("CHShepttM12"         , & CHShepttM12         , "CHShepttM12"        );                               
+  JetTree->Branch("CHShepttNsubjets"    , & CHShepttNsubjets    , "CHShepttNsubjets"   );                               
+  JetTree->Branch("CHShepttMinMass"     , & CHShepttMinMass     , "CHShepttMinMass"    );  
+  JetTree->Branch("CHShepttM12M012"     , & CHShepttM12M012     , "CHShepttM12M012"    );  
+  JetTree->Branch("CHShepttAtanM02M01"  , & CHShepttAtanM02M01  , "CHShepttAtanM02M01" );  
+
+  JetTree->Branch("PUPhepttJetMass"     , & PUPhepttJetMass     , "PUPhepttJetMass"    );                               
+  JetTree->Branch("PUPhepttWMass"       , & PUPhepttWMass       , "PUPhepttWMass"      );                               
+  JetTree->Branch("PUPhepttM01"         , & PUPhepttM01         , "PUPhepttM01"        );                               
+  JetTree->Branch("PUPhepttM02"         , & PUPhepttM02         , "PUPhepttM02"        );                               
+  JetTree->Branch("PUPhepttM12"         , & PUPhepttM12         , "PUPhepttM12"        );                               
+  JetTree->Branch("PUPhepttNsubjets"    , & PUPhepttNsubjets    , "PUPhepttNsubjets"   );                               
+  JetTree->Branch("PUPhepttMinMass"     , & PUPhepttMinMass     , "PUPhepttMinMass"    );  
+  JetTree->Branch("PUPhepttM12M012"     , & PUPhepttM12M012     , "PUPhepttM12M012"    );  
+  JetTree->Branch("PUPhepttAtanM02M01"  , & PUPhepttAtanM02M01  , "PUPhepttAtanM02M01" );  
+
+  JetTree->Branch("PFqjetVol",  &PFqjetVol   , "PFqjetVol"  );
+  JetTree->Branch("CHSqjetVol", &CHSqjetVol  , "CHSqjetVol" );
+  JetTree->Branch("PUPqjetVol", &PUPqjetVol  , "PUPqjetVol" );
+  JetTree->Branch("GENqjetVol", &GENqjetVol  , "GENqjetVol" );
+
+  JetTree->Branch("nPU"                 ,&nPU              ,"nPU"              );
 
   
   /////////////////////////////////////////////////////////////////////
@@ -694,6 +853,9 @@ int main( int argc, char *argv[] ){
   TClonesArray *fGenPart = new TClonesArray("baconhep::TGenParticle");
   fIn.SetBranchAddress("GenParticle",  &fGenPart);
   fIn.SetBranchAddress("PFPart",       &fPFPart);
+
+  TEventInfo *eventInfo = new TEventInfo();
+  fIn.SetBranchAddress("Info",&eventInfo);
   
   /////////////////////////////////////////////////////////////////////
   //  Setup Jet Energy Corrections
@@ -745,13 +907,17 @@ int main( int argc, char *argv[] ){
   if (Nevents+FirstEvent > nEventsInChain ) {cout << "Not enough events in chain" << endl; exit(1);}
 
   for(int i0 = FirstEvent; i0 < Nevents+FirstEvent; i0++) { 
+    //clock_t Eventtime = clock();
+
     fIn.GetEntry(i0);
     particles   .clear();
     genparticles.clear();
     gentops.clear();
     genWs.clear();
 
-    if (i0%100==0) std::cout <<"Event: "<< i0 <<"  (Running from "<< FirstEvent << " -> " <<Nevents+FirstEvent-1 <<") - (total # of events in chain = "<<nEventsInChain<<")"<< std::endl;
+    nPU = eventInfo->nPU;
+
+    if (i0%50==0) std::cout <<"Event: "<< i0 <<"  (Running from "<< FirstEvent << " -> " <<Nevents+FirstEvent-1 <<") - (total # of events in chain = "<<nEventsInChain<<")"<< std::endl;
     if (verbose) std::cout <<"Event: "<< i0 <<"  (Running from "<< FirstEvent << " -> " <<Nevents+FirstEvent-1 <<") - (total # of events in chain = "<<nEventsInChain<<") -  N PF candidates = " << fPFPart->GetEntriesFast() << std::endl;
 
     //Get the PF Candidates
@@ -815,11 +981,9 @@ int main( int argc, char *argv[] ){
     puppiContainer curEvent(particles); 
     curEvent.setGen(genparticles); 
 
-
     // Setup soft killer
     SoftKiller soft_killer   (0.4,0.4);
     //SoftKiller soft_killerCHS(4.0,0.5, !SelectorIsPupCharged());
-
   
     //Lets fetch the particle collections 
     vector<PseudoJet> gen_event       = curEvent.genFetch();
@@ -830,23 +994,7 @@ int main( int argc, char *argv[] ){
     vector<PseudoJet> soft_event      = soft_killer   (pf_event);
     //vector<PseudoJet> softCHS_event   = soft_killerCHS(chs_event);
     if (verbose ) cout<<"got particle collections"<<endl;
-    // for(unsigned int i0 = 0; i0 < genJets.size(); i0++) {
-    //   lIndex = i0;
-    //   PseudoJet puppiJet   = match(genJets[i0],puppiJets);
-    //   PseudoJet pfJet      = match(genJets[i0],pfJets   );
-    //   PseudoJet chsJet     = match(genJets[i0],chsJets  );
-    //   PseudoJet chs2GeVJet = match(genJets[i0],chs2GeVJets);
-    //   PseudoJet softJet    = match(genJets[i0],softJets);
-    //   // PseudoJet softCHSJet = match(genJets[i0],softCHSJets);
-    //   setJet(genJets[i0],JGen    ,gen_event   ,false,jetCorr,jetUnc,gsn_cleanser);
-    //   if(pfJet.pt()      != 0) setJet(pfJet ,     JPF     ,pf_event     ,false,jetCorr,jetUnc,gsn_cleanser);
-    //   if(chsJet.pt()     != 0) setJet(chsJet,     JCHS    ,chs_event    ,true ,jetCorr,jetUnc,gsn_cleanser);
-    //   if(chs2GeVJet.pt() != 0) setJet(chs2GeVJet, JCHS2GeV,chs_event2GeV,true ,jetCorr,jetUnc,gsn_cleanser);
-    //   if(puppiJet.pt()   != 0) setJet(puppiJet  , JPup    ,puppi_event  ,true ,jetCorr,jetUnc,gsn_cleanser);
-    //   if(softJet.pt()    != 0) setJet(softJet   , JSoft   ,soft_event   ,false,jetCorr,jetUnc,gsn_cleanser);
-    //   // if(softCHSJet.pt() != 0) setJet(softCHSJet, JSoftCHS,softCHS_event,true ,jetCorr,jetUnc,gsn_cleanser);
-    //   lOut->Fill();
-    // }
+
 
     /////////////////////////////////////////////////////////////////////
     //  Cluster jets from different input particle collections
@@ -871,13 +1019,11 @@ int main( int argc, char *argv[] ){
     //    - > now cluster the rest
     ClusterSequenceArea clus_seq_PF      (pf_event     , jet_def  , area_def);
     ClusterSequenceArea clus_seq_Pup     (puppi_event  , jet_def  , area_def);
-    //ClusterSequenceArea clus_seq_Gen     (gen_event    , jet_def  , area_def);
     ClusterSequenceArea clus_seq_CHS     (chs_event    , jet_def  , area_def);
     ClusterSequenceArea clus_seq_CHS2GeV (chs_event2GeV, jet_def  , area_def);
     ClusterSequenceArea clus_seq_Soft    (soft_event   , jet_def  , area_def);
     //lusterSequenceArea pSoftCHS (softCHS_event, jet_def  , area_def);
     
-
     //Now lets define a selector to get the leading jet
     Selector selector = SelectorNHardest(4); 
 
@@ -887,32 +1033,26 @@ int main( int argc, char *argv[] ){
     vector<PseudoJet> chsJets       = selector(sorted_by_pt(clus_seq_CHS   .inclusive_jets()));
     vector<PseudoJet> pupJets       = selector(sorted_by_pt(clus_seq_Pup   .inclusive_jets()));
     vector<PseudoJet> sofJets       = selector(sorted_by_pt(clus_seq_Soft  .inclusive_jets()));
-    // vector<PseudoJet> genJets       = sorted_by_pt(clus_seq_Gen   .inclusive_jets());
-    // vector<PseudoJet>  pfJets       = sorted_by_pt(clus_seq_PF    .inclusive_jets());
-    // vector<PseudoJet> chsJets       = sorted_by_pt(clus_seq_CHS   .inclusive_jets());
-    // vector<PseudoJet> pupJets       = sorted_by_pt(clus_seq_Pup   .inclusive_jets());
 
     if (verbose ) cout<<"clustered jets"<<endl;
 
     // find gen jet matched top top quark
     PseudoJet genJet0 ;
-    genWs       = sorted_by_pt(genWs);
+    genWs         = sorted_by_pt(genWs);
     gentops       = sorted_by_pt(gentops);
     if (Sample==2) genJet0 = match(genWs[0],genJets);  
     if (Sample==1) genJet0 = match(gentops[0],genJets);  
     else genJet0 = genJets[0];
 
-
-
     if(genJet0.pt() < 1) 
     {
-      cout<<"************************  did not find genjet matched to top ************************"<<endl;
-      cout<<"   genWs.size() "<<genWs.size()<<" pt0 "<<genWs[0].perp()<<" pt1 "<<genWs[1].perp()<<endl;
-      cout<<"   gentops.size() "<<gentops.size()<<" pt0 "<<gentops[0].perp()<<" pt1 "<<gentops[1].perp()<<endl;
-      cout<<"   genJets.size() "<<genJets.size()<<" pt0 "<<genJets[0].perp()<<" pt1 "<<genJets[1].perp()<<" dr1 "<< deltaR(gentops[0],genJets[0])<<" dr2 "<<deltaR(gentops[0],genJets[1])<<endl;
+      cout<<"************************  did not find genjet matched to top or W (depending on the sample)- Event "<<i0<<" ************************"<<endl;
+      if (verbose) cout<<"   genWs.size() "<<genWs.size()<<" pt0 "<<genWs[0].perp()<<" pt1 "<<genWs[1].perp()<<endl;
+      if (verbose) cout<<"   gentops.size() "<<gentops.size()<<" pt0 "<<gentops[0].perp()<<" pt1 "<<gentops[1].perp()<<endl;
+      if (verbose) cout<<"   genJets.size() "<<genJets.size()<<" pt0 "<<genJets[0].perp()<<" pt1 "<<genJets[1].perp()<<endl;
+      cout<<" nJets "<<genJets.size()<<" nTops "<<gentops.size()<<" nWs "<<genWs.size()<<" drTop1 "<< deltaR(gentops[0],genJets[0])<<" drTop2 "<<deltaR(gentops[0],genJets[1])<<" drW1 "<< deltaR(genWs[0],genJets[0])<<" drW2 "<<deltaR(genWs[0],genJets[1])<<endl;
       continue;
     }
-
 
     // find reco jets matched to gen jets
     PseudoJet chsJet0 = match(genJet0,chsJets);
@@ -921,15 +1061,15 @@ int main( int argc, char *argv[] ){
 
     if( pfJet0.pt() < 1  || chsJet0.pt() < 1  ||  pupJet0.pt() < 1 ) 
     {
-      if (verbose) cout<<"************************  did not find genjet matched to recojets ************************"<<endl;
+      if (verbose) cout<<"************************  did not find genjet matched to recojets - Event "<<i0<<" ************************"<<endl;
       continue;
     }
 
     if(verbose ) {
       cout<<"genJet0 mass  "<<genJet0 .m()<<endl;
-      cout<<"chsJet0  mass "<<chsJet0 .m()<<endl;
-      cout<<"pfJet0   mass "<<pfJet0  .m()<<endl;
-      cout<<"pupJet0  mass "<<pupJet0 .m()<<endl;
+      cout<<"chsJet0 mass  "<<chsJet0 .m()<<endl;
+      cout<<"pfJet0  mass  "<<pfJet0  .m()<<endl;
+      cout<<"pupJet0 mass  "<<pupJet0 .m()<<endl;
     }
    
     //Now we've got jets so lets calculate rho for the two that need it (CHS/PF)
@@ -1055,7 +1195,6 @@ int main( int argc, char *argv[] ){
     PUPjetNconstTrimmed       = trimmed_pupJet.constituents().size() ;
     GENjetNconstTrimmed       = trimmed_genJet.constituents().size() ;
 
-    if (verbose) cout<<"done trimming"<<endl;
     // -- Pruning ------------------------------------------
     double  prune_zcut=0.1;
     double Dcut_pfJets  =  pfJet0 .m() /  pfJet0 .perp();
@@ -1097,6 +1236,11 @@ int main( int argc, char *argv[] ){
     CHSjetNconstPruned       = pruned_chsJet.constituents().size() ;
     PUPjetNconstPruned       = pruned_pupJet.constituents().size() ;
     GENjetNconstPruned       = pruned_genJet.constituents().size() ;
+
+     PFjetMassDropPruned   = calculate_mass_drop_pruned ( pruned_pfJet  );
+    CHSjetMassDropPruned   = calculate_mass_drop_pruned ( pruned_chsJet );
+    PUPjetMassDropPruned   = calculate_mass_drop_pruned ( pruned_pupJet );
+    GENjetMassDropPruned   = calculate_mass_drop_pruned ( pruned_genJet );
 
 
     // -- Filtering ------------------------------------------
@@ -1147,7 +1291,6 @@ int main( int argc, char *argv[] ){
     PseudoJet mmdt_chsJet = mmdt(chsJet0 );
     PseudoJet mmdt_pupJet = mmdt(pupJet0 );
     PseudoJet mmdt_genJet = mmdt(genJet0 );
-        if (verbose) cout<<"somemmdt"<<endl;
 
     //returns [0] uncorr mmdt mass [1] corr mmdt mass [2] uncorr mmdt filtered mass [3] corr mmdt filtered mass
     vector<double> masses_mmdt_pfJet  = mmdt_corr_and_filter(mmdt_pfJet, jetCorr,rho.rho());
@@ -1162,26 +1305,36 @@ int main( int argc, char *argv[] ){
     if (verbose) cout<<" masses_mmdt_pfJet .size() "<< masses_mmdt_pfJet .size() <<endl;
 
     if (masses_mmdt_pfJet.size() >0 && masses_mmdt_chsJet.size() >0  && masses_mmdt_pupJet.size() >0 && masses_mmdt_genJet.size() >0 )
-   { // save to tree
-    PFjetMassMMDTUncorr           = masses_mmdt_pfJet[0];
-    PFjetMassMMDT                 = masses_mmdt_pfJet[1];
-    PFjetMassMMDTFilteredUncorr   = masses_mmdt_pfJet[2];
-    PFjetMassMMDTFiltered         = masses_mmdt_pfJet[3];
+    { // save to tree
+      PFjetMassMMDTUncorr           = masses_mmdt_pfJet[0];
+      PFjetMassMMDT                 = masses_mmdt_pfJet[1];
+      PFjetMassMMDTFilteredUncorr   = masses_mmdt_pfJet[2];
+      PFjetMassMMDTFiltered         = masses_mmdt_pfJet[3];
 
-    CHSjetMassMMDTUncorr          = masses_mmdt_chsJet[0];
-    CHSjetMassMMDT                = masses_mmdt_chsJet[1];
-    CHSjetMassMMDTFilteredUncorr  = masses_mmdt_chsJet[2];
-    CHSjetMassMMDTFiltered        = masses_mmdt_chsJet[3];
+      CHSjetMassMMDTUncorr          = masses_mmdt_chsJet[0];
+      CHSjetMassMMDT                = masses_mmdt_chsJet[1];
+      CHSjetMassMMDTFilteredUncorr  = masses_mmdt_chsJet[2];
+      CHSjetMassMMDTFiltered        = masses_mmdt_chsJet[3];
 
-    PUPjetMassMMDTUncorr          = masses_mmdt_pupJet[0];
-    PUPjetMassMMDT                = masses_mmdt_pupJet[1];
-    PUPjetMassMMDTFilteredUncorr  = masses_mmdt_pupJet[2];
-    PUPjetMassMMDTFiltered        = masses_mmdt_pupJet[3];
+      PUPjetMassMMDTUncorr          = masses_mmdt_pupJet[0];
+      PUPjetMassMMDT                = masses_mmdt_pupJet[1];
+      PUPjetMassMMDTFilteredUncorr  = masses_mmdt_pupJet[2];
+      PUPjetMassMMDTFiltered        = masses_mmdt_pupJet[3];
 
-    GENjetMassMMDT                = masses_mmdt_genJet[0];
-    GENjetMassMMDTFiltered        = masses_mmdt_genJet[2];
+      GENjetMassMMDT                = masses_mmdt_genJet[0];
+      GENjetMassMMDTFiltered        = masses_mmdt_genJet[2];
 
-    if (verbose) cout<<"mmdt  "<<masses_mmdt_pfJet[0]<<" "<<masses_mmdt_pfJet[1]<<" "<<masses_mmdt_pfJet[2]<<" "<<masses_mmdt_pfJet[3]<<" "<<endl;
+
+       PFjetAreaMMDT   =  mmdt_pfJet .area() ;   
+      CHSjetAreaMMDT   =  mmdt_chsJet.area() ;   
+      GENjetAreaMMDT   =  mmdt_pupJet.area() ;   
+      PUPjetAreaMMDT   =  mmdt_genJet.area() ;   
+       PFjetAreaMMDTFiltered   = masses_mmdt_genJet[5];    
+      CHSjetAreaMMDTFiltered   = masses_mmdt_genJet[5];    
+      GENjetAreaMMDTFiltered   = masses_mmdt_genJet[5];    
+      PUPjetAreaMMDTFiltered   = masses_mmdt_genJet[5];  
+
+      if (verbose) cout<<"mmdt  "<<masses_mmdt_pfJet[0]<<" "<<masses_mmdt_pfJet[1]<<" "<<masses_mmdt_pfJet[2]<<" "<<masses_mmdt_pfJet[3]<<" "<<endl;
     }
 
     // -- Soft drop ------------------------------------------
@@ -1190,12 +1343,11 @@ int main( int argc, char *argv[] ){
     double mu   = 1.0;
     SoftDrop soft_drop(beta, zcut, mu);
 
-    PseudoJet sd_pfJet  = soft_drop(pfJets[0]);
-    PseudoJet sd_chsJet = soft_drop(chsJets[0]);
-    PseudoJet sd_pupJet = soft_drop(pupJets[0]);
-    PseudoJet sd_genJet = soft_drop(genJets[0]);
+    PseudoJet sd_pfJet  = soft_drop( pfJet0 );
+    PseudoJet sd_chsJet = soft_drop(chsJet0 );
+    PseudoJet sd_pupJet = soft_drop(pupJet0 );
+    PseudoJet sd_genJet = soft_drop(genJet0 );
     
-   
     if (sd_pfJet!=0)
     {
       double mass_sd_corr     = sd_pfJet.m() * correction(sd_pfJet,jetCorr,rho.rho()); 
@@ -1260,10 +1412,10 @@ int main( int argc, char *argv[] ){
 
 
 
-    vector<PseudoJet> jet_constituents_pf  = pfJets[0].constituents();      
-    vector<PseudoJet> jet_constituents_chs = chsJets[0].constituents();      
-    vector<PseudoJet> jet_constituents_pup = pupJets[0].constituents();      
-    vector<PseudoJet> jet_constituents_gen = genJets[0].constituents(); 
+    vector<PseudoJet> jet_constituents_pf  =  pfJet0.constituents();      
+    vector<PseudoJet> jet_constituents_chs = chsJet0.constituents();      
+    vector<PseudoJet> jet_constituents_pup = pupJet0.constituents();      
+    vector<PseudoJet> jet_constituents_gen = genJet0.constituents(); 
     if (verbose) cout<<" N-subjett"<<endl;
 
     double tau1_pf  = nSubOnePass.getTau(1,jet_constituents_pf );
@@ -1291,6 +1443,15 @@ int main( int argc, char *argv[] ){
     GENtau1 = tau1_gen;
     GENtau2 = tau2_gen;
     GENtau3 = tau3_gen;
+    if (tau1_pf !=0)  PFtau21 = tau2_pf  / tau1_pf ;
+    if (tau1_chs!=0) CHStau21 = tau2_chs / tau1_chs;
+    if (tau1_pup!=0) PUPtau21 = tau2_pup / tau1_pup;
+    if (tau1_gen!=0) GENtau21 = tau2_gen / tau1_gen;
+    if (tau2_pf !=0)  PFtau32 = tau3_pf  / tau2_pf ;
+    if (tau2_chs!=0) CHStau32 = tau3_chs / tau2_chs;
+    if (tau2_pup!=0) PUPtau32 = tau3_pup / tau2_pup;
+    if (tau2_gen!=0) GENtau32 = tau3_gen / tau2_gen;
+
 
     // Get N-subjettiness subjets
     // vector<fastjet::PseudoJet> onepass1jets = nSubOnePass.getJets(jet_constituents);
@@ -1307,7 +1468,261 @@ int main( int argc, char *argv[] ){
     // ------ HATS Groups: calculated N-subjettiness for PUPPI jets
 
 
-    // // -- JHU Top Tagger ------------------------------------------
+
+
+    // // -- HEP Top Tagger ------------------------------------------
+
+    double mass_drop_threshold=0.8;
+    double max_subjet_mass=30;
+    bool use_subjet_mass_cuts=false;
+    HEPTopTagger hep_top_tagger(mass_drop_threshold, max_subjet_mass, use_subjet_mass_cuts);
+    
+    PseudoJet hep_top_candidate_pf   = hep_top_tagger( pfJet0 );
+    PseudoJet hep_top_candidate_chs  = hep_top_tagger(chsJet0 );
+    PseudoJet hep_top_candidate_pup  = hep_top_tagger(pupJet0 );
+    PseudoJet hep_top_candidate_gen  = hep_top_tagger(genJet0 );
+
+    if (hep_top_candidate_pf != 0)
+    {
+      PseudoJet W =     hep_top_candidate_pf.structure_of<HEPTopTagger>().W();
+      PseudoJet W1 =    hep_top_candidate_pf.structure_of<HEPTopTagger>().W1();
+      PseudoJet W2 =    hep_top_candidate_pf.structure_of<HEPTopTagger>().W2();
+      PseudoJet non_W = hep_top_candidate_pf.structure_of<HEPTopTagger>().non_W();
+
+      vector<PseudoJet> all_subjets;
+      all_subjets.push_back(W1);
+      all_subjets.push_back(W2);
+      all_subjets.push_back(non_W);
+      all_subjets = sorted_by_pt(all_subjets);
+
+      PseudoJet sum012 = all_subjets[0]+all_subjets[1]+all_subjets[2];
+      PseudoJet sum01 = all_subjets[0]+all_subjets[1];
+      PseudoJet sum02 = all_subjets[0]+all_subjets[2];
+      PseudoJet sum12 = all_subjets[1]+all_subjets[2];
+
+      PFhepttJetMass  = hep_top_candidate_pf.m();
+      PFhepttWMass    = W.m();
+      PFhepttM01    = sum01.m();
+      PFhepttM02    = sum02.m();
+      PFhepttM12    = sum12.m();
+      PFhepttNsubjets = all_subjets.size();
+      PFhepttMinMass  = calculate_minmass(all_subjets);
+      if ( sum012.m()!=0 ) PFhepttM12M012     =  sum12.m() / sum012.m();
+      if ( sum01.m()!=0 )  PFhepttAtanM02M01  = atan( sum02.m() / sum01.m() ) ;
+
+
+      if (verbose)
+      {
+        cout<<"pfJets[0].m() "<<pfJets[0].m()<<" hep_top_candidate_pf.m() "<<hep_top_candidate_pf.m()<<endl;
+        cout<<"W1.m() "<<W1.m()<<" W2.m() "<<W2.m()<<endl;
+        cout<<" W.m() "<<W.m()<<endl;
+        cout<<" sum012 .m() "<<sum012.m()<<endl;
+        cout<<" sum01  .m() "<<sum01 .m()<<endl;
+        cout<<" sum02  .m() "<<sum02 .m()<<endl;
+        cout<<" sum12  .m() "<<sum12 .m()<<endl;
+        cout<<"all_subjets size "<<all_subjets.size()<< " pt "<<all_subjets[0].pt()<<"  "<<all_subjets[1].pt()<<"  "<<all_subjets[2].pt()<<endl;
+      }
+    }
+    if (hep_top_candidate_chs != 0)
+    {
+      PseudoJet W =     hep_top_candidate_chs.structure_of<HEPTopTagger>().W();
+      PseudoJet W1 =    hep_top_candidate_chs.structure_of<HEPTopTagger>().W1();
+      PseudoJet W2 =    hep_top_candidate_chs.structure_of<HEPTopTagger>().W2();
+      PseudoJet non_W = hep_top_candidate_chs.structure_of<HEPTopTagger>().non_W();
+
+      vector<PseudoJet> all_subjets;
+      all_subjets.push_back(W1);
+      all_subjets.push_back(W2);
+      all_subjets.push_back(non_W);
+      all_subjets = sorted_by_pt(all_subjets);
+
+      PseudoJet sum012 = all_subjets[0]+all_subjets[1]+all_subjets[2];
+      PseudoJet sum01 = all_subjets[0]+all_subjets[1];
+      PseudoJet sum02 = all_subjets[0]+all_subjets[2];
+      PseudoJet sum12 = all_subjets[1]+all_subjets[2];
+
+      CHShepttJetMass  = hep_top_candidate_chs.m();
+      CHShepttWMass    = W.m();
+      CHShepttM01    = sum01.m();
+      CHShepttM02    = sum02.m();
+      CHShepttM12    = sum12.m();
+      CHShepttNsubjets = all_subjets.size();
+      CHShepttMinMass  = calculate_minmass(all_subjets);
+      if ( sum012.m()!=0 ) CHShepttM12M012     =  sum12.m() / sum012.m();
+      if ( sum01.m()!=0 )  CHShepttAtanM02M01  = atan( sum02.m() / sum01.m() ) ;
+
+    }
+    if (hep_top_candidate_pup != 0)
+    {
+      PseudoJet W =     hep_top_candidate_pup.structure_of<HEPTopTagger>().W();
+      PseudoJet W1 =    hep_top_candidate_pup.structure_of<HEPTopTagger>().W1();
+      PseudoJet W2 =    hep_top_candidate_pup.structure_of<HEPTopTagger>().W2();
+      PseudoJet non_W = hep_top_candidate_pup.structure_of<HEPTopTagger>().non_W();
+
+      vector<PseudoJet> all_subjets;
+      all_subjets.push_back(W1);
+      all_subjets.push_back(W2);
+      all_subjets.push_back(non_W);
+      all_subjets = sorted_by_pt(all_subjets);
+
+      PseudoJet sum012 = all_subjets[0]+all_subjets[1]+all_subjets[2];
+      PseudoJet sum01 = all_subjets[0]+all_subjets[1];
+      PseudoJet sum02 = all_subjets[0]+all_subjets[2];
+      PseudoJet sum12 = all_subjets[1]+all_subjets[2];
+
+      PUPhepttJetMass  = hep_top_candidate_pup.m();
+      PUPhepttWMass    = W.m();
+      PUPhepttM01    = sum01.m();
+      PUPhepttM02    = sum02.m();
+      PUPhepttM12    = sum12.m();
+      PUPhepttNsubjets = all_subjets.size();
+      PUPhepttMinMass  = calculate_minmass(all_subjets);
+      if ( sum012.m()!=0 ) PUPhepttM12M012     =  sum12.m() / sum012.m();
+      if ( sum01.m()!=0 )  PUPhepttAtanM02M01  = atan( sum02.m() / sum01.m() ) ;
+
+    }
+    if (hep_top_candidate_gen != 0)
+    {
+      PseudoJet W =     hep_top_candidate_gen.structure_of<HEPTopTagger>().W();
+      PseudoJet W1 =    hep_top_candidate_gen.structure_of<HEPTopTagger>().W1();
+      PseudoJet W2 =    hep_top_candidate_gen.structure_of<HEPTopTagger>().W2();
+      PseudoJet non_W = hep_top_candidate_gen.structure_of<HEPTopTagger>().non_W();
+
+      vector<PseudoJet> all_subjets;
+      all_subjets.push_back(W1);
+      all_subjets.push_back(W2);
+      all_subjets.push_back(non_W);
+      all_subjets = sorted_by_pt(all_subjets);
+
+      PseudoJet sum012 = all_subjets[0]+all_subjets[1]+all_subjets[2];
+      PseudoJet sum01 = all_subjets[0]+all_subjets[1];
+      PseudoJet sum02 = all_subjets[0]+all_subjets[2];
+      PseudoJet sum12 = all_subjets[1]+all_subjets[2];
+
+      GENhepttJetMass  = hep_top_candidate_gen.m();
+      GENhepttWMass    = W.m();
+      GENhepttM01      = sum01.m();
+      GENhepttM02      = sum02.m();
+      GENhepttM12      = sum12.m();
+      GENhepttNsubjets = all_subjets.size();
+      GENhepttMinMass  = calculate_minmass(all_subjets);
+      if ( sum012.m()!=0 ) GENhepttM12M012     =  sum12.m() / sum012.m();
+      if ( sum01.m()!=0 )  GENhepttAtanM02M01  = atan( sum02.m() / sum01.m() ) ;
+
+    }
+
+
+
+
+    // // -- CMS Top Tagger ------------------------------------------
+    double cms_delta_p = 0.05;
+    double cms_delta_r=0.4;
+    double A=0.0004;
+
+    CMSTopTagger cms_top_tagger(cms_delta_p, cms_delta_r, A);
+    // cms_top_tagger.set_top_selector(SelectorMassRange(140,250));
+    // cms_top_tagger.set_W_selector  (SelectorMassRange( 50,1000));
+
+    PseudoJet cms_top_candidate_pf  = cms_top_tagger( pfJet0 );
+    PseudoJet cms_top_candidate_chs = cms_top_tagger(chsJet0 );
+    PseudoJet cms_top_candidate_pup = cms_top_tagger(pupJet0 );
+    PseudoJet cms_top_candidate_gen = cms_top_tagger(genJet0 );
+
+    if (cms_top_candidate_pf != 0)
+    {
+      vector<PseudoJet> kept_subjets0 = cms_top_candidate_pf.structure_of<CMSTopTagger>().W().pieces();
+      vector<PseudoJet> kept_subjets1 = cms_top_candidate_pf.structure_of<CMSTopTagger>().non_W().pieces();
+      vector<PseudoJet> all_subjets = kept_subjets0;
+      all_subjets.insert( all_subjets.end(), kept_subjets1.begin(), kept_subjets1.end() );
+
+      PFcmsttJetMass  = cms_top_candidate_pf.m();
+      PFcmsttWMass    = cms_top_candidate_pf.structure_of<CMSTopTagger>().W().m();
+      PFcmsttHelicity = cms_top_candidate_pf.structure_of<CMSTopTagger>().cos_theta_W();
+      PFcmsttNsubjets = all_subjets.size();
+      PFcmsttMinMass  = calculate_minmass(all_subjets);
+      PFcmsttGroomMass  = calculate_sum_subjet_mass(all_subjets);
+
+    } 
+
+    if (cms_top_candidate_chs != 0)
+    {
+
+      vector<PseudoJet> kept_subjets0 = cms_top_candidate_chs.structure_of<CMSTopTagger>().W().pieces();
+      vector<PseudoJet> kept_subjets1 = cms_top_candidate_chs.structure_of<CMSTopTagger>().non_W().pieces();
+      vector<PseudoJet> all_subjets = kept_subjets0;
+      all_subjets.insert( all_subjets.end(), kept_subjets1.begin(), kept_subjets1.end() );
+
+      CHScmsttJetMass  = cms_top_candidate_chs.m();
+      CHScmsttWMass    = cms_top_candidate_chs.structure_of<CMSTopTagger>().W().m();
+      CHScmsttHelicity = cms_top_candidate_chs.structure_of<CMSTopTagger>().cos_theta_W();
+      CHScmsttNsubjets = all_subjets.size();
+      CHScmsttMinMass  = calculate_minmass(all_subjets);
+      CHScmsttGroomMass  = calculate_sum_subjet_mass(all_subjets);
+    } 
+
+    if (cms_top_candidate_pup != 0)
+    {
+
+      vector<PseudoJet> kept_subjets0 = cms_top_candidate_pup.structure_of<CMSTopTagger>().W().pieces();
+      vector<PseudoJet> kept_subjets1 = cms_top_candidate_pup.structure_of<CMSTopTagger>().non_W().pieces();
+      vector<PseudoJet> all_subjets = kept_subjets0;
+      all_subjets.insert( all_subjets.end(), kept_subjets1.begin(), kept_subjets1.end() );
+
+      PUPcmsttJetMass  = cms_top_candidate_pup.m();
+      PUPcmsttWMass    = cms_top_candidate_pup.structure_of<CMSTopTagger>().W().m();
+      PUPcmsttHelicity = cms_top_candidate_pup.structure_of<CMSTopTagger>().cos_theta_W();
+      PUPcmsttNsubjets = all_subjets.size();
+      PUPcmsttMinMass  = calculate_minmass(all_subjets);
+      PUPcmsttGroomMass  = calculate_sum_subjet_mass(all_subjets);
+    } 
+
+    if (cms_top_candidate_gen != 0)
+    {
+
+      vector<PseudoJet> kept_subjets0 = cms_top_candidate_gen.structure_of<CMSTopTagger>().W().pieces();
+      vector<PseudoJet> kept_subjets1 = cms_top_candidate_gen.structure_of<CMSTopTagger>().non_W().pieces();
+      vector<PseudoJet> all_subjets = kept_subjets0;
+      all_subjets.insert( all_subjets.end(), kept_subjets1.begin(), kept_subjets1.end() );
+
+      GENcmsttJetMass  = cms_top_candidate_gen.m();
+      GENcmsttWMass    = cms_top_candidate_gen.structure_of<CMSTopTagger>().W().m();
+      GENcmsttHelicity = cms_top_candidate_gen.structure_of<CMSTopTagger>().cos_theta_W();
+      GENcmsttNsubjets = all_subjets.size();
+      GENcmsttMinMass  = calculate_minmass(all_subjets);
+      GENcmsttGroomMass  = calculate_sum_subjet_mass(all_subjets);
+    } 
+
+    // -- Qjets ------------------------------------------
+
+    //clock_t Qtime = clock();
+
+    PFqjetVol  = run_qjets_get_vol( pfJet0, i0 ) ;
+    CHSqjetVol = run_qjets_get_vol(chsJet0, i0 ) ;
+    PUPqjetVol = run_qjets_get_vol(pupJet0, i0 ) ;
+    GENqjetVol = run_qjets_get_vol(genJet0, i0 ) ;
+    
+    //Qtime = clock() - Qtime;
+    //cout<<"Qtime "<<Qtime<<endl;
+
+    //------------------------------------
+    // EnergyCorrelatorRatio
+    //------------------------------------
+
+    // EnergyCorrelatorRatio C2beta0 (2,0. ,fastjet::EnergyCorrelator::pt_R);
+    // EnergyCorrelatorRatio C2beta02(2,0.2,fastjet::EnergyCorrelator::pt_R);
+    // EnergyCorrelatorRatio C2beta05(2,0.5,fastjet::EnergyCorrelator::pt_R);
+    // EnergyCorrelatorRatio C2beta10(2,1.0,fastjet::EnergyCorrelator::pt_R);
+    // EnergyCorrelatorRatio C2beta20(2,2.0,fastjet::EnergyCorrelator::pt_R);
+    // double ca8_C2beta0  = C2beta0 ( chsJets_ca10[0] );
+    // double ca8_C2beta02 = C2beta02( chsJets_ca10[0] );
+    // double ca8_C2beta05 = C2beta05( chsJets_ca10[0] );
+    // double ca8_C2beta10 = C2beta10( chsJets_ca10[0] );
+    // double ca8_C2beta20 = C2beta20( chsJets_ca10[0] );
+
+
+    //------------------------------------
+    // JHU Top Tagger
+    //------------------------------------
 
     // double delta_p = 0.05;
     // double delta_r=0.19;
@@ -1338,155 +1753,9 @@ int main( int argc, char *argv[] ){
     //   if (verbose) cout<<" JHU mass "<<jhu_top_mass <<" jhu_W_mass "<<jhu_W_mass<<" jhu_cosTheta "<< jhu_cosTheta<<endl;
     // } 
 
-    if (verbose) cout<<" start CMS tt"<<endl;
-
-    // // -- CMS Top Tagger ------------------------------------------
-    double cms_delta_p = 0.05;
-    double cms_delta_r=0.4;
-    double A=0.0004;
-
-    CMSTopTagger cms_top_tagger(cms_delta_p, cms_delta_r, A);
-    // cms_top_tagger.set_top_selector(SelectorMassRange(140,250));
-    // cms_top_tagger.set_W_selector  (SelectorMassRange( 50,1000));
-
-    PseudoJet cms_top_candidate_pf  = cms_top_tagger(pfJets[0]);
-    PseudoJet cms_top_candidate_chs = cms_top_tagger(chsJets[0]);
-    PseudoJet cms_top_candidate_pup = cms_top_tagger(pupJets[0]);
-    PseudoJet cms_top_candidate_gen = cms_top_tagger(genJets[0]);
-
-    if (cms_top_candidate_pf != 0)
-    {
-      vector<PseudoJet> kept_subjets0 = cms_top_candidate_pf.structure_of<CMSTopTagger>().W().pieces();
-      vector<PseudoJet> kept_subjets1 = cms_top_candidate_pf.structure_of<CMSTopTagger>().non_W().pieces();
-      vector<PseudoJet> all_subjets = kept_subjets0;
-      all_subjets.insert( all_subjets.end(), kept_subjets1.begin(), kept_subjets1.end() );
-
-      PFcmsttJetMass  = cms_top_candidate_pf.m();
-      PFcmsttWMass    = cms_top_candidate_pf.structure_of<CMSTopTagger>().W().m();
-      PFcmsttHelicity = cms_top_candidate_pf.structure_of<CMSTopTagger>().cos_theta_W();
-      PFcmsttNsubjets = all_subjets.size();
-      PFcmsttMinMass  = calculate_minmass(all_subjets);
-
-    } 
-
-    if (cms_top_candidate_chs != 0)
-    {
-
-      vector<PseudoJet> kept_subjets0 = cms_top_candidate_chs.structure_of<CMSTopTagger>().W().pieces();
-      vector<PseudoJet> kept_subjets1 = cms_top_candidate_chs.structure_of<CMSTopTagger>().non_W().pieces();
-      vector<PseudoJet> all_subjets = kept_subjets0;
-      all_subjets.insert( all_subjets.end(), kept_subjets1.begin(), kept_subjets1.end() );
-
-      CHScmsttJetMass  = cms_top_candidate_chs.m();
-      CHScmsttWMass    = cms_top_candidate_chs.structure_of<CMSTopTagger>().W().m();
-      CHScmsttHelicity = cms_top_candidate_chs.structure_of<CMSTopTagger>().cos_theta_W();
-      CHScmsttNsubjets = all_subjets.size();
-      CHScmsttMinMass  = calculate_minmass(all_subjets);
-
-    } 
-
-    if (cms_top_candidate_pup != 0)
-    {
-
-      vector<PseudoJet> kept_subjets0 = cms_top_candidate_pup.structure_of<CMSTopTagger>().W().pieces();
-      vector<PseudoJet> kept_subjets1 = cms_top_candidate_pup.structure_of<CMSTopTagger>().non_W().pieces();
-      vector<PseudoJet> all_subjets = kept_subjets0;
-      all_subjets.insert( all_subjets.end(), kept_subjets1.begin(), kept_subjets1.end() );
-
-      PUPcmsttJetMass  = cms_top_candidate_pup.m();
-      PUPcmsttWMass    = cms_top_candidate_pup.structure_of<CMSTopTagger>().W().m();
-      PUPcmsttHelicity = cms_top_candidate_pup.structure_of<CMSTopTagger>().cos_theta_W();
-      PUPcmsttNsubjets = all_subjets.size();
-      PUPcmsttMinMass  = calculate_minmass(all_subjets);
-
-    } 
-
-    if (cms_top_candidate_gen != 0)
-    {
-
-      vector<PseudoJet> kept_subjets0 = cms_top_candidate_gen.structure_of<CMSTopTagger>().W().pieces();
-      vector<PseudoJet> kept_subjets1 = cms_top_candidate_gen.structure_of<CMSTopTagger>().non_W().pieces();
-      vector<PseudoJet> all_subjets = kept_subjets0;
-      all_subjets.insert( all_subjets.end(), kept_subjets1.begin(), kept_subjets1.end() );
-
-      GENcmsttJetMass  = cms_top_candidate_gen.m();
-      GENcmsttWMass    = cms_top_candidate_gen.structure_of<CMSTopTagger>().W().m();
-      GENcmsttHelicity = cms_top_candidate_gen.structure_of<CMSTopTagger>().cos_theta_W();
-      GENcmsttNsubjets = all_subjets.size();
-      GENcmsttMinMass  = calculate_minmass(all_subjets);
-
-    } 
-
-
-    // -- HEP Top Tagger ------------------------------------------
-
-    //     double topmass=172.3;
-    //     double wmass=80.4;
-    //     HEPTopTagger::HEPTopTagger cm_toptag(clus_seq_PF,pfJets[0],topmass,wmass);
-    //     cm_toptag.set_top_range(150.,200.);
-    //     cout<< "========= Top Tagger ============" << endl;
-    //     cm_toptag.run_tagger();
-    //     cout<< "-------- setting  --------" << endl;
-    //     cm_toptag.get_setting();
-    //     cout<< "-------- resutls  --------" << endl;
-    //     cm_toptag.get_info();
-
-    //       if(cm_toptag.is_masscut_passed()){
-    //   cout << "### masscut_passed ###" << endl;
-    //   PseudoJet top=cm_toptag.top_candidate();
-    //   PseudoJet b=cm_toptag.top_subjets().at(0);
-    //   PseudoJet W1=cm_toptag.top_subjets().at(1);
-    //   PseudoJet W2=cm_toptag.top_subjets().at(2);
-    //   cout << "top mass: " << top.m() << endl;
-    //   cout << "bottom mass: "<< b.m() << endl;
-    //   cout << "W mass: "<< (W1+W2).m() << endl;
-    // }
-    // -- Qjets ------------------------------------------
-
-    // int QJetsPreclustering = 999;
-    // std::vector<fastjet::PseudoJet> constits;
-    // unsigned int nqjetconstits = chsJets_ca10[0].constituents().size();
-    // if (nqjetconstits < (unsigned int) QJetsPreclustering) constits = chsJets_ca10[0].constituents();
-    // else constits = chsJets_ca10[0].associated_cluster_sequence()->exclusive_subjets_up_to(chsJets_ca10[0],QJetsPreclustering);
-    // double qjet_vol = getQjetVolatility(constits, 25, i0*25) );
-    // constits.clear();
-
-     // double zcut =0.1; 
-     // double dcut_fctr = 0.5;
-     // double exp_min = 0.0;
-     // double exp_max = 0.0;
-     // double rigidity = 0.1;
-     // double truncationFactor = 0.01;
-    
-    //  QjetsPlugin qjet_plugin(zcut, dcut_fctr, exp_min, exp_max, rigidity, truncationFactor);
-
-    // -- Shower deconstruction ------------------------------------------
-
-    // -- Jet Charge ------------------------------------------
-
-    // -- pruned mass drop ------------------------------------------
-
-    // -- ECF ------------------------------------------
-
-    //------------------------------------
-    // EnergyCorrelatorRatio
-    //------------------------------------
-
-    // EnergyCorrelatorRatio C2beta0 (2,0. ,fastjet::EnergyCorrelator::pt_R);
-    // EnergyCorrelatorRatio C2beta02(2,0.2,fastjet::EnergyCorrelator::pt_R);
-    // EnergyCorrelatorRatio C2beta05(2,0.5,fastjet::EnergyCorrelator::pt_R);
-    // EnergyCorrelatorRatio C2beta10(2,1.0,fastjet::EnergyCorrelator::pt_R);
-    // EnergyCorrelatorRatio C2beta20(2,2.0,fastjet::EnergyCorrelator::pt_R);
-    // double ca8_C2beta0  = C2beta0 ( chsJets_ca10[0] );
-    // double ca8_C2beta02 = C2beta02( chsJets_ca10[0] );
-    // double ca8_C2beta05 = C2beta05( chsJets_ca10[0] );
-    // double ca8_C2beta10 = C2beta10( chsJets_ca10[0] );
-    // double ca8_C2beta20 = C2beta20( chsJets_ca10[0] );
-
-    // -- Planar Flow ------------------------------------------
-
-
     JetTree->Fill();
+    //Eventtime = clock() - Eventtime;
+    //cout<<"Eventtime "<<Eventtime<<endl;
 
 
   }//end event loop
