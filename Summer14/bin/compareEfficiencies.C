@@ -17,6 +17,10 @@ void compareEfficiencies(string filename1, string filename2, string variable, in
 	TH1F *var2NumH = new TH1F("var2NumH", "var2NumH", nbins, min, max);
 	TH1F *var1DenH = new TH1F("var1DenH", "var1DenH", nbins, min, max);
 	TH1F *var2DenH = new TH1F("var2DenH", "var2DenH", nbins, min, max);
+	var1NumH->Sumw2();
+	var2NumH->Sumw2();
+	var1DenH->Sumw2();
+	var2DenH->Sumw2();
 	
 
 	cout << variable << endl;	
