@@ -6,6 +6,7 @@
 <flags CXXFLAGS="-g -Wall -fpermissive -Wno-reorder"/>
 <bin   file="runBacon.cpp" name="runBacon"> </bin>
 <bin   file="runPuppi.cpp" name="runPuppi"> </bin>
+<bin   file="MiniNtuplizer.cpp" name="MiniNtuplizer"> </bin>
 <bin   file="runHats.cpp" name="runHats"> </bin>
 
 

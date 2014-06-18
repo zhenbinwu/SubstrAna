@@ -55,6 +55,15 @@ TTree* load(std::string iName) {
 }
 
 
+// SoftDrop paramenters
+double beta, symmetry_cut, R0;
+
+//trimming paramenters
+double R_trimming, PtFraction;
+
+//pruning paramenters
+double R_Cut, z_cut;
+
 struct JetInfo {
   int npu ;
 /////////////////////////pt /////
@@ -291,16 +300,15 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedianBa
   PseudoJet     lClean = gsn_cleanser(neutrals,chargedLV,chargedPU);
   
   // -- trimming
-  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.05)));
+  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, R_trimming), fastjet::SelectorPtFractionMin(PtFraction)));
   
   PseudoJet lTrim     = (trimmer)(iJet);
   trimmer.set_subtractor(area_subtractor);
   
   PseudoJet lTrimSafe = (trimmer)(iJet);
  
-    //pruning
-  double RCut= 0.5;
-  Pruner pruner(jet_def_, 0.1,RCut);
+   //pruning
+  Pruner pruner(jet_def_, z_cut,R_Cut);
   PseudoJet lPruned = pruner(iJet);
   PseudoJet lPrunedSafe = pruner(lCorr);
  
@@ -397,19 +405,18 @@ void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI,JetDefinition 
   
    
 // -- trimming
-  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.05)));
+  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, R_trimming), fastjet::SelectorPtFractionMin(PtFraction)));
   
   PseudoJet lTrim     = (trimmer)(iJet);
   trimmer.set_subtractor(area_subtractor);
   PseudoJet lTrimSafe = (trimmer)(iJet);
  
-    //pruning
-  double RCut= 0.5;
-  Pruner pruner(jet_def_, 0.1,RCut);
+  //pruning
+  Pruner pruner(jet_def_, z_cut, R_Cut);
   PseudoJet lPruned = pruner(iJet);
   PseudoJet lPrunedSafe = pruner(lCorr);
    //softdrop
-  contrib::SoftDrop softdrop(2., 0.1, 1.0);
+  contrib::SoftDrop softdrop(beta, symmetry_cut, R0);
   PseudoJet lSoftDropped = softdrop(iJet);
   softdrop.set_subtractor(area_subtractor);
   PseudoJet lSoftDroppedSafe = softdrop(iJet);
@@ -501,7 +508,7 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
   PseudoJet     lClean = gsn_cleanser(neutrals,chargedLV,chargedPU);
   
   // -- trimming
-  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, 0.2), fastjet::SelectorPtFractionMin(0.05)));
+  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, R_trimming), fastjet::SelectorPtFractionMin(PtFraction)));
   
 
   PseudoJet lTrim     = (trimmer)(iJet);
@@ -513,19 +520,15 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
  
 
   
-   double RCut= 0.5;
-  Pruner pruner(jet_def_, 0.1,RCut);
-  
-
-
+   
+  Pruner pruner(jet_def_, z_cut, R_Cut);
   PseudoJet lPruned = pruner(iJet);
- 
   PseudoJet lPrunedSafe = pruner(lCorr);
  
 
   
   //softdrop
- contrib::SoftDrop softdrop(2., 0.1, 1.0);
+ contrib::SoftDrop softdrop(beta, symmetry_cut, R0);
  
 
 
@@ -892,6 +895,19 @@ int main (int argc, char ** argv) {
   setupTree(puppiTree, JPuppiInfo  , "" );
   if (doCMSSWJets) setupTree(cmsswTree, JCMSSWPFInfo, "" );
 
+  
+  //softdrop parameters
+  beta =2.;
+  symmetry_cut = 0.1;
+  R0 =1.0;
+  
+  //trimming paramenters
+  R_trimming =0.2;
+  PtFraction = 0.05;
+  
+  //pruning paramenters
+  z_cut = 0.1;
+  R_Cut =0.5;
   
   // --- start loop over events
   for(int ientry = 0; ientry < maxEvents; ientry++) { 

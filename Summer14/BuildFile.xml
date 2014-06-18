@@ -1,6 +1,7 @@
 <use name="FWCore/PythonParameterSet"/>
 <use name="Dummy/Puppi"/>
 <use name="BaconAna/DataFormats"/>
+<use name="CondFormats/JetMETObjects"/>
 <use name="root"/>
 <use name="fastjet"/>
 <use name="roottmva"/>
