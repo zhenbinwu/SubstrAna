@@ -11,6 +11,7 @@ git clone https://github.com/violatingcp/Dummy.git
 # modify fastjet.xml.modified to make it your local installation of fastjet
 # if you are at the CMSLPC, then you can use this: /uscms_data/d2/ntran/physics/fastjet/summer14/fastjet
 # if you are at the LXPLUS, then you can use this: ????
+# if you are at hep.wisc.edu, then you can use this: /afs/hep.wisc.edu/swanson/fastjet
 # if you want to install your own fastjet, then follow the appendix below [A]
 cp fastjet.xml.modified $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/fastjet.xml
 scram setup fastjet
