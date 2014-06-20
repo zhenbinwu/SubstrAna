@@ -824,7 +824,19 @@ int main (int argc, char ** argv) {
   std::string L3AbsoluteJEC  = Options.getParameter<std::string>("L3AbsoluteJEC"); // L3
   std::string L2L3ResidualJEC= Options.getParameter<std::string>("L2L3ResidualJEC"); // L2L3 residual (for data only)
   std::string JECUncertainty = Options.getParameter<std::string>("JECUncertainty"); // Uncertainty
+  
+    //softdrop parameters
+  beta = Options.getParameter<double>("beta");
+  symmetry_cut = Options.getParameter<double>("symmetry_cut");
+  R0 = Options.getParameter<double>("R0");
 
+  //trimming paramenters
+  R_trimming = Options.getParameter<double>("R_trimming");
+  PtFraction = Options.getParameter<double>("PtFraction");
+  
+  //pruning paramenters
+  z_cut = Options.getParameter<double>("z_cut");
+  R_Cut = Options.getParameter<double>("R_Cut");
 
   // --- Read list of files to be analyzed and fill TChain
   TChain* lTree = new TChain("Events");
@@ -895,20 +907,6 @@ int main (int argc, char ** argv) {
   setupTree(puppiTree, JPuppiInfo  , "" );
   if (doCMSSWJets) setupTree(cmsswTree, JCMSSWPFInfo, "" );
 
-  
-  //softdrop parameters
-  beta =2.;
-  symmetry_cut = 0.1;
-  R0 =1.0;
-  
-  //trimming paramenters
-  R_trimming =0.2;
-  PtFraction = 0.05;
-  
-  //pruning paramenters
-  z_cut = 0.1;
-  R_Cut =0.5;
-  
   // --- start loop over events
   for(int ientry = 0; ientry < maxEvents; ientry++) { 
 
@@ -958,7 +956,7 @@ int main (int argc, char ** argv) {
 
   // --- Write trees 
   fout->cd();
-
+cout << "hier" << endl;
   genTree  ->Write();
   pfTree   ->Write();
   chsTree  ->Write();
