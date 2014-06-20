@@ -24,5 +24,6 @@ process.Options = cms.PSet(
     
     #pruning
     z_cut = cms.double(0.1),
-    R_Cut = cms.double(0.5)
+    R_Cut = cms.double(0.5),
+    R_jet_def_pruning = cms.double(0.3)
 )

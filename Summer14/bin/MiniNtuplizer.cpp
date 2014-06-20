@@ -62,7 +62,10 @@ double beta, symmetry_cut, R0;
 double R_trimming, PtFraction;
 
 //pruning paramenters
-double R_Cut, z_cut;
+double R_Cut, z_cut, R_jet_def_pruning;
+
+
+fastjet::JetAlgorithm algorithm_Trimming, algorithm_Pruning;
 
 struct JetInfo {
   int npu ;
@@ -278,7 +281,7 @@ void clear(JetInfo &iJet) {
 
 
 
-void setJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedianBackgroundEstimator bge_rho, JetMedianBackgroundEstimator bge_rhom, JetMedianBackgroundEstimator bge_rhoC, 
+void setJet(PseudoJet &iJet, JetInfo &iJetI, JetMedianBackgroundEstimator bge_rho, JetMedianBackgroundEstimator bge_rhom, JetMedianBackgroundEstimator bge_rhoC, 
 	    bool isGEN, bool isCHS, FactorizedJetCorrector *iJetCorr, JetCorrectionUncertainty *iJetUnc, JetCleanser &gsn_cleanser, 
 	    bool doGenMatching, vector<PseudoJet> genJets) {
 
@@ -300,7 +303,7 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedianBa
   PseudoJet     lClean = gsn_cleanser(neutrals,chargedLV,chargedPU);
   
   // -- trimming
-  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, R_trimming), fastjet::SelectorPtFractionMin(PtFraction)));
+  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(algorithm_Trimming, R_trimming), fastjet::SelectorPtFractionMin(PtFraction)));
   
   PseudoJet lTrim     = (trimmer)(iJet);
   trimmer.set_subtractor(area_subtractor);
@@ -308,12 +311,13 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedianBa
   PseudoJet lTrimSafe = (trimmer)(iJet);
  
    //pruning
-  Pruner pruner(jet_def_, z_cut,R_Cut);
+  JetDefinition jet_def_Pruning(algorithm_Pruning, R_jet_def_pruning);
+  Pruner pruner(jet_def_Pruning, z_cut,R_Cut);
   PseudoJet lPruned = pruner(iJet);
   PseudoJet lPrunedSafe = pruner(lCorr);
  
   //softdrop
-  contrib::SoftDrop softdrop(2., 0.1, 1.0);
+  contrib::SoftDrop softdrop(beta, symmetry_cut, R0);
   PseudoJet lSoftDropped = softdrop(iJet);
   softdrop.set_subtractor(area_subtractor);
   PseudoJet lSoftDroppedSafe = softdrop(iJet);
@@ -383,7 +387,7 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedianBa
 }
 
 
-void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI,JetDefinition jet_def_, JetMedianBackgroundEstimator bge_rho, JetMedianBackgroundEstimator bge_rhom, JetMedianBackgroundEstimator bge_rhoC, 
+void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI, JetMedianBackgroundEstimator bge_rho, JetMedianBackgroundEstimator bge_rhom, JetMedianBackgroundEstimator bge_rhoC, 
 		bool isCHS, FactorizedJetCorrector *iJetCorr, JetCorrectionUncertainty *iJetUnc, JetCleanser &gsn_cleanser) {
 
   // -- area-median subtractor  ( safe area subtractor )
@@ -405,14 +409,15 @@ void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI,JetDefinition 
   
    
 // -- trimming
-  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, R_trimming), fastjet::SelectorPtFractionMin(PtFraction)));
+  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(algorithm_Trimming, R_trimming), fastjet::SelectorPtFractionMin(PtFraction)));
   
   PseudoJet lTrim     = (trimmer)(iJet);
   trimmer.set_subtractor(area_subtractor);
   PseudoJet lTrimSafe = (trimmer)(iJet);
  
   //pruning
-  Pruner pruner(jet_def_, z_cut, R_Cut);
+   JetDefinition jet_def_Pruning(algorithm_Pruning, R_jet_def_pruning);
+  Pruner pruner(jet_def_Pruning, z_cut, R_Cut);
   PseudoJet lPruned = pruner(iJet);
   PseudoJet lPrunedSafe = pruner(lCorr);
    //softdrop
@@ -489,7 +494,7 @@ void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI,JetDefinition 
 }
 
 
-void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedianBackgroundEstimator bge_rho, JetMedianBackgroundEstimator bge_rhom, JetMedianBackgroundEstimator bge_rhoC, JetCleanser &gsn_cleanser) {
+void setGenJet(PseudoJet &iJet, JetInfo &iJetI,  JetMedianBackgroundEstimator bge_rho, JetMedianBackgroundEstimator bge_rhom, JetMedianBackgroundEstimator bge_rhoC, JetCleanser &gsn_cleanser) {
 
   // -- area-median subtractor  ( safe area subtractor )
   contrib::SafeAreaSubtractor *area_subtractor = 0;
@@ -508,7 +513,7 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
   PseudoJet     lClean = gsn_cleanser(neutrals,chargedLV,chargedPU);
   
   // -- trimming
-  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(fastjet::kt_algorithm, R_trimming), fastjet::SelectorPtFractionMin(PtFraction)));
+  fastjet::Filter trimmer( fastjet::Filter(fastjet::JetDefinition(algorithm_Trimming, R_trimming), fastjet::SelectorPtFractionMin(PtFraction)));
   
 
   PseudoJet lTrim     = (trimmer)(iJet);
@@ -520,8 +525,8 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
  
 
   
-   
-  Pruner pruner(jet_def_, z_cut, R_Cut);
+  JetDefinition jet_def_Pruning(algorithm_Pruning, R_jet_def_pruning); 
+  Pruner pruner(jet_def_Pruning, z_cut, R_Cut);
   PseudoJet lPruned = pruner(iJet);
   PseudoJet lPrunedSafe = pruner(lCorr);
  
@@ -587,7 +592,7 @@ void setGenJet(PseudoJet &iJet, JetInfo &iJetI, JetDefinition jet_def_, JetMedia
 
 
 // ------------------------------------------------------------------------------------------
-void fillGenJetsInfo(vector<PseudoJet> &iJets, JetDefinition jet_def_, vector<PseudoJet> &iParticles, JetInfo &iJetInfo, JetCleanser &gsn_cleanser, int nPU ){
+void fillGenJetsInfo(vector<PseudoJet> &iJets, vector<PseudoJet> &iParticles, JetInfo &iJetInfo, JetCleanser &gsn_cleanser, int nPU ){
 
   // -- Compute rho, rho_m for SafeAreaSubtraction
   AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
@@ -618,7 +623,7 @@ void fillGenJetsInfo(vector<PseudoJet> &iJets, JetDefinition jet_def_, vector<Ps
 
   // -- Loop over jets in the event and set jets variables                                                                                                                                                                      
   for (unsigned int j = 0; j < iJets.size(); j++){
-    setGenJet( iJets[j], iJetInfo,  jet_def_, bge_rho, bge_rhom, bge_rhoC, gsn_cleanser);
+    setGenJet( iJets[j], iJetInfo,  bge_rho, bge_rhom, bge_rhoC, gsn_cleanser);
     //cout << iTree.GetName() << "  " << (iJetInfo.pt)[j] << "  "<< (iJetInfo.ptcorr)[j] <<endl;                                                                                                                                      
   }
 
@@ -626,7 +631,7 @@ void fillGenJetsInfo(vector<PseudoJet> &iJets, JetDefinition jet_def_, vector<Ps
 // ------------------------------------------------------------------------------------------
 
 
-void fillRecoJetsInfo(vector<PseudoJet> &iJets, JetDefinition jet_def_, vector<PseudoJet> &iParticles, JetInfo &iJetInfo, JetInfo iGenJetInfo, bool isCHS, FactorizedJetCorrector *jetCorr, JetCorrectionUncertainty *ijetUnc,
+void fillRecoJetsInfo(vector<PseudoJet> &iJets,  vector<PseudoJet> &iParticles, JetInfo &iJetInfo, JetInfo iGenJetInfo, bool isCHS, FactorizedJetCorrector *jetCorr, JetCorrectionUncertainty *ijetUnc,
 		      JetCleanser &gsn_cleanser, int nPU ){
   
   // -- Compute rho, rho_m for SafeAreaSubtraction
@@ -658,7 +663,7 @@ void fillRecoJetsInfo(vector<PseudoJet> &iJets, JetDefinition jet_def_, vector<P
 
   // -- Loop over jets in the event and set jets variables                                                                                                                                                                      
   for (unsigned int j = 0; j < iJets.size(); j++){
-    setRecoJet( iJets[j], iJetInfo, iGenJetInfo, jet_def_,bge_rho, bge_rhom, bge_rhoC, isCHS, jetCorr, ijetUnc, gsn_cleanser);
+    setRecoJet( iJets[j], iJetInfo, iGenJetInfo,bge_rho, bge_rhom, bge_rhoC, isCHS, jetCorr, ijetUnc, gsn_cleanser);
     //cout << iTree.GetName() << "  " << (iJetInfo.pt)[j] << "  "<< (iJetInfo.ptcorr)[j] <<endl;                                                                                                                                      
   }
 
@@ -833,10 +838,13 @@ int main (int argc, char ** argv) {
   //trimming paramenters
   R_trimming = Options.getParameter<double>("R_trimming");
   PtFraction = Options.getParameter<double>("PtFraction");
+  algorithm_Trimming = fastjet::kt_algorithm;
   
   //pruning paramenters
   z_cut = Options.getParameter<double>("z_cut");
   R_Cut = Options.getParameter<double>("R_Cut");
+  algorithm_Pruning = fastjet::antikt_algorithm;
+  R_jet_def_pruning = Options.getParameter<double>("R_jet_def_pruning");
 
   // --- Read list of files to be analyzed and fill TChain
   TChain* lTree = new TChain("Events");
@@ -883,7 +891,7 @@ int main (int argc, char ** argv) {
 
   // --- Setup JetAlgos
   JetDefinition jet_def(antikt_algorithm,jetR);         // the jet definition....
-  JetDefinition jet_def_Pruning(antikt_algorithm,0.3);//this is a jet algorithm for pruning. Smaller radius to be used
+  //JetDefinition jet_def_Pruning(antikt_algorithm,0.3);//this is a jet algorithm for pruning. Smaller radius to be used
   AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
   
   // --- Setup cleansing
@@ -938,10 +946,10 @@ int main (int argc, char ** argv) {
     int nPU = eventInfo->nPU;
 
     // save jet info in a tree
-    fillGenJetsInfo(genJets, jet_def_Pruning, gen_event, JGenInfo, gsn_cleanser, nPU);
-    fillRecoJetsInfo(puppiJets, jet_def_Pruning, puppi_event, JPuppiInfo, JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU);
-    fillRecoJetsInfo(pfJets , jet_def_Pruning, pf_event   , JPFInfo   , JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU);
-    fillRecoJetsInfo(chsJets, jet_def_Pruning, chs_event  , JCHSInfo  , JGenInfo, true , jetCorr, jetUnc, gsn_cleanser,nPU);
+    fillGenJetsInfo(genJets, gen_event, JGenInfo, gsn_cleanser, nPU);
+    fillRecoJetsInfo(puppiJets, puppi_event, JPuppiInfo, JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU);
+    fillRecoJetsInfo(pfJets , pf_event   , JPFInfo   , JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU);
+    fillRecoJetsInfo(chsJets,  chs_event  , JCHSInfo  , JGenInfo, true , jetCorr, jetUnc, gsn_cleanser,nPU);
 
     genTree->Fill();
     puppiTree->Fill();
