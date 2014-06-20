@@ -19,10 +19,10 @@ process.Options = cms.PSet(
     R0 = cms.double(1.),
     
     # trimming
-    R_trimming = cms.double(0.2);
-    PtFraction = cms.double(0.05);
+    R_trimming = cms.double(0.2),
+    PtFraction = cms.double(0.05),
     
     #pruning
-    z_cut = cms.double(0.1);
-    R_Cut = cms.double(0.5);
+    z_cut = cms.double(0.1),
+    R_Cut = cms.double(0.5)
 )
