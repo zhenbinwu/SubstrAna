@@ -40,6 +40,9 @@ using namespace std;
 using namespace fastjet;
 using namespace contrib;
 
+typedef vector<float> vfloat;
+typedef vector<bool> vbool;
+
 //Object Processors
 GenLoader       *fGen      = 0; 
 MuonLoader      *fMuon     = 0; 
@@ -105,6 +108,9 @@ struct JetInfo {
   vector<float> mcleangen; //needed?
   vector<float> mconstgen;//needed?
   vector<int>   imatch;
+  
+  //matching to the Boson
+  vbool is_MatchedToBoson;
 };
 
 
@@ -200,6 +206,22 @@ int matchingIndexFromJetInfo(PseudoJet jet, JetInfo jetInfo) {
 }
 
 
+bool IsMatchedToGenBoson(vfloat eta, vfloat phi, PseudoJet Jet) {
+ bool IsMatched=false;
+   
+  for (unsigned int iGen =0; iGen < eta.size(); ++iGen)
+  {
+      double dEta = fabs(eta.at(iGen) - (Jet.pt()));
+      double dPhi = fabs(phi.at(iGen) - (Jet.eta()));
+      if(dPhi > 2.*TMath::Pi()-dPhi) dPhi =  2.*TMath::Pi()-dPhi;
+      float rtemp = sqrt(dEta*dEta+dPhi*dPhi);
+      if ( rtemp < 0.3 ){
+	IsMatched = true;
+      }
+  }
+  return (IsMatched);  
+}
+
 
 
 void setupTree(TTree *iTree, JetInfo &iJet, std::string iName) {
@@ -240,6 +262,10 @@ void setupTree(TTree *iTree, JetInfo &iJet, std::string iName) {
   iTree->Branch((iName+"mcleangen"   ).c_str(),&iJet.mcleangen   );//needed?
   iTree->Branch((iName+"mconstgen"   ).c_str(),&iJet.mconstgen   );//needed?
   iTree->Branch((iName+"imatch"      ).c_str(),&iJet.imatch      );
+  
+  //matched to the boson
+  iTree->Branch((iName+"is_MatchedToBoson"      ).c_str(),&iJet.imatch      );
+  
 }
 
 
@@ -277,13 +303,14 @@ void clear(JetInfo &iJet) {
   iJet.mcleangen   .clear();
   iJet.mconstgen   .clear();
   iJet.imatch      .clear();
+  iJet.is_MatchedToBoson.clear();
 }
 
 
 
 void setJet(PseudoJet &iJet, JetInfo &iJetI, JetMedianBackgroundEstimator bge_rho, JetMedianBackgroundEstimator bge_rhom, JetMedianBackgroundEstimator bge_rhoC, 
 	    bool isGEN, bool isCHS, FactorizedJetCorrector *iJetCorr, JetCorrectionUncertainty *iJetUnc, JetCleanser &gsn_cleanser, 
-	    bool doGenMatching, vector<PseudoJet> genJets) {
+	    bool doGenMatching, vector<PseudoJet> genJets, vfloat eta_Boson, vfloat phi_Boson) {
 
   // -- area-median subtractor  ( safe area subtractor )
   contrib::SafeAreaSubtractor *area_subtractor = 0;
@@ -336,6 +363,7 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetMedianBackgroundEstimator bge_rh
 
   // -- find the gen jet matched to this reco jet
   int imatch = -1;
+  bool matched = IsMatchedToGenBoson(eta_Boson, phi_Boson, iJet);
   if (doGenMatching) imatch = matchingIndex(iJet,genJets);
   
   // -- fill jet info
@@ -362,6 +390,7 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetMedianBackgroundEstimator bge_rh
   (iJetI.nparticles).push_back((iJet.constituents()).size());
   (iJetI.nneutrals ).push_back(neutrals.size());
   (iJetI.ncharged  ).push_back(chargedLV.size()+chargedPU.size());
+  (iJetI.is_MatchedToBoson ).push_back(matched);
   
   if (imatch > -1){
     (iJetI.imatch  ).push_back(imatch);
@@ -387,8 +416,7 @@ void setJet(PseudoJet &iJet, JetInfo &iJetI, JetMedianBackgroundEstimator bge_rh
 }
 
 
-void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI, JetMedianBackgroundEstimator bge_rho, JetMedianBackgroundEstimator bge_rhom, JetMedianBackgroundEstimator bge_rhoC, 
-		bool isCHS, FactorizedJetCorrector *iJetCorr, JetCorrectionUncertainty *iJetUnc, JetCleanser &gsn_cleanser) {
+void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI, JetMedianBackgroundEstimator bge_rho, JetMedianBackgroundEstimator bge_rhom, JetMedianBackgroundEstimator bge_rhoC, bool isCHS, FactorizedJetCorrector *iJetCorr, JetCorrectionUncertainty *iJetUnc, JetCleanser &gsn_cleanser, vfloat eta_Boson, vfloat phi_Boson) {
 
   // -- area-median subtractor  ( safe area subtractor )
   contrib::SafeAreaSubtractor *area_subtractor = 0;
@@ -436,6 +464,7 @@ void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI, JetMedianBack
   // -- find the gen jet matched to this reco jet
   //int imatch = matchingIndex(iJet,genJets);
   int imatch = matchingIndexFromJetInfo(iJet, iGenJetI);
+  bool matched = IsMatchedToGenBoson( eta_Boson, phi_Boson, iJet);
   
   // -- fill jet info
   (iJetI.pt        ).push_back(lCorr     .pt());
@@ -462,6 +491,7 @@ void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI, JetMedianBack
   (iJetI.nparticles).push_back((iJet.constituents()).size());
   (iJetI.nneutrals ).push_back(neutrals.size());
   (iJetI.ncharged  ).push_back(chargedLV.size()+chargedPU.size());
+  (iJetI.is_MatchedToBoson ).push_back(matched);
   
   if (imatch > -1){
     (iJetI.imatch).push_back(imatch);
@@ -632,7 +662,7 @@ void fillGenJetsInfo(vector<PseudoJet> &iJets, vector<PseudoJet> &iParticles, Je
 
 
 void fillRecoJetsInfo(vector<PseudoJet> &iJets,  vector<PseudoJet> &iParticles, JetInfo &iJetInfo, JetInfo iGenJetInfo, bool isCHS, FactorizedJetCorrector *jetCorr, JetCorrectionUncertainty *ijetUnc,
-		      JetCleanser &gsn_cleanser, int nPU ){
+		      JetCleanser &gsn_cleanser, int nPU, vfloat eta_Boson, vfloat phi_Boson ){
   
   // -- Compute rho, rho_m for SafeAreaSubtraction
   AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
@@ -663,7 +693,7 @@ void fillRecoJetsInfo(vector<PseudoJet> &iJets,  vector<PseudoJet> &iParticles, 
 
   // -- Loop over jets in the event and set jets variables                                                                                                                                                                      
   for (unsigned int j = 0; j < iJets.size(); j++){
-    setRecoJet( iJets[j], iJetInfo, iGenJetInfo,bge_rho, bge_rhom, bge_rhoC, isCHS, jetCorr, ijetUnc, gsn_cleanser);
+    setRecoJet( iJets[j], iJetInfo, iGenJetInfo,bge_rho, bge_rhom, bge_rhoC, isCHS, jetCorr, ijetUnc, gsn_cleanser, eta_Boson, phi_Boson);
     //cout << iTree.GetName() << "  " << (iJetInfo.pt)[j] << "  "<< (iJetInfo.ptcorr)[j] <<endl;                                                                                                                                      
   }
 
@@ -944,12 +974,16 @@ int main (int argc, char ** argv) {
 
     lTree->GetEntry(ientry);
     int nPU = eventInfo->nPU;
+    
+    fGen -> selectBoson(24);
+    
+    cout << "information about W " <<( fGen -> eta_Boson).size()  << endl;
 
     // save jet info in a tree
     fillGenJetsInfo(genJets, gen_event, JGenInfo, gsn_cleanser, nPU);
-    fillRecoJetsInfo(puppiJets, puppi_event, JPuppiInfo, JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU);
-    fillRecoJetsInfo(pfJets , pf_event   , JPFInfo   , JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU);
-    fillRecoJetsInfo(chsJets,  chs_event  , JCHSInfo  , JGenInfo, true , jetCorr, jetUnc, gsn_cleanser,nPU);
+    fillRecoJetsInfo(puppiJets, puppi_event, JPuppiInfo, JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
+    fillRecoJetsInfo(pfJets , pf_event   , JPFInfo   , JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
+    fillRecoJetsInfo(chsJets,  chs_event  , JCHSInfo  , JGenInfo, true , jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
 
     genTree->Fill();
     puppiTree->Fill();
@@ -959,6 +993,8 @@ int main (int argc, char ** argv) {
     if (doCMSSWJets)
       readCMSSWJet(ientry, lTree, *cmsswTree, genJets, JCMSSWPFInfo);
     
+    
+    fGen -> reset();
   }
 
 
