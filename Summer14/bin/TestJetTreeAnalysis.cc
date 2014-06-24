@@ -9,6 +9,11 @@ int main( int argc, char **argv ) {
 
   gROOT->ProcessLine("#include <vector>");
 
+  if (argc<8){
+    cout << "Usage: TestJetTreeAnalysis <ntuple name> <output name> <min pt> <max pt> <min eta> <max eta> <analyze also CMSSW jets>"<<endl;
+    exit(0);
+  }
+
   TFile *inputFile = TFile::Open(argv[1]);
   if (inputFile==0){
     std::cout<<"Error: cannot open " << inputFile->GetName() << std::endl;
