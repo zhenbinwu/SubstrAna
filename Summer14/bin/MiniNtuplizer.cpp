@@ -929,6 +929,9 @@ int main (int argc, char ** argv) {
   JetCleanser gsn_cleanser(subjet_def,JetCleanser::gaussian_cleansing,JetCleanser::input_nc_separate);
   gsn_cleanser.SetGaussianParameters(0.617,0.62,0.15,0.22);
 
+  // --- Setup soft-killer
+  SoftKiller soft_killer   (5.0,0.4);
+
   // --- Setup output trees
   TFile *fout = new TFile(fOut.c_str(),"RECREATE");
 
@@ -936,13 +939,15 @@ int main (int argc, char ** argv) {
   TTree *pfTree    = new TTree("pf"   , "pf"   );
   TTree *chsTree   = new TTree("chs"  , "chs"  );
   TTree *puppiTree = new TTree("puppi", "puppi");
+  TTree *softkillerTree    = new TTree("softkiller", "softkiller");
   TTree *cmsswTree = new TTree("cmsswpf", "cmsswpf");
 
-  JetInfo JGenInfo, JPFInfo, JCHSInfo, JPuppiInfo, JCMSSWPFInfo;    
+  JetInfo JGenInfo, JPFInfo, JCHSInfo, JPuppiInfo, JSoftKillerInfo, JCMSSWPFInfo;
   setupTree(genTree,   JGenInfo    , "" );
   setupTree(pfTree,    JPFInfo     , "" );
   setupTree(chsTree,   JCHSInfo    , "" );
   setupTree(puppiTree, JPuppiInfo  , "" );
+  setupTree(softkillerTree, JSoftKillerInfo  , "" );
   if (doCMSSWJets) setupTree(cmsswTree, JCMSSWPFInfo, "" );
 
   // --- start loop over events
@@ -960,17 +965,20 @@ int main (int argc, char ** argv) {
     vector<PseudoJet> pf_event        = fPFCand->pfFetch();
     vector<PseudoJet> chs_event       = fPFCand->pfchsFetch(-1);
     vector<PseudoJet> puppi_event     = fPFCand->puppiFetch();
+    vector<PseudoJet> soft_event      = soft_killer(pf_event);
 
     // -- Cluster jets
     ClusterSequenceArea pGen    (gen_event    , jet_def, area_def);
     ClusterSequenceArea pPup    (puppi_event  , jet_def, area_def);
     ClusterSequenceArea pPF     (pf_event     , jet_def, area_def);
     ClusterSequenceArea pCHS    (chs_event    , jet_def, area_def);
+    ClusterSequenceArea pSoft   (soft_event   , jet_def, area_def);
 
     vector<PseudoJet> genJets     = sorted_by_pt(pGen    .inclusive_jets(25.));
     vector<PseudoJet> puppiJets   = sorted_by_pt(pPup    .inclusive_jets(25.));
     vector<PseudoJet> pfJets      = sorted_by_pt(pPF     .inclusive_jets(25.));
     vector<PseudoJet> chsJets     = sorted_by_pt(pCHS    .inclusive_jets(25.));
+    vector<PseudoJet> softJets    = sorted_by_pt(pSoft   .inclusive_jets(25.));
 
     lTree->GetEntry(ientry);
     int nPU = eventInfo->nPU;
@@ -984,11 +992,13 @@ int main (int argc, char ** argv) {
     fillRecoJetsInfo(puppiJets, puppi_event, JPuppiInfo, JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
     fillRecoJetsInfo(pfJets , pf_event   , JPFInfo   , JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
     fillRecoJetsInfo(chsJets,  chs_event  , JCHSInfo  , JGenInfo, true , jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
+    fillRecoJetsInfo(softJets, soft_event  , JSoftKillerInfo  , JGenInfo, true , jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
 
     genTree->Fill();
     puppiTree->Fill();
     pfTree->Fill();
     chsTree->Fill();
+    softkillerTree->Fill();
 
     if (doCMSSWJets)
       readCMSSWJet(ientry, lTree, *cmsswTree, genJets, JCMSSWPFInfo);
@@ -1005,6 +1015,7 @@ cout << "hier" << endl;
   pfTree   ->Write();
   chsTree  ->Write();
   puppiTree->Write();
+  softkillerTree->Write();
 
   if (doCMSSWJets)  cmsswTree->Write();
 }  
