@@ -9,7 +9,8 @@ parser.add_option("-i","--inputdir"   , dest="inputdir"   , type="string", help=
 parser.add_option("-w","--workdir"    , dest="workdir"    , type="string", default="mydir",help="Name of the directory for jobs")
 parser.add_option("-o","--outputname" , dest="outputname" , type="string", default="outtree",help="Name of the output file. Default is: outtree")
 parser.add_option(""  ,"--eosdir"     , dest="eosdir"     , type="string", default="",help="Name of the eos output directory for jobs")
-parser.add_option("-c","--config"     , dest="config"     , type="string", default="minintuplizer_cfg.py",help="Name of the config file. Default is: minintuplizer_cfg.py")
+parser.add_option("-c","--config"     , dest="config"     , type="string", default="minintuplizer_cfg.py",help="Ntuplizer config file. Default is: minintuplizer_cfg.py")
+parser.add_option("",  "--puppiConfig", dest="puppiConfig", type="string", default="Puppi_cff.py",help="Puppi config file. Default is: Puppi_cff.py")
 parser.add_option("-n","--njobs"      , dest="njobs"      , type="int"   , help="Number of jobs")
 parser.add_option("-e","--executable" , dest="executable" , type="string", default="MiniNtuplizer",help="Name of the executable. Default is: MiniNtuplizer")
 parser.add_option("-q","--queue"      , dest="queue"      , type="string", default="1nh",help="Name of the queue on lxbatch")
@@ -36,7 +37,7 @@ def makeFilesList(indir,wdir):
     return list
 
 
-def writeJobs(wdir, analysis, config, indir, output, eosoutdir, njobs):
+def writeJobs(wdir, analysis, config, puppiconfig, indir, output, eosoutdir, njobs):
     #---------------------------------------------
     # --- prepare the list of files to be analyzed
     #---------------------------------------------
@@ -64,7 +65,7 @@ def writeJobs(wdir, analysis, config, indir, output, eosoutdir, njobs):
         jobscript.write('export SCRAM_ARCH=slc6_amd64_gcc472 \n')
         jobscript.write('eval ` scramv1 runtime -sh ` \n')
         jobscript.write('cd - \n')
-        jobscript.write('cp %s ./ \n'%(config)) 
+        jobscript.write('cp %s ./ \n'%(puppiconfig)) 
         jobscript.write('if ( \n')
         jobscript.write('\t touch %s/sub_%d.run \n'%(jobdir,job))
         jobscript.write('\t %s %s %s/input_%d.txt %s_%d.root'%(analysis, config, jobdir, job, output, job))
@@ -130,6 +131,7 @@ def checkJobs(wdir, output, queue, eosoutdir):
 
 path = os.getcwd()
 conf = path+'/'+options.config
+puppiconf = path+'/'+options.puppiConfig
 workingdir = path+'/'+options.workdir
 
 eosoutdir = ''
@@ -144,9 +146,7 @@ if not options.checkJobs and not options.resubmit:
         command = '%s %s'%(mkdir,eosoutdir)
         print command
         os.system(command)
-    #writeJobs(options.inputdir, workingdir, options.njobs, options.maxEvents, options.executable, options.radius, options.doCMSSWJets, options.outputname, conf, eosoutdir )
-#    writeJobs(workingdir, options.inputdir, options.njobs, options.executable, conf, options.outputname, eosoutdir )
-    writeJobs(workingdir, options.executable, conf, options.inputdir, options.outputname, eosoutdir, options.njobs)
+    writeJobs(workingdir, options.executable, conf, puppiconf, options.inputdir, options.outputname, eosoutdir, options.njobs)
     
     # -- submit jobs 
     if not options.dryRun:
