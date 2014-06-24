@@ -20,33 +20,36 @@ int main( int argc, char **argv ) {
   int maxEntries = -1;
   float minpt = atof(argv[3]);
   float maxpt  = atof(argv[4]);
-  bool doCMSSWJets = atoi(argv[5]);
+  float minAbsEta = atof(argv[5]);
+  float maxAbsEta = atof(argv[6]);
+  bool doCMSSWJets = atoi(argv[7]);
+
 
   // -- gen
   TTree *tree_gen   = (TTree *)inputFile->Get("gen");
   JetTreeAnalyzer *genAnalyzer = new JetTreeAnalyzer(tree_gen);
   genAnalyzer->bookHistograms("_gen");
-  genAnalyzer->fillHistograms(maxEntries,minpt, maxpt);
+  genAnalyzer->fillHistograms(maxEntries,minpt,maxpt,minAbsEta,maxAbsEta);
   delete tree_gen;
 
   // -- pf
   TTree *tree_pf    = (TTree *)inputFile->Get("pf");
   JetTreeAnalyzer *pfAnalyzer = new JetTreeAnalyzer(tree_pf);
   pfAnalyzer->bookHistograms("_pf");
-  pfAnalyzer->fillHistograms(maxEntries,minpt,maxpt);
+  pfAnalyzer->fillHistograms(maxEntries,minpt,maxpt,minAbsEta,maxAbsEta);
   delete tree_pf;
 
   // -- pfchs
   TTree *tree_pfchs = (TTree *)inputFile->Get("chs");
   JetTreeAnalyzer *pfchsAnalyzer = new JetTreeAnalyzer(tree_pfchs);
   pfchsAnalyzer->bookHistograms("_pfchs");
-  pfchsAnalyzer->fillHistograms(maxEntries,minpt,maxpt);
+  pfchsAnalyzer->fillHistograms(maxEntries,minpt,maxpt,minAbsEta,maxAbsEta);
 
   // -- puppi
   TTree *tree_puppi = (TTree *)inputFile->Get("puppi");
   JetTreeAnalyzer *puppiAnalyzer = new JetTreeAnalyzer(tree_puppi);
   puppiAnalyzer->bookHistograms("_puppi");
-  puppiAnalyzer->fillHistograms(maxEntries,minpt,maxpt);
+  puppiAnalyzer->fillHistograms(maxEntries,minpt,maxpt,minAbsEta,maxAbsEta);
   delete tree_puppi;
 
   // -- pf cmssw
@@ -56,7 +59,7 @@ int main( int argc, char **argv ) {
     tree_pfcmssw = (TTree *)inputFile->Get("cmsswpf");
     pfcmsswAnalyzer = new JetTreeAnalyzer(tree_pfcmssw);
     pfcmsswAnalyzer->bookHistograms("_pfcmssw");
-    pfcmsswAnalyzer->fillHistograms(maxEntries, minpt,maxpt);
+    pfcmsswAnalyzer->fillHistograms(maxEntries, minpt,maxpt,minAbsEta,maxAbsEta);
     delete tree_pfcmssw;
   }
 

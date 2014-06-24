@@ -254,7 +254,7 @@ void JetTreeAnalyzer::bookHistograms(std::string suffix){
 
 
 // --- Fill histograms ---------------------------------------------------------------
-void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt, float maxPt){
+void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt, float maxPt, float minAbsEta, float maxAbsEta){
 
   std::cout << "Filling histograms..." << std::endl;
   
@@ -287,12 +287,13 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt, float maxPt){
       //float thispt = ptraw->at(j); // use pt raw
       
       if (thispt < minPt)  continue;
-      //if (thispt < minPt) break; // since are ordered in decreasing pT, can skip all the rest
       if (thispt > maxPt)  continue;
+
+      if (fabs(eta->at(j)) < minAbsEta) continue;
+      if (fabs(eta->at(j)) > maxAbsEta) continue;
 
       nj++;
       int matchInd = imatch->at(j);
-
       
       hptgen    -> Fill(ptgen->at(j));
       hptraw    -> Fill(ptraw->at(j));
@@ -396,7 +397,7 @@ void JetTreeAnalyzer::fillHistograms(int maxEntries, float minPt, float maxPt){
 
 	//hptraw_response_vs_npu     -> Fill(npu,ptraw->at(j)-ptgen->at(j));
 	//hpt_response_vs_npu        -> Fill(npu,pt->at(j)-ptgen->at(j));
-	//hptcorr_response_vs_npu        -> Fill(npu,ptcorr->at(j)-ptgen->at(j));
+	//hptcorr_response_vs_npu    -> Fill(npu,ptcorr->at(j)-ptgen->at(j));
 	hptraw_response_vs_npu     -> Fill(npu,ptraw->at(j)/ptgen->at(j)-1); // fill with (pt-ptgen)/ptgen
 	hpt_response_vs_npu        -> Fill(npu,pt->at(j)/ptgen->at(j)-1);    // fill with (pt-ptgen)/ptgen
 	hptcorr_response_vs_npu    -> Fill(npu,ptcorr->at(j)/ptgen->at(j)-1);    // fill with (pt-ptgen)/ptgen

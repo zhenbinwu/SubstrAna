@@ -38,7 +38,7 @@ class JetTreeAnalyzer{
   virtual int  GetEntry(Long64_t entry);
 
   virtual void bookHistograms(std::string suffix="");
-  virtual void fillHistograms(int maxEntries, float minPt, float maxPt);
+  virtual void fillHistograms(int maxEntries, float minPt, float maxPt, float minAbsEta, float maxAbsEta);
   virtual void saveHistograms(TFile *file, std::string dir);
 
   
