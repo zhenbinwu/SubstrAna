@@ -110,7 +110,7 @@ struct JetInfo {
   vector<int>   imatch;
   
   //matching to the Boson
-  vbool is_MatchedToBoson;
+  vector <bool> is_MatchedToBoson;
 };
 
 
@@ -264,7 +264,7 @@ void setupTree(TTree *iTree, JetInfo &iJet, std::string iName) {
   iTree->Branch((iName+"imatch"      ).c_str(),&iJet.imatch      );
   
   //matched to the boson
-  iTree->Branch((iName+"is_MatchedToBoson"      ).c_str(),&iJet.imatch      );
+  iTree->Branch((iName+"is_MatchedToBoson"      ).c_str(),&iJet.is_MatchedToBoson      );
   
 }
 
