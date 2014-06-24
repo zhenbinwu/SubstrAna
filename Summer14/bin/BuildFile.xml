@@ -8,5 +8,5 @@
 <bin   file="runPuppi.cpp" name="runPuppi"> </bin>
 <bin   file="MiniNtuplizer.cpp" name="MiniNtuplizer"> </bin>
 <bin   file="runHats.cpp" name="runHats"> </bin>
-
+<bin   file="TestJetTreeAnalysis.cc" name="TestJetTreeAnalysis"> </bin>
 
