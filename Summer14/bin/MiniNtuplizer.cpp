@@ -859,6 +859,8 @@ int main (int argc, char ** argv) {
   std::string L3AbsoluteJEC  = Options.getParameter<std::string>("L3AbsoluteJEC"); // L3
   std::string L2L3ResidualJEC= Options.getParameter<std::string>("L2L3ResidualJEC"); // L2L3 residual (for data only)
   std::string JECUncertainty = Options.getParameter<std::string>("JECUncertainty"); // Uncertainty
+  bool DoMatchingToBoson =  Options.getParameter<bool>("DoMatchingToBoson"); // this is relevant for the WW, ttbar etc. samples
+  int pdgIdBoson =  Options.getParameter<int>("pdgIdBoson"); // absolute value of pdgId of the boson. Can be used only if the DoMatchingToBoson is set to true.
   
     //softdrop parameters
   beta = Options.getParameter<double>("beta");
@@ -982,14 +984,22 @@ int main (int argc, char ** argv) {
 
     lTree->GetEntry(ientry);
     int nPU = eventInfo->nPU;
+  
     
-    fGen -> selectBoson(24);
+    vfloat eta_Boson, phi_Boson;
     
-    cout << "information about W " <<( fGen -> eta_Boson).size()  << endl;
+    if (DoMatchingToBoson)
+    {
+      fGen -> selectBoson(pdgIdBoson);
+      eta_Boson = fGen -> eta_Boson;
+      phi_Boson = fGen -> phi_Boson;
+    }
+    
+    cout << eta_Boson.size()  << endl;
 
     // save jet info in a tree
     fillGenJetsInfo(genJets, gen_event, JGenInfo, gsn_cleanser, nPU);
-    fillRecoJetsInfo(puppiJets, puppi_event, JPuppiInfo, JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
+    fillRecoJetsInfo(puppiJets, puppi_event, JPuppiInfo, JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU, eta_Boson, phi_Boson );
     fillRecoJetsInfo(pfJets , pf_event   , JPFInfo   , JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
     fillRecoJetsInfo(chsJets,  chs_event  , JCHSInfo  , JGenInfo, true , jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
     fillRecoJetsInfo(softJets, soft_event  , JSoftKillerInfo  , JGenInfo, true , jetCorr, jetUnc, gsn_cleanser,nPU, fGen -> eta_Boson,fGen -> phi_Boson );
