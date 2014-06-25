@@ -12,6 +12,10 @@ process.Options = cms.PSet(
     L3AbsoluteJEC   = cms.string("/afs/cern.ch/user/b/bmahakud/public/JEC/POSTLS162_V5_L3Absolute_AK7PF.txt"),
     L2L3ResidualJEC = cms.string(""), 
     JECUncertainty  = cms.string("/afs/cern.ch/user/b/bmahakud/public/JEC/POSTLS162_V5_Uncertainty_AK7PF.txt"),
+
+    #mc matching
+    DoMatchingToBoson = cms.bool(False), # use this to run on WW, ttbar...
+    pdgIdBoson        = cms.int32(24),
     
     #softdrop
     beta = cms.double(2),
