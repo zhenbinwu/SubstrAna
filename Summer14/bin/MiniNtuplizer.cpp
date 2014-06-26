@@ -935,7 +935,7 @@ int main (int argc, char ** argv) {
   gsn_cleanser.SetGaussianParameters(0.617,0.62,0.15,0.22);
 
   // --- Setup soft-killer
-  SoftKiller soft_killer   (5.0,0.4);
+  SoftKiller soft_killer   (2.5,0.4);
 
   // --- Setup output trees
   TFile *fout = new TFile(fOut.c_str(),"RECREATE");
