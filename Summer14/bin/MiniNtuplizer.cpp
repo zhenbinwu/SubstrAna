@@ -836,6 +836,7 @@ bool FillChain(TChain& chain, const std::string& inputFileList)
 //---------------------------------------------------------------------------------------------------------------
 int main (int argc, char ** argv) {
 
+  cout << "dfgasf"  << endl;
   // --- args
   if (argc<3){
     cout << "Missing arguments!!!" <<endl;
@@ -953,13 +954,12 @@ int main (int argc, char ** argv) {
   setupTree(puppiTree, JPuppiInfo  , "" );
   setupTree(softkillerTree, JSoftKillerInfo  , "" );
   if (doCMSSWJets) setupTree(cmsswTree, JCMSSWPFInfo, "" );
+   
 
   // --- start loop over events
   for(int ientry = 0; ientry < maxEvents; ientry++) { 
 
-    if(ientry % 50 == 0) 
-      std::cout << "===> Processed " << ientry << " - Done : " << (float(ientry)/float(maxEvents))*100 << "%" << std::endl;
-
+    
     // -- For each event build collections of particles (gen, puppi, etc..) to cluster
     Long64_t localEntry = lTree->LoadTree(ientry);
     fPFCand->load(localEntry);
@@ -996,9 +996,10 @@ int main (int argc, char ** argv) {
       eta_Boson = fGen -> eta_Boson;
       phi_Boson = fGen -> phi_Boson;
     }
-    
 
 
+    cout << "\r" ;
+    cout << "===> Processed " << ientry << " - Done : " << (float(ientry)/float(maxEvents))*100 << "%"  ;
     // save jet info in a tree
     fillGenJetsInfo(genJets, gen_event, JGenInfo, gsn_cleanser, nPU);
     fillRecoJetsInfo(puppiJets, puppi_event, JPuppiInfo, JGenInfo, false, jetCorr, jetUnc, gsn_cleanser,nPU, eta_Boson, phi_Boson );
@@ -1017,6 +1018,9 @@ int main (int argc, char ** argv) {
     
     
     fGen -> reset();
+    
+    
+ 
   }
 
 
