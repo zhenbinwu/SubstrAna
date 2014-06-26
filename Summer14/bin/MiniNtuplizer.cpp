@@ -211,14 +211,15 @@ bool IsMatchedToGenBoson(vfloat eta, vfloat phi, PseudoJet Jet) {
    
   for (unsigned int iGen =0; iGen < eta.size(); ++iGen)
   {
-      double dEta = fabs(eta.at(iGen) - (Jet.pt()));
-      double dPhi = fabs(phi.at(iGen) - (Jet.eta()));
+      double dEta = fabs(eta.at(iGen) - (Jet.eta()));
+      double dPhi = fabs(phi.at(iGen) - (Jet.phi()));
       if(dPhi > 2.*TMath::Pi()-dPhi) dPhi =  2.*TMath::Pi()-dPhi;
       float rtemp = sqrt(dEta*dEta+dPhi*dPhi);
-      if ( rtemp < 0.3 ){
+      if ( rtemp < 0.8 ){
 	IsMatched = true;
       }
   }
+  
   return (IsMatched);  
 }
 
@@ -465,6 +466,7 @@ void setRecoJet(PseudoJet &iJet, JetInfo &iJetI, JetInfo iGenJetI, JetMedianBack
   //int imatch = matchingIndex(iJet,genJets);
   int imatch = matchingIndexFromJetInfo(iJet, iGenJetI);
   bool matched = IsMatchedToGenBoson( eta_Boson, phi_Boson, iJet);
+  //cout << matched << endl;
   
   // -- fill jet info
   (iJetI.pt        ).push_back(lCorr     .pt());
@@ -995,7 +997,7 @@ int main (int argc, char ** argv) {
       phi_Boson = fGen -> phi_Boson;
     }
     
-    cout << eta_Boson.size()  << endl;
+
 
     // save jet info in a tree
     fillGenJetsInfo(genJets, gen_event, JGenInfo, gsn_cleanser, nPU);
@@ -1020,7 +1022,7 @@ int main (int argc, char ** argv) {
 
   // --- Write trees 
   fout->cd();
-cout << "hier" << endl;
+
   genTree  ->Write();
   pfTree   ->Write();
   chsTree  ->Write();
