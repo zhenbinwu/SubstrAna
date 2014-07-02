@@ -215,7 +215,7 @@ bool IsMatchedToGenBoson(vfloat eta, vfloat phi, PseudoJet Jet) {
       double dPhi = fabs(phi.at(iGen) - (Jet.phi()));
       if(dPhi > 2.*TMath::Pi()-dPhi) dPhi =  2.*TMath::Pi()-dPhi;
       float rtemp = sqrt(dEta*dEta+dPhi*dPhi);
-      if ( rtemp < 0.8 ){
+      if ( rtemp < 0.3 ){
 	IsMatched = true;
       }
   }
