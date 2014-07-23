@@ -1,6 +1,7 @@
 //#include "../include/puppiContainer.hh"
 #include "../include/GenLoader.hh"
 #include "../include/MuonLoader.hh"
+#include "../include/JetLoader.hh"
 #include "../include/PFLoader.hh"
 #include "fastjet/tools/Filter.hh"
 #include "fastjet/tools/Pruner.hh"
@@ -28,6 +29,7 @@ using namespace contrib;
 
 //Object Processors
 GenLoader       *fGen      = 0; 
+JetLoader       *fJet      = 0; 
 MuonLoader      *fMuon     = 0; 
 PFLoader        *fPFCand   = 0; 
 
@@ -154,6 +156,7 @@ void setJet(PseudoJet &iJet,JetInfo &iJetI,std::vector<PseudoJet> &iParticles, b
     iJetI.mtrimsafe   = lTrimSafe .m();
     iJetI.mconst      = lConstit  .m();
 }
+
 void setupTree(TTree *iTree,JetInfo &iJet,std::string iName) {
     iTree->Branch((iName+"pt"        ).c_str(),&iJet.pt        ,(iName+"pt/F"        ).c_str());
     iTree->Branch((iName+"ptcorr"    ).c_str(),&iJet.ptcorr    ,(iName+"ptcorr/F"    ).c_str());
@@ -209,8 +212,11 @@ int main (int argc, char ** argv) {
   int maxEvents     = atoi(argv[1]);
   std::string lName = argv[2];
   bool        lGen  = atoi(argv[3]);
+  bool        lUseZ = atoi(argv[4]);
+  bool        lMet  = atoi(argv[5]);
+
   //Setup JEC on the fly
-  std::string cmsenv = "/afs/cern.ch/user/p/pharris/pharris/public/bacon/prod/CMSSW_6_2_7_patch2/src/";
+  std::string cmsenv = "/data/nbay04/a/benwu/JetMETTP/CMSSW_6_2_0_SLHC15_fixTk1/src/";
   std::vector<JetCorrectorParameters> corrParams;
   corrParams.push_back(JetCorrectorParameters(cmsenv+"BaconProd/Utils/data/Summer13_V1_MC_L1FastJet_AK5PF.txt"));
   corrParams.push_back(JetCorrectorParameters(cmsenv+"BaconProd/Utils/data/Summer13_V1_MC_L2Relative_AK5PF.txt"));
@@ -225,29 +231,33 @@ int main (int argc, char ** argv) {
   JetDefinition jet_def(antikt_algorithm,R);         // the jet definition....
   AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
   Selector selector = SelectorNHardest(3);   // definition of a selector for the three hardest jets
+
   //Now setup cleansing
   JetDefinition subjet_def(kt_algorithm,0.2);
   JetCleanser gsn_cleanser(subjet_def,JetCleanser::gaussian_cleansing,JetCleanser::input_nc_separate);
   gsn_cleanser.SetGaussianParameters(0.617,0.62,0.15,0.22);
   //Now read a file
-  lName =  "root://eoscms.cern.ch//store/group/phys_jetmet/ntran/PUPPI/miniSamples/62x/rsgww1000_62x_PU40BX50/ntuple_1_1_VQC.root";
-  lGen  = true;
+  //root://eoscms.cern.ch//store/group/phys_jetmet/ntran/PUPPI/miniSamples/62x/rsgww1000_62x_PU40BX50/ntuple_1_1_VQC.root";
   TTree *lTree = load(lName); 
   if(lTree->GetEntries() < maxEvents || maxEvents == -1) maxEvents = lTree->GetEntries(); 
+
   //Declare Readers
   //fEvt      = new EvtLoader     (lTree);
-  fMuon     = new MuonLoader    (lTree);
+  //fMuon     = new MuonLoader    (lTree);
   fPFCand   = new PFLoader      (lTree,"Puppi_cff.py");
-  if(lGen) fGen      = new GenLoader     (lTree);
+  //fJet      = new JetLoader     (lTree);
+  fGen      = new GenLoader     (lTree);
 
-  TFile *lFile = new TFile("Output.root","RECREATE");
+  std::size_t pos = lName.find_last_of("/");
+  std::string outfile = lName.substr(pos+1, lName.size() - pos);
+  TFile *lFile = new TFile(outfile.c_str(),"RECREATE");
   TTree *lOut  = new TTree("Tree","Tree");
   //Setup Tree
   //fEvt    ->setupTree      (lOut);
   //fMuon   ->setupTree      (lOut);
   fPFCand ->setupTree      (lOut);
   //if(lGen) fGen ->setupTree      (lOut);
-    
+
   int lIndex = 0; lOut->Branch("index",&lIndex,"lIndex/F");
   JetInfo JGen;     setupTree(lOut,JGen    ,"Gen"  );
   JetInfo JPF;      setupTree(lOut,JPF     ,"PF"   );
@@ -256,21 +266,37 @@ int main (int argc, char ** argv) {
   JetInfo JCHS2GeV; setupTree(lOut,JCHS2GeV,"CHS2GeV");
   JetInfo JSoft;    setupTree(lOut,JSoft   ,"SK"  );
   JetInfo JSoftCHS; setupTree(lOut,JSoftCHS,"SKCHS");
-
+  std::vector<TLorentzVector> lVetoes;
   for(int i0 = 0; i0 < maxEvents; i0++) { 
+    lVetoes.clear();
     //if(i0 < 108) continue;
-    if(i0 % 2 == 0) std::cout << "===> Processed " << i0 << " - Done : " << (float(i0)/float(maxEvents)) << std::endl;
+    if(i0 % 100 == 0) std::cout << "===> Processed " << i0 << " - Done : " << (float(i0)/float(maxEvents)) << std::endl;
     clear(JGen);
     clear(JPF);
     clear(JPup);
     clear(JCHS);
     clear(JCHS2GeV);
-    
+    //fMuon   ->load(i0); 
+    //fJet    ->load(i0); 
+    fGen    ->load(i0);
+    //bool lFindZ = fMuon->selectZ(lVetoes);
+    //if(!lFindZ && lUseZ) continue;
+    if(lUseZ) continue;
+
+    vector<PseudoJet> genJets;
+    vector<PseudoJet> gen_event;
+    gen_event  = fGen   ->genFetch();
+    ClusterSequenceArea pGen(gen_event    ,jet_def,area_def);
+    genJets     = sorted_by_pt(pGen    .inclusive_jets());
+    //bool lFind20Jet = (genJets[2].pt() > 20);
+    //if(!lFind20Jet) continue;
     //////////////////////////////////////////////////////
-    fPFCand->load(i0);
-    fGen   ->load(i0); 
-    vector<PseudoJet> gen_event       = fGen   ->genFetch();
-    vector<PseudoJet> puppi_event     = fPFCand->puppiFetch();
+    //TLorentzVector lZ = fMuon->boson();
+    TLorentzVector lZ(0, 0, 0, 0);
+    fPFCand->load(i0,lZ);
+    vector<PseudoJet> puppi_event     = fPFCand->puppiFetch(lZ);
+    if(lMet) lOut->Fill();
+    if(lMet) continue;
     vector<PseudoJet> pf_event        = fPFCand->pfFetch();
     vector<PseudoJet> chs_event       = fPFCand->pfchsFetch(-1);
     vector<PseudoJet> chs_event2GeV   = fPFCand->pfchsFetch( 2.);
@@ -279,30 +305,44 @@ int main (int argc, char ** argv) {
     SoftKiller soft_killerCHS(4.0,0.5, !SelectorIsPupCharged());
     vector<PseudoJet> soft_event    = soft_killer   (pf_event);
     vector<PseudoJet> softCHS_event = soft_killerCHS(chs_event);
-    
-    ClusterSequenceArea pGen    (gen_event    ,jet_def,area_def);
+
+    //ClusterSequenceArea pGen    (gen_event    ,jet_def,area_def);
     ClusterSequenceArea pPup    (puppi_event  ,jet_def,area_def);
     ClusterSequenceArea pPF     (pf_event     ,jet_def,area_def);
     ClusterSequenceArea pCHS    (chs_event    ,jet_def,area_def);
     ClusterSequenceArea pCHS2GeV(chs_event2GeV,jet_def,area_def);
     ClusterSequenceArea pSoft   (soft_event   ,jet_def,area_def);
     ClusterSequenceArea pSoftCHS(softCHS_event,jet_def,area_def);
-    vector<PseudoJet> genJets     = selector(sorted_by_pt(pGen    .inclusive_jets()));
-    vector<PseudoJet> puppiJets   = selector(sorted_by_pt(pPup    .inclusive_jets()));
-    vector<PseudoJet> pfJets      = selector(sorted_by_pt(pPF     .inclusive_jets()));
-    vector<PseudoJet> chsJets     = selector(sorted_by_pt(pCHS    .inclusive_jets()));
-    vector<PseudoJet> chs2GeVJets = selector(sorted_by_pt(pCHS2GeV.inclusive_jets()));
-    vector<PseudoJet> softJets    = selector(sorted_by_pt(pSoft   .inclusive_jets()));
-    vector<PseudoJet> softCHSJets = selector(sorted_by_pt(pSoftCHS.inclusive_jets()));
-    for(unsigned int i0 = 0; i0 < genJets.size(); i0++) {
+
+    vector<PseudoJet> puppiJets   = sorted_by_pt(pPup    .inclusive_jets());
+    vector<PseudoJet> pfJets      = sorted_by_pt(pPF     .inclusive_jets());
+    vector<PseudoJet> chsJets     = sorted_by_pt(pCHS    .inclusive_jets());
+    vector<PseudoJet> chs2GeVJets = sorted_by_pt(pCHS2GeV.inclusive_jets());
+    vector<PseudoJet> softJets    = sorted_by_pt(pSoft   .inclusive_jets());
+    vector<PseudoJet> softCHSJets = sorted_by_pt(pSoftCHS.inclusive_jets());
+    vector<PseudoJet> loopJets = pfJets;
+    if(lGen) loopJets = genJets;
+    for(unsigned int i0 = 0; i0 < loopJets.size(); i0++) {
+      if(loopJets[i0].pt() < 20) continue;
       lIndex = i0;
-      PseudoJet puppiJet   = match(genJets[i0],puppiJets);
-      PseudoJet pfJet      = match(genJets[i0],pfJets   );
-      PseudoJet chsJet     = match(genJets[i0],chsJets  );
-      PseudoJet chs2GeVJet = match(genJets[i0],chs2GeVJets);
-      PseudoJet softJet    = match(genJets[i0],softJets);
-      PseudoJet softCHSJet = match(genJets[i0],softCHSJets);
-      setJet(genJets[i0],JGen    ,gen_event   ,false,jetCorr,jetUnc,gsn_cleanser);
+      bool lMatch = false;
+      for(unsigned int i1 = 0; i1 < lVetoes.size(); i1++) { 
+        double pDPhi = fabs(lVetoes[i1].Phi()-loopJets[i0].phi());
+        if(pDPhi > TMath::Pi()*2.-pDPhi) pDPhi = TMath::Pi()*2.-pDPhi;
+        double pDEta = fabs(lVetoes[i1].Eta()-loopJets[i0].eta());
+        if(sqrt(pDPhi*pDPhi+pDEta*pDEta)  < 0.5) lMatch = true;
+      }
+      if(lMatch) continue;
+      if(loopJets[i0].pt() < 20) continue;
+      PseudoJet puppiJet   = match(loopJets[i0],puppiJets);
+      PseudoJet pfJet      = match(loopJets[i0],pfJets   );
+      PseudoJet chsJet     = match(loopJets[i0],chsJets  );
+      PseudoJet chs2GeVJet = match(loopJets[i0],chs2GeVJets);
+      PseudoJet softJet    = match(loopJets[i0],softJets);
+      PseudoJet softCHSJet = match(loopJets[i0],softCHSJets);
+      PseudoJet genJet     = match(loopJets[i0],genJets);
+      std::cout << "==> " << genJet.pt() << " -- " << genJets[i0].pt() << " -- " << loopJets[i0].pt() << std::endl;
+      if(genJet.pt()     != 0) setJet(genJet,     JGen    ,gen_event    ,false,jetCorr,jetUnc,gsn_cleanser);
       if(pfJet.pt()      != 0) setJet(pfJet ,     JPF     ,pf_event     ,false,jetCorr,jetUnc,gsn_cleanser);
       if(chsJet.pt()     != 0) setJet(chsJet,     JCHS    ,chs_event    ,true ,jetCorr,jetUnc,gsn_cleanser);
       if(chs2GeVJet.pt() != 0) setJet(chs2GeVJet, JCHS2GeV,chs_event2GeV,true ,jetCorr,jetUnc,gsn_cleanser);
@@ -314,4 +354,6 @@ int main (int argc, char ** argv) {
   }
   lFile->cd();
   lOut->Write();
+  //delete FactorizedJetCorrector;
+  //delete JetCorrectionUncertainty;
 }  
