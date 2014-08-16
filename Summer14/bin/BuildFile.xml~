@@ -1,7 +1,0 @@
-<use name="BaconAna/DataFormats"/>
-<use name="BaconAnalyzer/MJSelection"/>
-<use name="root"/>
-<flags CXXFLAGS="-g -Wall"/>
-<bin   file="runMJ.cpp" name="runMJ"> </bin>
-
-
