@@ -28,6 +28,10 @@ using namespace std;
 using namespace fastjet;
 using namespace contrib;
 
+
+typedef std::map<double, std::map<double, std::vector<int> > > JetMAP;
+typedef std::map<double, std::map<double, std::vector<int> > >::iterator JetMAPIt;
+
 //Object Processors
 GenLoader       *fGen      = 0; 
 JetLoader       *fJet      = 0; 
@@ -103,16 +107,48 @@ double unc( PseudoJet &iJet,JetCorrectionUncertainty *iJetUnc) {
   double jetunc = iJetUnc->getUncertainty(true);
   return jetunc;
 }
-void setJet(PseudoJet &iJet,JetInfo &iJetI,std::vector<PseudoJet> &iParticles, bool iCHS,FactorizedJetCorrector *iJetCorr,JetCorrectionUncertainty *iJetUnc,JetCleanser &gsn_cleanser) {
+
+//// ===  FUNCTION  ============================================================
+////         Name:  GetPUJetID
+////  Description:  
+//// ===========================================================================
+//std::vector<double> GetPUJetID(PseudoJet &iJet, std::vector<PseudoJet> &neutrals, std::vector<PseudoJet> &chargedLV, std::vector<PseudoJet> &chargedPU)
+//{
+     //std::vector<double> output;
+  
+    //float sumpt = 0.;
+    //float sumptchpv = 0.;
+    //float sumptchpu = 0.;
+    //float sumdrsqptsq = 0.;
+    //float sumptsq = 0.;
+
+    //// For Neutrals
+    //for (int i = 0; i < neutrals.size(); ++i)
+    //{
+      //sumpt += neutrals.pt();
+      //sumdrsqptsq += dr*dr*pt*pt;
+      //sumptsq += pt*pt;
+      
+    //}
+
+  //return true;
+//}       // -----  end of function GetPUJetID  -----
+
+//void setJet(PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &clust_seq_rho, bool iCHS,FactorizedJetCorrector *iJetCorr,JetCorrectionUncertainty *iJetUnc,JetCleanser &gsn_cleanser) {
+void setJet(PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &clust_seq_rho, bool iCHS,FactorizedJetCorrector *iJetCorr,JetCorrectionUncertainty *iJetUnc) {
     vector<PseudoJet> neutrals,chargedLV,chargedPU;
     getConstitsForCleansing(iJet.constituents(),neutrals,chargedLV,chargedPU);
+
     //PseudoJet     lClean = gsn_cleanser(neutrals,chargedLV,chargedPU);
+//----------------------------------------------------------------------------
+//  PU Jet ID
+//----------------------------------------------------------------------------
     
     // define safeAreaSub (PF)
-    AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
-    JetDefinition jet_def_for_rho(kt_algorithm, 0.4);
+    //AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
+    //JetDefinition jet_def_for_rho(kt_algorithm, 0.4);
     Selector rho_range =  SelectorAbsRapMax(5.0);
-    ClusterSequenceArea clust_seq_rho(iParticles, jet_def_for_rho, area_def);
+    //ClusterSequenceArea clust_seq_rho(iParticles, jet_def_for_rho, area_def);
     // the two background estimators
     JetMedianBackgroundEstimator bge_rho (rho_range, clust_seq_rho);
     JetMedianBackgroundEstimator bge_rhom(rho_range, clust_seq_rho);
@@ -185,14 +221,32 @@ void setupTree(TTree *iTree,JetInfo &iJet,std::string iName) {
 //  return threehardest;
 //}
 PseudoJet match(PseudoJet &iJet,vector<PseudoJet> &iJets) {
-    for(unsigned int i0 = 0; i0 < iJets.size(); i0++) {
-        double pEta = fabs(iJet.eta()-iJets[i0].eta());
-        double pPhi = fabs(iJet.phi() - iJets[i0].phi());
-        if(pPhi > 2.*TMath::Pi()-pPhi) pPhi =  2.*TMath::Pi()-pPhi;
-        if(sqrt(pEta*pEta+pPhi*pPhi) > 0.3) continue;
-        return iJets[i0];
+
+    std::list< std::pair<double, int> > lJetEta; //Sorting jet energy 
+    for(unsigned int i0 = 0; i0 < iJets.size(); i0++)
+    {
+      // Ignore those soft pt jets
+      if (iJets[i0].pt() < 0.5) continue; 
+
+      double pEta = fabs(iJet.eta()-iJets[i0].eta());
+      double pPhi = fabs(iJet.phi() - iJets[i0].phi());
+      if(pPhi > 2.*TMath::Pi()-pPhi) pPhi =  2.*TMath::Pi()-pPhi;
+      double deltaR = sqrt(pEta*pEta+pPhi*pPhi);
+      if( deltaR > 0.3) continue;
+      else
+        lJetEta.push_back(std::make_pair(deltaR, i0));
     }
-    return PseudoJet();
+
+    lJetEta.sort();
+    if (lJetEta.size() != 0)
+    {
+      int MatchedIdx = lJetEta.front().second;
+      PseudoJet retJet = iJets[MatchedIdx];
+      iJets.erase(iJets.begin()+MatchedIdx);
+      return retJet;
+    }
+    else 
+      return PseudoJet();
 }
 
 void clear(JetInfo &iJet) {
@@ -263,8 +317,8 @@ int main (int argc, char ** argv) {
 
   //Now setup cleansing
   JetDefinition subjet_def(kt_algorithm,0.2);
-  JetCleanser gsn_cleanser(subjet_def,JetCleanser::gaussian_cleansing,JetCleanser::input_nc_separate);
-  gsn_cleanser.SetGaussianParameters(0.617,0.62,0.15,0.22);
+  //JetCleanser gsn_cleanser(subjet_def,JetCleanser::gaussian_cleansing,JetCleanser::input_nc_separate);
+  //gsn_cleanser.SetGaussianParameters(0.617,0.62,0.15,0.22);
 
   //Now read a file
   //root://eoscms.cern.ch//store/group/phys_jetmet/ntran/PUPPI/miniSamples/62x/rsgww1000_62x_PU40BX50/ntuple_1_1_VQC.root";
@@ -346,6 +400,7 @@ int main (int argc, char ** argv) {
     ClusterSequenceArea pPF     (pf_event     ,jet_def,area_def);
     ClusterSequenceArea pCHS    (chs_event    ,jet_def,area_def);
     //ClusterSequenceArea pCHS2GeV(chs_event2GeV,jet_def,area_def);
+    //
 
     vector<PseudoJet> genJets     = sorted_by_pt(pGen    .inclusive_jets());
     vector<PseudoJet> puppiJets   = sorted_by_pt(pPup    .inclusive_jets());
@@ -362,6 +417,13 @@ int main (int argc, char ** argv) {
     //ClusterSequenceArea pSoftCHS(softCHS_event,jet_def,area_def);
     //vector<PseudoJet> softJets    = sorted_by_pt(pSoft   .inclusive_jets());
     //vector<PseudoJet> softCHSJets = sorted_by_pt(pSoftCHS.inclusive_jets());
+    
+    // Rho
+    JetDefinition jet_def_for_rho(kt_algorithm, 0.4);
+    ClusterSequenceArea pGen_Rho (gen_event    , jet_def_for_rho, area_def);
+    ClusterSequenceArea pPup_Rho   (puppi_event, jet_def_for_rho, area_def);
+    ClusterSequenceArea pPF_Rho     (pf_event   , jet_def_for_rho, area_def);
+    ClusterSequenceArea pCHS_Rho    (chs_event  , jet_def_for_rho, area_def);
 
     vector<PseudoJet> loopJets = pfJets;
     if(lGen) loopJets = genJets;
@@ -379,17 +441,23 @@ int main (int argc, char ** argv) {
       }
       if(lMatch) continue;
       if(loopJets[i0].pt() < 1) continue;
-      PseudoJet genJet     = match(loopJets[i0],genJets);
+
+
+      PseudoJet genJet     = PseudoJet();
+      if (lGen) genJet = loopJets[i0];
+      else genJet = match(loopJets[i0],genJets);
+    
       PseudoJet pfJet      = match(loopJets[i0],pfJets   );
       PseudoJet chsJet     = match(loopJets[i0],chsJets  );
       PseudoJet puppiJet   = match(loopJets[i0],puppiJets);
+
       //PseudoJet chs2GeVJet = match(loopJets[i0],chs2GeVJets);
       //std::cout << "==> " << genJet.pt() << " -- " << genJets[i0].pt() << " -- " << loopJets[i0].pt() << std::endl;
-      if(genJet.pt()     != 0) setJet(genJet    , JGen    , gen_event    , false, PFjetCorr   , PFjetUnc   , gsn_cleanser);
-      if(pfJet.pt()      != 0) setJet(pfJet     , JPF     , pf_event     , false, PFjetCorr   , PFjetUnc   , gsn_cleanser);
-      if(chsJet.pt()     != 0) setJet(chsJet    , JCHS    , chs_event    , true , CHSjetCorr  , CHSjetUnc  , gsn_cleanser);
+      if(genJet.pt()     != 0) setJet(genJet  , JGen, pGen_Rho, false, PFjetCorr   , PFjetUnc   );
+      if(pfJet.pt()      != 0) setJet(pfJet   , JPF , pPF_Rho , false, PFjetCorr   , PFjetUnc   );
+      if(chsJet.pt()     != 0) setJet(chsJet  , JCHS, pCHS_Rho, true , CHSjetCorr  , CHSjetUnc  );
+      if(puppiJet.pt()   != 0) setJet(puppiJet, JPup, pPup_Rho, true , PuppijetCorr, PuppijetUnc);
       //if(chs2GeVJet.pt() != 0) setJet(chs2GeVJet, JCHS2GeV, chs_event2GeV, true , CHSjetCorr  , CHSjetUnc  , gsn_cleanser);
-      if(puppiJet.pt()   != 0) setJet(puppiJet  , JPup    , puppi_event  , true , PuppijetCorr, PuppijetUnc, gsn_cleanser);
 
       //////////////////////////////////////////////////////
       //PseudoJet softJet    = match(loopJets[i0],softJets);
@@ -404,6 +472,18 @@ int main (int argc, char ** argv) {
   lOut->Write();
   lFile->Close();
 
+  //delete PFjetCorr;
+  //delete PFjetUnc;
+  //delete CHSjetCorr;
+  //delete CHSjetUnc;
+  //delete PuppijetCorr;
+  //delete PuppijetUnc;
+  //delete fMuon;
+  //delete fPFCand;
+  //delete fGen;
+  //delete lFile;
+  //delete lOut;
+
   //delete FactorizedJetCorrector;
   //delete JetCorrectionUncertainty;
-}  
+} 
