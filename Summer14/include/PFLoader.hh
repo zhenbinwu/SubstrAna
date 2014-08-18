@@ -15,25 +15,44 @@ public:
   ~PFLoader();
   void reset();
   void setupTree(TTree *iTree);
-  void load (int iEvent);
+  void load (int iEvent,TLorentzVector &iVec);
   TLorentzVector met();
-  std::vector<fastjet::PseudoJet> puppiFetch();
+  std::vector<fastjet::PseudoJet> puppiFetch(TLorentzVector &iVec);
   std::vector<fastjet::PseudoJet> pfFetch   (){ return fPFParticles; }
   std::vector<fastjet::PseudoJet> pfchsFetch(double iPt);
-  void                            fetch();
+  void                            fetch(TLorentzVector &iVec);
   RecoObj            convert(TPFPart *iPart);
   fastjet::PseudoJet convert(RecoObj *iObj);  
   std::vector<fastjet::PseudoJet> puppiJets(std::vector<TLorentzVector> lVetoes);
   std::vector<fastjet::PseudoJet> pfJets   (std::vector<TLorentzVector> lVetoes);
   std::vector<fastjet::PseudoJet> chsJets  (std::vector<TLorentzVector> lVetoes);
   void getJets(std::vector < fastjet::PseudoJet > &constits,std::vector < fastjet::PseudoJet > &jets,std::vector<TLorentzVector> lVetoes);
- 
+
 protected: 
   TClonesArray *fPFCands;
   TBranch      *fPFCandBr;
   TTree        *fTree;
+  float fPt;
+  float fEta;
+  float fPhi;
+  float fEcalE;
+  float fHcalE;
+  float fPFType;
+  float fSumEt;
   float fMet;
   float fMetPhi;
+  float fU1;
+  float fU2;
+  float fPupSumEt;
+  float fPupMet;
+  float fPupMetPhi;
+  float fPupU1;
+  float fPupU2;
+  float fCHSSumEt;
+  float fCHSMet;
+  float fCHSMetPhi;
+  float fCHSU1;
+  float fCHSU2;
   std::vector<RecoObj>            fAllParticles;
   std::vector<fastjet::PseudoJet> fPuppi;
   std::vector<fastjet::PseudoJet> fPFParticles;

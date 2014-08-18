@@ -50,10 +50,6 @@ void GenLoader::reset() {
   fPhi2  = 0; 
   fM2    = 0; 
   fId2   = 0; 
-  
-  eta_Boson.clear();
-  phi_Boson.clear();
-  pt_Boson.clear();
 }
 void GenLoader::setupTree(TTree *iTree) { 
   reset();
@@ -121,22 +117,19 @@ void GenLoader::fillGenEvent() {
   fPId1 = fGenInfo->id_1; 
   fPId2 = fGenInfo->id_2; 
 }
-void GenLoader::selectBoson(int PdgIdBoson) {
+void GenLoader::selectBoson() {
   reset(); 
   TGenParticle *lBoson   = 0; 
   TGenParticle *lLep1    = 0; 
   TGenParticle *lLep2    = 0; 
   int   lBosonId = -10; 
-  
   for  (int i0 = 0; i0 < fGens->GetEntriesFast(); i0++) { 
     TGenParticle *pGen = (TGenParticle*)((*fGens)[i0]);
-    if(  fabs(pGen->pdgId) == PdgIdBoson ) {  
+    if(fabs(pGen->pdgId) == 23 ||   // Select Z or
+       fabs(pGen->pdgId) == 24 ||   // Select W or
+       fabs(pGen->pdgId) == 25) {   // Select Higgs
       lBoson   = pGen;
-      eta_Boson.push_back(lBoson -> eta);
-      phi_Boson.push_back(lBoson -> phi);
-      pt_Boson.push_back(lBoson -> pt);
       lBosonId = i0;
-  
     }
     if(pGen->parent == lBosonId) { //All of these guys have two daughters
       //!!!Note this will not work for taus
@@ -144,18 +137,13 @@ void GenLoader::selectBoson(int PdgIdBoson) {
       if(pGen->status == 1 && lLep1 == 0) lLep1 = pGen;
       if(pGen->status != 1 && lLep1 != 0) lLep2 = getStatus1(i0);  //Obtain the simulation level if not already
       if(pGen->status != 1 && lLep1 == 0) lLep1 = getStatus1(i0); 
-      
-      
-    }
-    
- 
+    } 
   }
   fVPt  = lBoson->pt;
   fVEta = lBoson->eta;
   fVPhi = lBoson->phi;
   fVM   = lBoson->mass;
   fVId  = lBoson->pdgId;
-  
   if(lLep1 == 0 || lLep2 == 0) return;
   assert(lLep1);
   assert(lLep2);
@@ -177,8 +165,6 @@ void GenLoader::selectBoson(int PdgIdBoson) {
   fPhi2 = lLep2->phi;
   fM2   = lLep2->mass;
   fId2  = lLep2->pdgId;
-  
-
 }
 //H=>ZZ Mu Id
 TGenParticle* GenLoader::getStatus1(int iId) { 

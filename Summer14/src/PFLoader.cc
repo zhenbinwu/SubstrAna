@@ -31,15 +31,54 @@ PFLoader::~PFLoader() {
   delete fPFCandBr;
 }
 void PFLoader::reset() { 
-  fMet     = 0; 
-  fMetPhi  = 0; 
+  fPt     = 0; 
+  fEta    = 0; 
+  fPhi    = 0; 
+  fEcalE  = 0; 
+  fHcalE  = 0; 
+  fPFType = 0; 
   fPuppi.clear();
+
+  fSumEt     = 0; 
+  fMet       = 0; 
+  fMetPhi    = 0; 
+  fU1        = 0; 
+  fU2        = 0; 
+  fPupSumEt  = 0; 
+  fPupMet    = 0; 
+  fPupMetPhi = 0; 
+  fPupU1     = 0; 
+  fPupU2     = 0;   
+  fCHSSumEt  = 0; 
+  fCHSMet    = 0; 
+  fCHSMetPhi = 0; 
+  fCHSU1     = 0; 
+  fCHSU2     = 0;   
 }
 void PFLoader::setupTree(TTree *iTree) { 
   reset();
   fTree = iTree;
-  fTree->Branch("met"    ,&fMet   ,"fMet/F");
-  fTree->Branch("metphi" ,&fMetPhi,"fMetPhi/F");
+  fTree->Branch("sumet"        ,&fSumEt     ,"fSumEt/F");
+  fTree->Branch("met"          ,&fMet       ,"fMet/F");
+  fTree->Branch("metphi"       ,&fMetPhi    ,"fMetPhi/F");
+  fTree->Branch("u1"           ,&fU1        ,"fU1/F");
+  fTree->Branch("u2"           ,&fU2        ,"fU2/F");
+  fTree->Branch("pupisumet"    ,&fPupSumEt  ,"fPupSumEt/F");
+  fTree->Branch("puppimet"     ,&fPupMet    ,"fPupMet/F");
+  fTree->Branch("puppimetphi"  ,&fPupMetPhi ,"fPupMetPhi/F");
+  fTree->Branch("puppiu1"      ,&fPupU1     ,"fPupU1/F");
+  fTree->Branch("puppiu2"      ,&fPupU2     ,"fPupU2/F");
+  fTree->Branch("chssumet"     ,&fCHSSumEt  ,"fCHSSumEt/F");
+  fTree->Branch("chsmet"       ,&fCHSMet    ,"fCHSMet/F");
+  fTree->Branch("chsmetphi"    ,&fCHSMetPhi ,"fCHSMetPhi/F");
+  fTree->Branch("chsu1"        ,&fCHSU1     ,"fCHSU1/F");
+  fTree->Branch("chsu2"        ,&fCHSU2     ,"fCHSU2/F");
+  //fTree->Branch("pt"     ,&fPt    ,"fPt/F");
+  //fTree->Branch("eta"    ,&fEta   ,"fEta/F");
+  //fTree->Branch("phi"    ,&fPhi   ,"fPhi/F");
+  //fTree->Branch("ecalE"  ,&fEcalE ,"fEcalE/F");
+  //fTree->Branch("hcalE"  ,&fHcalE ,"fHcalE/F");
+  //fTree->Branch("pfType" ,&fPFType,"fPFType/F");
 }
 TLorentzVector PFLoader::met() { 
   TLorentzVector lVec(0,0,0,0);
@@ -51,31 +90,78 @@ TLorentzVector PFLoader::met() {
   }
   return lVec;
 }
-void PFLoader::load(int iEvent) { 
+void PFLoader::load(int iEvent,TLorentzVector &iVec) { 
   fPFCands  ->Clear();
   fPFCandBr ->GetEntry(iEvent);
-  fetch();
+  fetch(iVec);
 }
-void PFLoader::fetch() { 
+void PFLoader::fetch(TLorentzVector &iVec) { 
   fAllParticles  .resize(0);
   fPFParticles   .resize(0);
   fPFCHSParticles.resize(0);
   std::vector<RecoObj> lPuppi;
+
+  TLorentzVector lVec   (0,0,0,0);
+  TLorentzVector lCHSVec(0,0,0,0);
+  fSumEt    = 0;
+  fCHSSumEt = 0; 
   for(int i0 = 0; i0 < fPFCands->GetEntriesFast(); i0++) { 
     TPFPart  *pPart = (TPFPart*)((*fPFCands)[i0]);    
+    //if(pPart->eta > 0 ) cout << "---> " << pPart->pt << " -- " << pPart->eta << " -- " << pPart->phi << " -- " << pPart->pfType << " -- " << pPart->hcalE << " -- " << pPart->ecalE   << endl;
+    //if(pPart->pfType == 5) continue;
     RecoObj   pObj  = convert(pPart);
     PseudoJet pPar  = convert(&pObj);
     fAllParticles  .push_back(pObj); 
     fPFParticles   .push_back(pPar);
     if(pPar.user_index() != 3) fPFCHSParticles.push_back(pPar);
+    TLorentzVector pVec(0,0,0,0);
+    pVec.SetPtEtaPhiM(pPart->pt,0.,pPart->phi,0.);
+    lVec    -= pVec;
+    if(pPar.user_index() != 3) lCHSVec -= pVec;
+    fSumEt    += pPart->pt;
+    if(pPar.user_index() != 3) fCHSSumEt += pPart->pt;
+    fPt     = pPart->pt;
+    fEta    = pPart->eta;
+    fPhi    = pPart->phi;
+    fEcalE  = pPart->ecalE;
+    fHcalE  = pPart->hcalE;
+    fPFType = float(pPart->pfType);
+    //fTree->Fill();
   }
+  fMet       = lVec.Pt();
+  fMetPhi    = lVec.Phi();
+  lVec += iVec;
+  lVec.RotateZ(-iVec.Phi());
+  fU1        = lVec.Px();
+  fU2        = lVec.Py();
+
+  fCHSMet    = lCHSVec.Pt();
+  fCHSMetPhi = lCHSVec.Phi();
+  lCHSVec += iVec;
+  lCHSVec.RotateZ(-iVec.Phi());
+  fCHSU1     = lCHSVec.Px();
+  fCHSU2     = lCHSVec.Py();
 }
-std::vector<fastjet::PseudoJet> PFLoader::puppiFetch() {
+std::vector<fastjet::PseudoJet> PFLoader::puppiFetch(TLorentzVector &iVec) {
   //puppiContainer curEvent(fAllParticlesPuppi);
   //fPuppi = curEvent.puppiFetch(7,0.5);
   fPuppiContainer->initialize(fAllParticles);
   fPuppiContainer->puppiWeights();
   fPuppi = fPuppiContainer->puppiParticles();
+  TLorentzVector lVec   (0,0,0,0);
+  fPupSumEt    = 0;
+  for(unsigned int i0 = 0; i0 < fPuppi.size(); i0++) { 
+    TLorentzVector pVec;
+    pVec.SetPtEtaPhiM(fPuppi[i0].pt(),0.,fPuppi[i0].phi(),0.);
+    lVec -= pVec;
+    fPupSumEt  += fPuppi[i0].pt();
+  }
+  fPupMet    = lVec.Pt();
+  fPupMetPhi = lVec.Phi();
+  lVec      += iVec;
+  lVec.RotateZ(-iVec.Phi());
+  fPupU1     = lVec.Px();
+  fPupU2     = lVec.Py();
   return fPuppi;
 }
 std::vector<fastjet::PseudoJet> PFLoader::pfchsFetch(double iPtCut) { 
@@ -89,9 +175,10 @@ std::vector<fastjet::PseudoJet> PFLoader::pfchsFetch(double iPtCut) {
   return lParts;
 }
 RecoObj PFLoader::convert(TPFPart *iPart) { 
-    bool lIsCh   = (iPart->pfType == 1 || iPart->pfType == 2 || iPart->pfType == 3) && (iPart->vtxId > -1 || fabs(iPart->dz) < 0.2) ;
-    bool lIsPV   = (iPart->vtxId  == 0 || (fabs(iPart->dz) < 0.2 && lIsCh));
+    bool lIsCh   = (iPart->pfType == 1 || iPart->pfType == 2 || iPart->pfType == 3) && (iPart->vtxId > -1 || fabs(iPart->dz) < 0.3) ;
+    bool lIsPV   = (iPart->vtxId  == 0 || (fabs(iPart->dz) < 0.3 && lIsCh));
     int lID = -1;
+    // if(fabs(iPart->eta) > 2.5) lIsCh = false;
     if (!lIsCh) lID = 1;
     if (lIsCh &&  lIsPV) lID = 2;
     if (lIsCh && !lIsPV) lID = 3;
@@ -109,6 +196,9 @@ RecoObj PFLoader::convert(TPFPart *iPart) {
     pJet.time    = iPart->time;
     pJet.d0      = iPart->d0;
     pJet.dZ      = iPart->dz;
+    //if(!lIsCh && pJet.pfType == 1) pJet.pfType  = 5;//iPart->d0;
+    // if(!lIsCh) pJet.d0      = 0;//iPart->d0;
+    //if(!lIsCh) pJet.dZ      = 0;//iPart->dz;
     return pJet;
 }
 PseudoJet PFLoader::convert(RecoObj *iObj) { 

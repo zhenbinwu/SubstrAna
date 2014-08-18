@@ -28,10 +28,6 @@ using namespace std;
 using namespace fastjet;
 using namespace contrib;
 
-
-typedef std::map<double, std::map<double, std::vector<int> > > JetMAP;
-typedef std::map<double, std::map<double, std::vector<int> > >::iterator JetMAPIt;
-
 //Object Processors
 GenLoader       *fGen      = 0; 
 JetLoader       *fJet      = 0; 
@@ -48,19 +44,26 @@ struct JetInfo {
     float pt;
     float ptcorr;
     float ptraw;
-    float ptclean;
-    float pttrim;
-    float pttrimsafe;
-    float ptconst;
+    //float ptclean;
+    //float pttrim;
+    //float pttrimsafe;
+    //float ptconst;
     float ptunc;
     float eta;
     float phi;
     float m;
     float mraw;
-    float mclean;
-    float mtrim;
-    float mtrimsafe;
-    float mconst;
+    //float mclean;
+    //float mtrim;
+    //float mtrimsafe;
+    //float mconst;
+
+    float Beta;
+    float BetaStar;     
+    float MeanSqDeltaR; 
+    float NCharged;     
+    float NNeutrals;    
+
 };
 void getConstitsForCleansing(vector<PseudoJet> inputs, vector<PseudoJet> &oNeutrals, vector<PseudoJet> &oChargedLV, vector<PseudoJet> &oChargedPU){
     for (unsigned int i = 0; i < inputs.size(); i++){
@@ -108,36 +111,100 @@ double unc( PseudoJet &iJet,JetCorrectionUncertainty *iJetUnc) {
   return jetunc;
 }
 
-//// ===  FUNCTION  ============================================================
-////         Name:  GetPUJetID
-////  Description:  
-//// ===========================================================================
-//std::vector<double> GetPUJetID(PseudoJet &iJet, std::vector<PseudoJet> &neutrals, std::vector<PseudoJet> &chargedLV, std::vector<PseudoJet> &chargedPU)
-//{
-     //std::vector<double> output;
-  
-    //float sumpt = 0.;
-    //float sumptchpv = 0.;
-    //float sumptchpu = 0.;
-    //float sumdrsqptsq = 0.;
-    //float sumptsq = 0.;
+// ===  FUNCTION  ============================================================
+//         Name:  GetPUJetID
+//  Description:  
+// ===========================================================================
+std::map<std::string, float> GetPUJetID(PseudoJet &iJet, std::vector<PseudoJet> &neutrals, std::vector<PseudoJet> &chargedLV, std::vector<PseudoJet> &chargedPU)
+{
+  std::map<std::string, float> outmap;
 
-    //// For Neutrals
-    //for (int i = 0; i < neutrals.size(); ++i)
-    //{
-      //sumpt += neutrals.pt();
-      //sumdrsqptsq += dr*dr*pt*pt;
-      //sumptsq += pt*pt;
-      
-    //}
+  float sumpt = 0.;
+  float sumptch = 0.;
+  float sumptchpv = 0.;
+  float sumptchpu = 0.;
+  float sumdrsqptsq = 0.;
+  float sumptsq = 0.;
+  float nc = 0;
+  float nn = 0;
 
-  //return true;
-//}       // -----  end of function GetPUJetID  -----
+  // For Neutrals
+  for (unsigned int i = 0; i < neutrals.size(); ++i)
+  {
+    double pEta = fabs(iJet.eta()-neutrals[i].eta());
+    double pPhi = fabs(iJet.phi()-neutrals[i].phi());
+    if(pPhi > 2.*TMath::Pi()-pPhi) pPhi =  2.*TMath::Pi()-pPhi;
+    double dr = sqrt(pEta*pEta+pPhi*pPhi);
+    double pt =  neutrals[i].pt();
+
+    sumpt += pt;
+    sumdrsqptsq += dr*dr*pt*pt;
+    sumptsq += pt*pt;
+    nn++;
+  }
+
+  // For charged hadron LV
+  for (unsigned int i = 0; i < chargedLV.size(); ++i)
+  {
+    double pEta = fabs(iJet.eta()-chargedLV[i].eta());
+    double pPhi = fabs(iJet.phi()-chargedLV[i].phi());
+    if(pPhi > 2.*TMath::Pi()-pPhi) pPhi =  2.*TMath::Pi()-pPhi;
+    double dr = sqrt(pEta*pEta+pPhi*pPhi);
+    double pt =chargedLV[i].pt();
+
+    sumpt += pt;
+    sumptch += pt;
+    sumptchpv += pt;
+    sumdrsqptsq += dr*dr*pt*pt;
+    sumptsq += pt*pt;
+    nc++;
+  }
+
+
+  // For charged hadron PU
+  for (unsigned int i = 0; i < chargedPU.size(); ++i)
+  {
+    double pEta = fabs(iJet.eta()-chargedPU[i].eta());
+    double pPhi = fabs(iJet.phi()-chargedPU[i].phi());
+    if(pPhi > 2.*TMath::Pi()-pPhi) pPhi =  2.*TMath::Pi()-pPhi;
+    double dr = sqrt(pEta*pEta+pPhi*pPhi);
+    double pt =chargedPU[i].pt();
+
+    sumpt += pt;
+    sumptch += pt;
+    sumptchpu += pt;
+    sumdrsqptsq += dr*dr*pt*pt;
+    sumptsq += pt*pt;
+    nc++;
+  }
+
+
+
+  if (sumptch > 0.) {
+    outmap["Beta"] = sumptchpv/sumptch;
+    outmap["BetaStar"] = sumptchpu/sumptch;
+  } else {
+    outmap["Beta"] = -999.;
+    outmap["BetaStar"] = -999.;
+  }
+
+  if (sumptsq > 0.) {
+    outmap["MeanSqDeltaR"] =  sumdrsqptsq/sumptsq;
+  } else {
+    outmap["MeanSqDeltaR"] = -999.;
+  }
+
+  outmap["NCharged"] = nc;
+  outmap["NNeutrals"] = nn;
+
+  return outmap;
+}       // -----  end of function GetPUJetID  -----
 
 //void setJet(PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &clust_seq_rho, bool iCHS,FactorizedJetCorrector *iJetCorr,JetCorrectionUncertainty *iJetUnc,JetCleanser &gsn_cleanser) {
 void setJet(PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &clust_seq_rho, bool iCHS,FactorizedJetCorrector *iJetCorr,JetCorrectionUncertainty *iJetUnc) {
     vector<PseudoJet> neutrals,chargedLV,chargedPU;
     getConstitsForCleansing(iJet.constituents(),neutrals,chargedLV,chargedPU);
+    std::map<std::string, float> PUJetID = GetPUJetID(iJet, neutrals, chargedLV, chargedPU);
 
     //PseudoJet     lClean = gsn_cleanser(neutrals,chargedLV,chargedPU);
 //----------------------------------------------------------------------------
@@ -193,26 +260,42 @@ void setJet(PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &clust_seq_rho, 
     //iJetI.mtrim       = lTrim     .m();
     //iJetI.mtrimsafe   = lTrimSafe .m();
     //iJetI.mconst      = lConstit  .m();
+
+    iJetI.Beta         = PUJetID["Beta"];
+    iJetI.BetaStar     = PUJetID["BetaStar"];
+    iJetI.MeanSqDeltaR = PUJetID["MeanSqDeltaR"];
+    iJetI.NCharged     = PUJetID["NCharged"];
+    iJetI.NNeutrals    = PUJetID["NNeutrals"];
+
+  
     delete area_subtractor;
 }
 
 void setupTree(TTree *iTree,JetInfo &iJet,std::string iName) {
-    iTree->Branch((iName+"pt"        ).c_str(),&iJet.pt        ,(iName+"pt/F"        ).c_str());
-    iTree->Branch((iName+"ptcorr"    ).c_str(),&iJet.ptcorr    ,(iName+"ptcorr/F"    ).c_str());
-    iTree->Branch((iName+"ptraw"     ).c_str(),&iJet.ptraw     ,(iName+"ptraw/F"     ).c_str());
-    iTree->Branch((iName+"ptclean"   ).c_str(),&iJet.ptclean,   (iName+"ptclean/F"   ).c_str());
-    iTree->Branch((iName+"pttrim"    ).c_str(),&iJet.pttrim    ,(iName+"pttrim/F"    ).c_str());
-    iTree->Branch((iName+"pttrimsafe").c_str(),&iJet.pttrimsafe,(iName+"pttrimsafe/F").c_str());
-    iTree->Branch((iName+"ptconst"   ).c_str(),&iJet.ptconst   ,(iName+"ptconst/F"   ).c_str());
-    iTree->Branch((iName+"ptunc"     ).c_str(),&iJet.ptunc     ,(iName+"ptunc/F"     ).c_str());
-    iTree->Branch((iName+"eta"       ).c_str(),&iJet.eta       ,(iName+"eta/F"       ).c_str());
-    iTree->Branch((iName+"phi"       ).c_str(),&iJet.phi       ,(iName+"phi/F"       ).c_str());
-    iTree->Branch((iName+"m"         ).c_str(),&iJet.m         ,(iName+"m/F"         ).c_str());
-    iTree->Branch((iName+"mraw"      ).c_str(),&iJet.mraw      ,(iName+"mraw/F"      ).c_str());
-    iTree->Branch((iName+"mtrim"     ).c_str(),&iJet.mtrim     ,(iName+"mtrim/F"     ).c_str());
-    iTree->Branch((iName+"mtrimsafe" ).c_str(),&iJet.mtrimsafe ,(iName+"mtrimsafe/F" ).c_str());
-    iTree->Branch((iName+"mclean"    ).c_str(),&iJet.mclean    ,(iName+"mclean/F"    ).c_str());
-    iTree->Branch((iName+"mconst"    ).c_str(),&iJet.mconst    ,(iName+"mconst/F"    ).c_str());
+    iTree->Branch((iName+"pt"           ) .c_str() ,&iJet.pt           ,(iName+"pt/F"           ) .c_str( ) ) ;
+    iTree->Branch((iName+"ptcorr"       ) .c_str() ,&iJet.ptcorr       ,(iName+"ptcorr/F"       ) .c_str( ) ) ;
+    iTree->Branch((iName+"ptraw"        ) .c_str() ,&iJet.ptraw        ,(iName+"ptraw/F"        ) .c_str( ) ) ;
+    iTree->Branch((iName+"ptunc"        ) .c_str() ,&iJet.ptunc        ,(iName+"ptunc/F"        ) .c_str( ) ) ;
+    iTree->Branch((iName+"eta"          ) .c_str() ,&iJet.eta          ,(iName+"eta/F"          ) .c_str( ) ) ;
+    iTree->Branch((iName+"phi"          ) .c_str() ,&iJet.phi          ,(iName+"phi/F"          ) .c_str( ) ) ;
+    iTree->Branch((iName+"m"            ) .c_str() ,&iJet.m            ,(iName+"m/F"            ) .c_str( ) ) ;
+    iTree->Branch((iName+"mraw"         ) .c_str() ,&iJet.mraw         ,(iName+"mraw/F"         ) .c_str( ) ) ;
+    //                                  PUJet ID       Variable
+    iTree->Branch((iName+"Beta"         ) .c_str() ,&iJet.Beta         ,(iName+"Beta/F"         ) .c_str( ) ) ;
+    iTree->Branch((iName+"BetaStar"     ) .c_str() ,&iJet.BetaStar     ,(iName+"BetaStar/F"     ) .c_str( ) ) ;
+    iTree->Branch((iName+"MeanSqDeltaR" ) .c_str() ,&iJet.MeanSqDeltaR ,(iName+"MeanSqDeltaR/F" ) .c_str( ) ) ;
+    iTree->Branch((iName+"NCharged"     ) .c_str() ,&iJet.NCharged     ,(iName+"NCharged/F"     ) .c_str( ) ) ;
+    iTree->Branch((iName+"NNeutrals"    ) .c_str() ,&iJet.NNeutrals    ,(iName+"NNeutrals/F"    ) .c_str( ) ) ;
+
+
+    //iTree->Branch((iName+"mtrim"     ).c_str(),&iJet.mtrim     ,(iName+"mtrim/F"     ).c_str());
+    //iTree->Branch((iName+"mtrimsafe" ).c_str(),&iJet.mtrimsafe ,(iName+"mtrimsafe/F" ).c_str());
+    //iTree->Branch((iName+"mclean"    ).c_str(),&iJet.mclean    ,(iName+"mclean/F"    ).c_str());
+    //iTree->Branch((iName+"mconst"    ).c_str(),&iJet.mconst    ,(iName+"mconst/F"    ).c_str());
+    //iTree->Branch((iName+"ptclean"   ).c_str(),&iJet.ptclean,   (iName+"ptclean/F"   ).c_str());
+    //iTree->Branch((iName+"pttrim"    ).c_str(),&iJet.pttrim    ,(iName+"pttrim/F"    ).c_str());
+    //iTree->Branch((iName+"pttrimsafe").c_str(),&iJet.pttrimsafe,(iName+"pttrimsafe/F").c_str());
+    //iTree->Branch((iName+"ptconst"   ).c_str(),&iJet.ptconst   ,(iName+"ptconst/F"   ).c_str());
 }
 //vector<PseudoJet> threeHardest(vector<PseudoJet> &iParts, JetDefinition &iJetDef, Selector &iSelector,std::vector<ClusterSequence> &iCSs) {
 // cluster full event (hard + pileup)
@@ -250,20 +333,26 @@ PseudoJet match(PseudoJet &iJet,vector<PseudoJet> &iJets) {
 }
 
 void clear(JetInfo &iJet) {
-    iJet.pt         = -1;
-    iJet.ptraw      = -1;
-    iJet.ptclean    = -1;
-    iJet.pttrim     = -1;
-    iJet.pttrimsafe = -1;
-    iJet.eta        = -1;
-    iJet.phi        = -1;
-    iJet.m          = -1;
-    iJet.mraw       = -1;
-    iJet.mtrim      = -1;
-    iJet.mtrimsafe  = -1;
-    iJet.mclean     = -1;
-    iJet.mconst     = -1;
+    iJet.pt         = -999;
+    iJet.ptraw      = -999;
+    //iJet.ptclean    = -999;
+    //iJet.pttrim     = -999;
+    //iJet.pttrimsafe = -999;
+    iJet.eta        = -999;
+    iJet.phi        = -999;
+    iJet.m          = -999;
+    iJet.mraw       = -999;
+    //iJet.mtrim      = -999;
+    //iJet.mtrimsafe  = -999;
+    //iJet.mclean     = -999;
+    //iJet.mconst     = -999;
+    iJet.Beta       = -999;
+    iJet.BetaStar   = -999;
+    iJet.MeanSqDeltaR   = -999;
+    iJet.NNeutrals = -999;
+    iJet.NCharged = -999;
 }
+
 
 int main (int argc, char ** argv) {
 
@@ -329,7 +418,7 @@ int main (int argc, char ** argv) {
   //Declare Readers
   //fEvt      = new EvtLoader     (lTree);
   fMuon     = new MuonLoader    (lTree);
-  fPFCand   = new PFLoader      (lTree,"Puppi_cff.py");
+  fPFCand   = new PFLoader      (lTree, cmsenv+"/src/SubstrAna/Summer14/data/Puppi_cff.py");
   fGen      = new GenLoader     (lTree);
   //fJet      = new JetLoader     (lTree);
 
@@ -338,7 +427,9 @@ int main (int argc, char ** argv) {
 //----------------------------------------------------------------------------
   std::size_t pos = lName.find_last_of("/");
   std::string outfile = lName.substr(pos+1, lName.size() - pos);
-  outfile = "Puppi_" +outfile;
+  std::stringstream ss;
+  ss <<"Puppi" << lGen << lUseZ << lMet << "_" << outfile;
+  outfile = ss.str();
   TFile *lFile = new TFile(outfile.c_str(),"RECREATE");
   TTree *lOut  = new TTree("Tree","Tree");
 
@@ -378,7 +469,6 @@ int main (int argc, char ** argv) {
     fGen    ->load(i0);
     bool lFindZ = fMuon->selectZ(lVetoes);
     if(!lFindZ && lUseZ) continue;
-    if(lUseZ) continue;
 
     vector<PseudoJet> gen_event;
     gen_event  = fGen   ->genFetch();
@@ -386,7 +476,6 @@ int main (int argc, char ** argv) {
     //if(!lFind20Jet) continue;
     //////////////////////////////////////////////////////
     TLorentzVector lZ = fMuon->boson();
-    //TLorentzVector lZ(0, 0, 0, 0);
     fPFCand->load(i0,lZ);
     vector<PseudoJet> puppi_event     = fPFCand->puppiFetch(lZ);
     if(lMet) lOut->Fill();

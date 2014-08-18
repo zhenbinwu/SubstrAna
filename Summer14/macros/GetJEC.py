@@ -3,7 +3,7 @@ process = cms.Process("jectxt")
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 # define your favorite global tag
-process.GlobalTag.globaltag = 'GR_R_52_V9::All'
+process.GlobalTag.globaltag = 'DES19_62_V8::All'
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1))
 process.source = cms.Source("EmptySource")
 process.readAK5PF    = cms.EDAnalyzer('JetCorrectorDBReader',
@@ -11,11 +11,9 @@ process.readAK5PF    = cms.EDAnalyzer('JetCorrectorDBReader',
                                       payloadName    = cms.untracked.string('AK5PF'),
                                       # this is used ONLY for the name of the printed txt files. You can use any name that you like,
                                       # but it is recommended to use the GT name that you retrieved the files from.
-                                      globalTag      = cms.untracked.string('GR_R_52_V9'),
+                                      globalTag      = cms.untracked.string('DES19_62_V8'),
                                       printScreen    = cms.untracked.bool(False),
                                       createTextFile = cms.untracked.bool(True)
                                       )
 process.readAK5PFCHS = process.readAK5PF.clone(payloadName = 'AK5PFchs')
-process.readAK5Calo = process.readAK5PF.clone(payloadName = 'AK5Calo')
-process.readAK5JPT = process.readAK5PF.clone(payloadName = 'AK5JPT')
-process.p = cms.Path(process.readAK5PF * process.readAK5PFCHS *process.readAK5Calo * process.readAK5JPT)
+process.p = cms.Path(process.readAK5PF * process.readAK5PFCHS)

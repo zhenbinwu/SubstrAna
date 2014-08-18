@@ -18,17 +18,13 @@ public:
   void load (int iEvent);
   void fillGenEvent();
   //Fill specific Gen Info
-  void selectBoson(int PdgIdBoson);
+  void selectBoson();
   //Helpters
   TGenParticle* getStatus1(int iId);
   bool isNeutrino(TGenParticle *iPart);
   //Get gen particles
   std::vector<fastjet::PseudoJet>  genFetch();
   fastjet::PseudoJet convert(TGenParticle *iPart);
-
-  
-  std::vector <float> eta_Boson, phi_Boson, pt_Boson;
-  
 protected: 
   TClonesArray  *fGens;
   TBranch       *fGenBr;
@@ -42,6 +38,12 @@ protected:
   float fPId2;
   float fX2;
   float fPdf2;
+
+  float fVPt;
+  float fVEta;
+  float fVPhi;
+  float fVM;
+  int   fVId;
   
   float fPt1;
   float fEta1;
@@ -54,14 +56,4 @@ protected:
   float fPhi2;
   float fM2;
   int   fId2;
-  
-  float fVPt;
-  float fVEta;
-  float fVPhi;
-  float fVM;
-  int   fVId;
-
-
-  
-  
 };
