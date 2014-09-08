@@ -21,12 +21,16 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TMath.h"
+#include "TChain.h"
 
 #include <cstdlib>
+#include <fstream>
+#include <algorithm>
 
 using namespace std;
 using namespace fastjet;
 using namespace contrib;
+const bool verbose = false;
 
 //Object Processors
 GenLoader       *fGen      = 0; 
@@ -35,9 +39,26 @@ MuonLoader      *fMuon     = 0;
 PFLoader        *fPFCand   = 0; 
 
 TTree* load(std::string iName) { 
-  TFile *lFile = TFile::Open(iName.c_str());
-  TTree *lTree = (TTree*) lFile->FindObjectAny("Events");
-  return lTree;
+  if (iName.find("list")!= std::string::npos)
+  {
+    TChain *chain = new TChain("Events");
+    std::fstream input(iName);
+    for(std::string line; getline(input, line);)
+    {
+      if (line[0] == '#') continue;
+      std::cout << "Add File: " << line << std::endl;
+      chain->Add(line.c_str());
+      std::cout << "Enerties " << chain->GetEntries() << std::endl;
+    }
+    std::cout << "Total Enerties " << chain->GetEntries() << std::endl;
+    return chain;
+  } else {
+    TFile *lFile = TFile::Open(iName.c_str());
+    TTree *lTree = (TTree*) lFile->FindObjectAny("Events");
+    return lTree;
+  }
+
+  return NULL;
 }
 
 struct JetInfo {
@@ -65,6 +86,21 @@ struct JetInfo {
     float NNeutrals;    
 
 };
+
+struct MetInfo {
+  float fSumEt;
+  float fMet;
+  float fMetPhi;
+  float fU1;
+  float fU2;
+};
+
+
+bool DefaultJet(PseudoJet jet);
+std::vector<TLorentzVector> GetCorJets(std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr);
+bool setMET(std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr);
+bool setupMETTree(TTree *iTree,MetInfo &iMet,std::string iName);
+
 void getConstitsForCleansing(vector<PseudoJet> inputs, vector<PseudoJet> &oNeutrals, vector<PseudoJet> &oChargedLV, vector<PseudoJet> &oChargedPU){
     for (unsigned int i = 0; i < inputs.size(); i++){
         if (inputs[i].user_index() <= 1) oNeutrals.push_back(inputs[i]);
@@ -93,6 +129,7 @@ Selector SelectorIsPupVertex(){
   return Selector(new SW_IsPupVertex());
 }
 double correction( PseudoJet &iJet,FactorizedJetCorrector *iJetCorr,double iRho) { 
+  if (iJetCorr == NULL) return 1;
   iJetCorr->setJetPt (iJet.pt());
   iJetCorr->setJetEta(iJet.eta());
   iJetCorr->setJetPhi(iJet.phi());
@@ -243,7 +280,9 @@ void setJet(PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &clust_seq_rho, 
 
     //Finally apply the JEC
     double lJEC = correction(iJet,iJetCorr,bge_rho.rho());  
-    double lUnc = unc       (iJet,iJetUnc);
+    double lUnc = -999.;
+    if (iJetUnc != NULL)
+      lUnc = unc       (iJet,iJetUnc);
     iJetI.pt          = lCorr     .pt();
     iJetI.ptcorr      = iJet      .pt()*lJEC;
     iJetI.ptraw       = iJet      .pt();
@@ -353,50 +392,61 @@ void clear(JetInfo &iJet) {
     iJet.NCharged = -999;
 }
 
+void clear(MetInfo &iMet) {
+  iMet.fSumEt  = -999.;
+  iMet.fMet    = -999.;
+  iMet.fMetPhi = -999.;
+  iMet.fU1     = -999.;
+  iMet.fU2     = -999.;
+}
+
 
 int main (int argc, char ** argv) {
 
   //gROOT->ProcessLine("#include <vector>");          
-  int maxEvents     = atoi(argv[1]);
-  std::string lName = argv[2];
-  bool        lGen  = atoi(argv[3]);
-  bool        lUseZ = atoi(argv[4]);
-  bool        lMet  = atoi(argv[5]);
-
+  int maxEvents               = atoi(argv[1]);
+  const std::string globalTag = argv[2];
+  bool        lGen            = atoi(argv[3]);
+  bool        lUseZ           = atoi(argv[4]);
+  bool        lMet            = atoi(argv[5]);
+  std::string lName           = argv[6];
 //----------------------------------------------------------------------------
 //  Setup JEC on the fly
 //----------------------------------------------------------------------------
   std::string cmsenv = getenv("CMSSW_BASE");
-  const std::string globalTag = "DES19_62_V8";
+  const std::string JetType = "AK4PF";
 
   //AK5PF
   std::vector<JetCorrectorParameters> PFcorrParams;
-  PFcorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L1FastJet_AK5PF.txt"));
-  PFcorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L2Relative_AK5PF.txt"));
-  PFcorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L3Absolute_AK5PF.txt"));
-  //corrParams.push_back(JetCorrectorParameter(cmsenv+'BaconProd/Utils/data/Summer13_V1_DATA_L2L3Residual_AK5PF.txt'));
-  JetCorrectorParameters     PFparam(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_Uncertainty_AK5PF.txt");
+  PFcorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L1FastJet_"+JetType+".txt"));
+  PFcorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L2Relative_"+JetType+".txt"));
+  PFcorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L3Absolute_"+JetType+".txt"));
+  //corrParams.push_back(JetCorrectorParameter(cmsenv+'BaconProd/Utils/data/Summer13_V1_DATA_L2L3Residual_"+JetType+".txt'));
   FactorizedJetCorrector   *PFjetCorr = new FactorizedJetCorrector(PFcorrParams);
-  JetCorrectionUncertainty *PFjetUnc  = new JetCorrectionUncertainty(PFparam);
+  JetCorrectionUncertainty *PFjetUnc  = NULL;
+  //JetCorrectorParameters     PFparam(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_Uncertainty_"+JetType+".txt");
+  //JetCorrectionUncertainty *PFjetUnc  = new JetCorrectionUncertainty(PFparam);
 
   //AK5PFCHS
   std::vector<JetCorrectorParameters> CHScorrParams;
-  CHScorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L1FastJet_AK5PFchs.txt"));
-  CHScorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L2Relative_AK5PFchs.txt"));
-  CHScorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L3Absolute_AK5PFchs.txt"));
-  //corrParams.push_back(JetCorrectorParameter(cmsenv+'BaconProd/Utils/data/Summer13_V1_DATA_L2L3Residual_AK5PF.txt'));
-  JetCorrectorParameters    CHSparam(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_Uncertainty_AK5PFchs.txt");
+  CHScorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L1FastJet_"+JetType+"chs.txt"));
+  CHScorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L2Relative_"+JetType+"chs.txt"));
+  CHScorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L3Absolute_"+JetType+"chs.txt"));
+  //corrParams.push_back(JetCorrectorParameter(cmsenv+'BaconProd/Utils/data/Summer13_V1_DATA_L2L3Residual_"+JetType+".txt'));
   FactorizedJetCorrector   *CHSjetCorr = new FactorizedJetCorrector(CHScorrParams);
-  JetCorrectionUncertainty *CHSjetUnc  = new JetCorrectionUncertainty(CHSparam);
+  JetCorrectionUncertainty *CHSjetUnc  = NULL;
+  //JetCorrectorParameters    CHSparam(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_Uncertainty_"+JetType+"chs.txt");
+  //JetCorrectionUncertainty *CHSjetUnc  = new JetCorrectionUncertainty(CHSparam);
 
   //Puppi (L2L3)
   std::vector<JetCorrectorParameters> PuppicorrParams;
-  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L2Relative_AK5PFchs.txt"));
-  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L3Absolute_AK5PFchs.txt"));
-  //corrParams.push_back(JetCorrectorParameter(cmsenv+'BaconProd/Utils/data/Summer13_V1_DATA_L2L3Residual_AK5PF.txt'));
-  JetCorrectorParameters    Puppiparam(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_Uncertainty_AK5PFchs.txt");
+  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L2Relative_"+JetType+"chs.txt"));
+  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L3Absolute_"+JetType+"chs.txt"));
+  //corrParams.push_back(JetCorrectorParameter(cmsenv+'BaconProd/Utils/data/Summer13_V1_DATA_L2L3Residual_"+JetType+".txt'));
   FactorizedJetCorrector   *PuppijetCorr = new FactorizedJetCorrector(PuppicorrParams);
-  JetCorrectionUncertainty *PuppijetUnc  = new JetCorrectionUncertainty(Puppiparam);
+  JetCorrectionUncertainty *PuppijetUnc  = NULL;
+  //JetCorrectorParameters    Puppiparam(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_Uncertainty_"+JetType+"chs.txt");
+  //JetCorrectionUncertainty *PuppijetUnc  = new JetCorrectionUncertainty(Puppiparam);
 
   //Setup JetAlgos
   double R = 0.4;
@@ -405,7 +455,7 @@ int main (int argc, char ** argv) {
   Selector selector = SelectorNHardest(3);   // definition of a selector for the three hardest jets
 
   //Now setup cleansing
-  JetDefinition subjet_def(kt_algorithm,0.2);
+  //JetDefinition subjet_def(kt_algorithm,0.2);
   //JetCleanser gsn_cleanser(subjet_def,JetCleanser::gaussian_cleansing,JetCleanser::input_nc_separate);
   //gsn_cleanser.SetGaussianParameters(0.617,0.62,0.15,0.22);
 
@@ -427,10 +477,12 @@ int main (int argc, char ** argv) {
 //----------------------------------------------------------------------------
   std::size_t pos = lName.find_last_of("/");
   std::string outfile = lName.substr(pos+1, lName.size() - pos);
+  TString outname(outfile);
+  outname.ReplaceAll(".list", ".root");
   std::stringstream ss;
-  ss <<"Puppi" << lGen << lUseZ << lMet << "_" << outfile;
-  outfile = ss.str();
-  TFile *lFile = new TFile(outfile.c_str(),"RECREATE");
+  ss <<"Puppi" << lGen << lUseZ << lMet << "_" << outname;
+  std::cout << " out file name " << ss << std::endl;
+  TFile *lFile = new TFile(ss.str().c_str(),"RECREATE");
   TTree *lOut  = new TTree("Tree","Tree");
 
   //Setup Tree
@@ -443,14 +495,17 @@ int main (int argc, char ** argv) {
   int lIndex = 0; 
   lOut->Branch("index",&lIndex,"lIndex/F");
 
-  JetInfo JGen;     setupTree(lOut,JGen    ,"Gen"  );
-  JetInfo JPF;      setupTree(lOut,JPF     ,"PF"   );
-  JetInfo JPup;     setupTree(lOut,JPup    ,"Puppi");
-  JetInfo JCHS;     setupTree(lOut,JCHS    ,"CHS"  );
+  JetInfo JGen; setupTree(lOut,    JGen ,"Gen"     );
+  JetInfo JPF;  setupTree(lOut,    JPF  ,"PF"      );
+  JetInfo JPup; setupTree(lOut,    JPup ,"Puppi");
+  JetInfo JCHS; setupTree(lOut,    JCHS ,"CHS"     );
+  MetInfo MPF;  setupMETTree(lOut, MPF  ,"PF"      );
+  MetInfo MPup; setupMETTree(lOut, MPup ,"Puppi");
+  MetInfo MCHS; setupMETTree(lOut, MCHS ,"CHS"     );
+
   //JetInfo JCHS2GeV; setupTree(lOut,JCHS2GeV,"CHS2GeV");
   //JetInfo JSoft;    setupTree(lOut,JSoft   ,"SK"  );
   //JetInfo JSoftCHS; setupTree(lOut,JSoftCHS,"SKCHS");
-
   std::vector<TLorentzVector> lVetoes;
   for(int i0 = 0; i0 < maxEvents; i0++)
   { 
@@ -463,6 +518,9 @@ int main (int argc, char ** argv) {
     clear(JPup);
     clear(JCHS);
     //clear(JCHS2GeV);
+    clear(MPF);
+    clear(MPup);
+    clear(MCHS);
 
     //fJet    ->load(i0); 
     fMuon   ->load(i0); 
@@ -478,12 +536,44 @@ int main (int argc, char ** argv) {
     TLorentzVector lZ = fMuon->boson();
     fPFCand->load(i0,lZ);
     vector<PseudoJet> puppi_event     = fPFCand->puppiFetch(lZ);
-    if(lMet) lOut->Fill();
-    if(lMet) continue;
     vector<PseudoJet> pf_event        = fPFCand->pfFetch();
     vector<PseudoJet> chs_event       = fPFCand->pfchsFetch(-1);
-    //vector<PseudoJet> chs_event2GeV   = fPFCand->pfchsFetch( 2.);
 
+    if (verbose)
+    {
+      int EventCount[3][3] = {};
+      for(unsigned int i=0; i < pf_event.size(); ++i)
+      {
+        PseudoJet jet = pf_event.at(i);
+        if (jet.user_index() <= 1) EventCount[0][0]++;
+        if (jet.user_index() == 2) EventCount[0][1]++;
+        if (jet.user_index() == 3) EventCount[0][2]++;
+        assert(jet.user_index() < 4);
+      }
+      for(unsigned int i=0; i < chs_event.size(); ++i)
+      {
+        PseudoJet jet = chs_event.at(i);
+        if (jet.user_index() <= 1) EventCount[1][0]++;
+        if (jet.user_index() == 2) EventCount[1][1]++;
+        if (jet.user_index() == 3) EventCount[1][2]++;
+        assert(jet.user_index() < 4);
+      }
+      for(unsigned int i=0; i < puppi_event.size(); ++i)
+      {
+        PseudoJet jet = puppi_event.at(i);
+        if (jet.user_index() <= 1) EventCount[2][0]++;
+        if (jet.user_index() == 2) EventCount[2][1]++;
+        if (jet.user_index() == 3) EventCount[2][2]++;
+        assert(jet.user_index() < 4);
+      }
+      std::cout << "PF size " << pf_event.size() <<" CHS size " << chs_event.size() << " Puppisize " << puppi_event.size() << std::endl;
+      std::cout << "PF size : " << EventCount[0][0] <<" " << EventCount[0][1] <<" "<< EventCount[0][2] <<" "<< std::endl;
+      std::cout << "CHS size : " << EventCount[1][0] <<" " << EventCount[1][1] <<" "<< EventCount[1][2] <<" "<< std::endl;
+      std::cout << "Puppi size : " << EventCount[2][0] <<" " << EventCount[2][1] <<" "<< EventCount[2][2] <<" "<< std::endl;
+    }
+
+
+    //vector<PseudoJet> chs_event2GeV   = fPFCand->pfchsFetch( 2.);
     ClusterSequenceArea pGen    (gen_event    ,jet_def,area_def);
     ClusterSequenceArea pPup    (puppi_event  ,jet_def,area_def);
     ClusterSequenceArea pPF     (pf_event     ,jet_def,area_def);
@@ -497,6 +587,14 @@ int main (int argc, char ** argv) {
     vector<PseudoJet> chsJets     = sorted_by_pt(pCHS    .inclusive_jets());
     //vector<PseudoJet> chs2GeVJets = sorted_by_pt(pCHS2GeV.inclusive_jets());
 
+    if (verbose)
+    {
+      std::cout << "GenJet "<< count_if(genJets.begin(), genJets.end(), DefaultJet) 
+        << " PFJet "<< count_if(pfJets.begin(), pfJets.end(), DefaultJet) 
+        << " CHSJet "<< count_if(chsJets.begin(), chsJets.end(), DefaultJet) << std::endl; 
+    }
+
+
     //////////////////////////////////////////////////////
     //SoftKiller soft_killer   (0.4,0.4);
     //SoftKiller soft_killerCHS(4.0,0.5, !SelectorIsPupCharged());
@@ -509,10 +607,20 @@ int main (int argc, char ** argv) {
     
     // Rho
     JetDefinition jet_def_for_rho(kt_algorithm, 0.4);
-    ClusterSequenceArea pGen_Rho (gen_event    , jet_def_for_rho, area_def);
-    ClusterSequenceArea pPup_Rho   (puppi_event, jet_def_for_rho, area_def);
+    ClusterSequenceArea pGen_Rho    (gen_event  , jet_def_for_rho, area_def);
+    ClusterSequenceArea pPup_Rho    (puppi_event, jet_def_for_rho, area_def);
     ClusterSequenceArea pPF_Rho     (pf_event   , jet_def_for_rho, area_def);
     ClusterSequenceArea pCHS_Rho    (chs_event  , jet_def_for_rho, area_def);
+
+
+    if(lMet)
+    {
+      setMET(pfJets,    MPF,  lVetoes, pPF_Rho,  PFjetCorr);
+      setMET(chsJets,   MCHS, lVetoes, pCHS_Rho, CHSjetCorr);
+      setMET(puppiJets, MPup, lVetoes, pPup_Rho, NULL);
+      lOut->Fill();
+      continue;
+    }
 
     vector<PseudoJet> loopJets = pfJets;
     if(lGen) loopJets = genJets;
@@ -576,3 +684,95 @@ int main (int argc, char ** argv) {
   //delete FactorizedJetCorrector;
   //delete JetCorrectionUncertainty;
 } 
+
+// ===  FUNCTION  ============================================================
+//         Name:  DefaultJet
+//  Description:  
+// ===========================================================================
+bool DefaultJet(PseudoJet jet)
+{
+  return jet.pt() > 3;
+}       // -----  end of function DefaultJet  -----
+
+// ===  FUNCTION  ============================================================
+//         Name:  GetCorJets
+//  Description:  
+// ===========================================================================
+std::vector<TLorentzVector> GetCorJets(std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr)
+{
+  std::vector<TLorentzVector> CorJets;
+  Selector rho_range =  SelectorAbsRapMax(5.0);
+  JetMedianBackgroundEstimator bge_rho (rho_range, clust_seq_rho);
+
+  for(unsigned int i=0; i < iJets.size(); ++i)
+  {
+    PseudoJet ijet = iJets.at(i);
+
+    bool lMatch = false;
+    for(unsigned int i1 = 0; i1 < lVetoes.size(); i1++) 
+    { 
+      double pDPhi = fabs(lVetoes[i1].Phi()-ijet.phi());
+      if(pDPhi > TMath::Pi()*2.-pDPhi) pDPhi = TMath::Pi()*2.-pDPhi;
+      double pDEta = fabs(lVetoes[i1].Eta()-ijet.eta());
+      if(sqrt(pDPhi*pDPhi+pDEta*pDEta)  < 0.2) lMatch = true;
+    }
+    if(lMatch) continue;
+
+    double lJEC = correction(ijet,iJetCorr,bge_rho.rho());  
+    TLorentzVector pVec(0,0,0,0);
+    pVec.SetPtEtaPhiM(ijet.pt()*lJEC, ijet.eta(), ijet.phi(), ijet.m());
+    CorJets.push_back(pVec);
+  }
+  return CorJets;
+}       // -----  end of function GetCorJets  -----
+
+
+// ===  FUNCTION  ============================================================
+//         Name:  setupMETTree
+//  Description:  
+// ===========================================================================
+bool setupMETTree(TTree *iTree,MetInfo &iMet,std::string iName)
+{
+  iTree->Branch((iName+"sumet"  ) .c_str() ,&iMet.fSumEt  ,(iName+"sumet/F"  ) .c_str( ) );
+  iTree->Branch((iName+"met"    ) .c_str() ,&iMet.fMet    ,(iName+"met/F"    ) .c_str( ) );
+  iTree->Branch((iName+"metphi" ) .c_str() ,&iMet.fMetPhi ,(iName+"metphi/F" ) .c_str( ) );
+  iTree->Branch((iName+"u1"     ) .c_str() ,&iMet.fU1     ,(iName+"u1/F"     ) .c_str( ) );
+  iTree->Branch((iName+"u2"     ) .c_str() ,&iMet.fU2     ,(iName+"u2/F"     ) .c_str( ) );
+  return true;
+}       // -----  end of function setupMETTree  -----
+
+// ===  FUNCTION  ============================================================
+//         Name:  setMET
+//  Description:  
+// ===========================================================================
+bool setMET(std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr)
+{
+  std::vector<TLorentzVector> iCorJets = GetCorJets(iJets, lVetoes, clust_seq_rho, iJetCorr);
+
+  TLorentzVector lVec(0,0,0,0);
+  TLorentzVector iVec(0,0,0,0);
+  double SumEt = 0.0;
+  for(std::vector<TLorentzVector>::const_iterator it=iCorJets.begin();
+    it!=iCorJets.end(); ++it)
+  {
+    lVec -= *it;
+    SumEt += it->Pt();
+  }
+
+  for(std::vector<TLorentzVector>::const_iterator it=lVetoes.begin();
+    it!=lVetoes.end(); ++it)
+  {
+    iVec += *it;
+    lVec -= *it;
+    SumEt += it->Pt();
+  }
+
+  iMET.fSumEt  = SumEt;
+  iMET.fMet    = lVec.Pt();
+  iMET.fMetPhi = lVec.Phi();
+  lVec        += iVec;
+  lVec.RotateZ(-iVec.Phi());
+  iMET.fU1     = lVec.Px();
+  iMET.fU2     = lVec.Py();
+  return true;
+}       // -----  end of function setMET  -----
