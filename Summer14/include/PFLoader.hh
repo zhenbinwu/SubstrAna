@@ -1,4 +1,5 @@
 #include "fastjet/PseudoJet.hh"
+#include "TChain.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TClonesArray.h"
@@ -11,7 +12,7 @@ using namespace baconhep;
 
 class PFLoader { 
 public:
-  PFLoader(TTree *iTree,std::string iName);
+  PFLoader(TChain *iTree,std::string iName);
   ~PFLoader();
   void reset();
   void setupTree(TTree *iTree);

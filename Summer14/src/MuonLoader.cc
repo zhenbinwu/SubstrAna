@@ -4,10 +4,10 @@
 
 using namespace baconhep;
 
-MuonLoader::MuonLoader(TTree *iTree) { 
+MuonLoader::MuonLoader(TChain *iTree) { 
   fMuons  = new TClonesArray("baconhep::TMuon");
-  iTree->SetBranchAddress("Muon",       &fMuons);
-  fMuonBr  = iTree->GetBranch("Muon");
+  iTree->SetBranchAddress("Muon",       &fMuons, &fMuonBr);
+  //fMuonBr  = iTree->GetBranch("Muon");
 }
 MuonLoader::~MuonLoader() { 
   delete fMuons;
@@ -38,7 +38,7 @@ void MuonLoader::setupTree(TTree *iTree) {
   fTree->Branch("phi_2" ,&fPhi2,"fPhi2/F");
 }
 void MuonLoader::load(int iEvent) { 
-  fMuons   ->Clear();
+  fMuons  ->Clear();
   fMuonBr ->GetEntry(iEvent);
 }
 bool MuonLoader::selectSingleMu() {
@@ -63,12 +63,14 @@ bool MuonLoader::selectZ(std::vector<TLorentzVector> &iVetoes) {
   int lCount = 0; 
   for  (int i0 = 0; i0 < fMuons->GetEntriesFast(); i0++) { 
     TMuon *pMuon = (TMuon*)((*fMuons)[i0]);
-    if(!passLoose(pMuon)) continue;
+    if(!passTight(pMuon)) continue;
+    //if(!passLoose(pMuon)) continue;
     lCount++;
     bool lPassZ = false;
     for  (int i1 = i0+1; i1 < fMuons->GetEntriesFast(); i1++) { 
       TMuon *pMuon1 = (TMuon*)((*fMuons)[i1]);
-      if(!passLoose(pMuon1)) continue;
+      if(!passTight(pMuon1)) continue;
+      //if(!passLoose(pMuon1)) continue;
       TLorentzVector lVec ; lVec .SetPtEtaPhiM(pMuon ->pt,pMuon ->eta,pMuon ->phi,0.105);
       TLorentzVector lVec1; lVec1.SetPtEtaPhiM(pMuon1->pt,pMuon1->eta,pMuon1->phi,0.105);
       if((lVec+lVec1).M() < 60 || (lVec+lVec1).M() > 120) continue; 

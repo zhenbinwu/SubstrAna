@@ -18,6 +18,7 @@
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
+#include "boost/tokenizer.hpp"
 #include "TFile.h"
 #include "TTree.h"
 #include "TMath.h"
@@ -38,27 +39,31 @@ JetLoader       *fJet      = 0;
 MuonLoader      *fMuon     = 0; 
 PFLoader        *fPFCand   = 0; 
 
-TTree* load(std::string iName) { 
+TChain* load(std::string iName) { 
+  TChain *chain = new TChain("Events");
+  typedef boost::tokenizer<boost::char_separator<char> > passwdTokenizer;
+
   if (iName.find("list")!= std::string::npos)
   {
-    TChain *chain = new TChain("Events");
+    std::cout <<  "input file " << iName << std::endl;
     std::fstream input(iName);
     for(std::string line; getline(input, line);)
     {
       if (line[0] == '#') continue;
       std::cout << "Add File: " << line << std::endl;
       chain->Add(line.c_str());
-      std::cout << "Enerties " << chain->GetEntries() << std::endl;
     }
-    std::cout << "Total Enerties " << chain->GetEntries() << std::endl;
-    return chain;
   } else {
-    TFile *lFile = TFile::Open(iName.c_str());
-    TTree *lTree = (TTree*) lFile->FindObjectAny("Events");
-    return lTree;
+    boost::char_separator<char> tokenSep(",");
+    passwdTokenizer tok(iName, tokenSep);
+    for(passwdTokenizer::iterator curTok=tok.begin(); curTok!=tok.end(); ++curTok)
+    {
+      std::cout << "Add File: " << *curTok<< std::endl;
+      chain->Add(curTok->c_str());
+    }
   }
 
-  return NULL;
+  return chain;
 }
 
 struct JetInfo {
@@ -458,7 +463,7 @@ int main (int argc, char ** argv) {
 
   //Now read a file
   //root://eoscms.cern.ch//store/group/phys_jetmet/ntran/PUPPI/miniSamples/62x/rsgww1000_62x_PU40BX50/ntuple_1_1_VQC.root";
-  TTree *lTree = load(lName); 
+  TChain *lTree = load(lName); 
   if(lTree->GetEntries() < maxEvents || maxEvents == -1) 
     maxEvents = lTree->GetEntries(); 
 
@@ -514,7 +519,7 @@ int main (int argc, char ** argv) {
   { 
     lVetoes.clear();
     if(i0 % 500 == 0) 
-      std::cout << "===> Processed " << i0 << " - Done : " << (float(i0)/float(maxEvents)) << std::endl;
+      std::cout << "===> Processed " << i0 << " - Done : " << (float(i0)/float(maxEvents)) << " with " << lTree->GetCurrentFile()->GetName() << std::endl;
 
     clear(JGen);
     clear(JPF);
@@ -528,6 +533,7 @@ int main (int argc, char ** argv) {
     clear(MRawPup);
     clear(MRawCHS);
 
+    lTree->GetEntry(i0);
     //fJet    ->load(i0); 
     fMuon   ->load(i0); 
     fGen    ->load(i0);
