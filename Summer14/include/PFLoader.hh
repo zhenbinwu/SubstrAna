@@ -15,12 +15,12 @@ public:
   ~PFLoader();
   void reset();
   void setupTree(TTree *iTree);
-  void load (int iEvent,TLorentzVector &iVec);
+  void load(int iEvent, std::vector<TLorentzVector> &iVec);
   TLorentzVector met();
-  std::vector<fastjet::PseudoJet> puppiFetch(TLorentzVector &iVec);
+  std::vector<fastjet::PseudoJet> puppiFetch(std::vector<TLorentzVector> &lVetoes);
   std::vector<fastjet::PseudoJet> pfFetch   (){ return fPFParticles; }
   std::vector<fastjet::PseudoJet> pfchsFetch(double iPt);
-  void                            fetch(TLorentzVector &iVec);
+  void                            fetch(std::vector<TLorentzVector> &iVec);
   RecoObj            convert(TPFPart *iPart);
   fastjet::PseudoJet convert(RecoObj *iObj);  
   std::vector<fastjet::PseudoJet> puppiJets(std::vector<TLorentzVector> lVetoes);

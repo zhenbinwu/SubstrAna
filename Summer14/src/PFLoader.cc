@@ -85,39 +85,31 @@ TLorentzVector PFLoader::met() {
   for(int i0 = 0; i0 < fPFCands->GetEntriesFast(); i0++) { 
     TPFPart *pPart = (TPFPart*)((*fPFCands)[i0]);    
     TLorentzVector pVec(0,0,0,0);
-    pVec.SetPtEtaPhiM(pPart->pt,0.,pPart->phi,0.);
+    pVec.SetPtEtaPhiM(pPart->pt,pPart->eta,pPart->phi,pPart->m);
     lVec += pVec;
   }
   return lVec;
 }
-void PFLoader::load(int iEvent,TLorentzVector &iVec) { 
+void PFLoader::load(int iEvent, std::vector<TLorentzVector> &iVec) { 
   fPFCands  ->Clear();
   fPFCandBr ->GetEntry(iEvent);
   fetch(iVec);
 }
-void PFLoader::fetch(TLorentzVector &iVec) { 
+void PFLoader::fetch(std::vector<TLorentzVector> &lVetoes) { 
   fAllParticles  .resize(0);
   fPFParticles   .resize(0);
   fPFCHSParticles.resize(0);
   std::vector<RecoObj> lPuppi;
 
-  TLorentzVector lVec   (0,0,0,0);
-  TLorentzVector lCHSVec(0,0,0,0);
   fSumEt    = 0;
   fCHSSumEt = 0; 
   for(int i0 = 0; i0 < fPFCands->GetEntriesFast(); i0++) { 
     TPFPart  *pPart = (TPFPart*)((*fPFCands)[i0]);    
-    //if(pPart->eta > 0 ) cout << "---> " << pPart->pt << " -- " << pPart->eta << " -- " << pPart->phi << " -- " << pPart->pfType << " -- " << pPart->hcalE << " -- " << pPart->ecalE   << endl;
-    //if(pPart->pfType == 5) continue;
     RecoObj   pObj  = convert(pPart);
     PseudoJet pPar  = convert(&pObj);
     fAllParticles  .push_back(pObj); 
     fPFParticles   .push_back(pPar);
     if(pPar.user_index() != 3) fPFCHSParticles.push_back(pPar);
-    TLorentzVector pVec(0,0,0,0);
-    pVec.SetPtEtaPhiM(pPart->pt,0.,pPart->phi,0.);
-    lVec    -= pVec;
-    if(pPar.user_index() != 3) lCHSVec -= pVec;
     fSumEt    += pPart->pt;
     if(pPar.user_index() != 3) fCHSSumEt += pPart->pt;
     fPt     = pPart->pt;
@@ -128,40 +120,132 @@ void PFLoader::fetch(TLorentzVector &iVec) {
     fPFType = float(pPart->pfType);
     //fTree->Fill();
   }
-  fMet       = lVec.Pt();
-  fMetPhi    = lVec.Phi();
-  lVec += iVec;
-  lVec.RotateZ(-iVec.Phi());
-  fU1        = lVec.Px();
-  fU2        = lVec.Py();
 
-  fCHSMet    = lCHSVec.Pt();
-  fCHSMetPhi = lCHSVec.Phi();
-  lCHSVec += iVec;
-  lCHSVec.RotateZ(-iVec.Phi());
-  fCHSU1     = lCHSVec.Px();
-  fCHSU2     = lCHSVec.Py();
+
+
+//----------------------------------------------------------------------------
+//  Calculate MET
+//----------------------------------------------------------------------------
+  TLorentzVector lQT     (0,0,0,0);
+  TLorentzVector lPFVec  (0,0,0,0);
+  TLorentzVector lPFUT   (0,0,0,0);
+  TLorentzVector lCHSVec (0,0,0,0);
+  TLorentzVector lCHSUT  (0,0,0,0);
+
+  for(unsigned int i=0; i < lVetoes.size(); ++i)
+  {
+    TLorentzVector vec = lVetoes.at(i);
+    lQT += vec;
+  }
+
+  for(unsigned int i=0; i < fPFParticles.size(); ++i)
+  {
+    PseudoJet pPar = fPFParticles.at(i);
+    TLorentzVector pVec(0,0,0,0);
+    pVec.SetPtEtaPhiM(pPar.pt(),pPar.eta(),pPar.phi(),pPar.m());
+    
+    // MET
+    lPFVec  -= pVec;
+    if(pPar.user_index() != 3)  lCHSVec -= pVec;
+
+    // recoil
+    bool lMatch = false;
+    for(unsigned int i1 = 0; i1 < lVetoes.size(); i1++) 
+    { 
+      double pDPhi = fabs(lVetoes[i1].Phi()-pPar.phi());
+      if(pDPhi > TMath::Pi()*2.-pDPhi) pDPhi = TMath::Pi()*2.-pDPhi;
+      if (pDPhi > 0.01) continue;
+      double pDEta = fabs(lVetoes[i1].Eta()-pPar.eta());
+      if (pDEta > 0.01 ) continue;
+      if ( fabs(lVetoes[i1].Pt()-pPar.pt()) > 0.01) continue;
+      if(sqrt(pDPhi*pDPhi+pDEta*pDEta)  < 0.05) lMatch = true;
+      //if (lMatch) 
+        //std::cout << " Found a candidates in PF " << lVetoes[i1].Eta() <<"  " << lVetoes[i1].Phi() <<"  " << lVetoes[i1].Pt()
+          //<<" |  " << pPar.eta() <<" " << pPar.phi() <<" " << pPar.pt() <<" idex " << pPar.user_index()<< std::endl;
+    }
+    if (!lMatch) 
+    {
+      lPFUT += pVec;
+      if(pPar.user_index() != 3)
+        lCHSUT += pVec;
+    }
+  }
+
+
+
+//----------------------------------------------------------------------------
+//  PF MET
+//----------------------------------------------------------------------------
+  fMet       = lPFVec.Pt();
+  fMetPhi    = lPFVec.Phi();
+  double Dphi =  lPFUT.DeltaPhi(lQT);
+  fU2 = lPFUT.Pt() * std::sin(Dphi);
+  fU1 = lPFUT.Pt() * std::cos(Dphi);
+
+
+//----------------------------------------------------------------------------
+//  CHS MET
+//----------------------------------------------------------------------------
+  fCHSMet      = lCHSVec.Pt();
+  fCHSMetPhi    = lCHSVec.Phi();
+  Dphi =  lCHSUT.DeltaPhi(lQT);
+  fCHSU2 = lCHSUT.Pt() * std::sin(Dphi);
+  fCHSU1 = lCHSUT.Pt() * std::cos(Dphi);
 }
-std::vector<fastjet::PseudoJet> PFLoader::puppiFetch(TLorentzVector &iVec) {
+
+std::vector<fastjet::PseudoJet> PFLoader::puppiFetch(std::vector<TLorentzVector> &lVetoes) {
   //puppiContainer curEvent(fAllParticlesPuppi);
   //fPuppi = curEvent.puppiFetch(7,0.5);
   fPuppiContainer->initialize(fAllParticles);
   fPuppiContainer->puppiWeights();
   fPuppi = fPuppiContainer->puppiParticles();
-  TLorentzVector lVec   (0,0,0,0);
+
+
   fPupSumEt    = 0;
-  for(unsigned int i0 = 0; i0 < fPuppi.size(); i0++) { 
-    TLorentzVector pVec;
-    pVec.SetPtEtaPhiM(fPuppi[i0].pt(),0.,fPuppi[i0].phi(),0.);
-    lVec -= pVec;
-    fPupSumEt  += fPuppi[i0].pt();
+  TLorentzVector lQT    (0,0,0,0);
+  TLorentzVector lPupVec   (0,0,0,0);
+  TLorentzVector lPupUT  (0,0,0,0);
+//----------------------------------------------------------------------------
+//  Puppi MET
+//----------------------------------------------------------------------------
+  for(unsigned int i=0; i < lVetoes.size(); ++i)
+  {
+    TLorentzVector vec = lVetoes.at(i);
+    lQT += vec;
   }
-  fPupMet    = lVec.Pt();
-  fPupMetPhi = lVec.Phi();
-  lVec      += iVec;
-  lVec.RotateZ(-iVec.Phi());
-  fPupU1     = lVec.Px();
-  fPupU2     = lVec.Py();
+
+  for(unsigned int i=0; i < fPuppi.size(); ++i)
+  {
+    PseudoJet pPar = fPuppi.at(i);
+    TLorentzVector pVec(0,0,0,0);
+    pVec.SetPtEtaPhiM(pPar.pt(),pPar.eta(),pPar.phi(),pPar.m());
+    
+    // MET
+    lPupVec  -= pVec;
+    fPupSumEt  += pPar.pt();
+    
+    // recoil
+    bool lMatch = false;
+    for(unsigned int i1 = 0; i1 < lVetoes.size(); i1++) 
+    { 
+      double pDPhi = fabs(lVetoes[i1].Phi()-pPar.phi());
+      if(pDPhi > TMath::Pi()*2.-pDPhi) pDPhi = TMath::Pi()*2.-pDPhi;
+      if (pDPhi > 0.01) continue;
+      double pDEta = fabs(lVetoes[i1].Eta()-pPar.eta());
+      if (pDEta > 0.01 ) continue;
+      if ( fabs(lVetoes[i1].Pt()-pPar.pt()) > 0.01) continue;
+      if(sqrt(pDPhi*pDPhi+pDEta*pDEta)  < 0.05) lMatch = true;
+    }
+
+    if (!lMatch) lPupUT += pVec;
+  }
+
+  fMet       = lPupVec.Pt();
+  fMetPhi    = lPupVec.Phi();
+  double Dphi =  lPupUT.DeltaPhi(lQT);
+  fPupU2 = lPupUT.Pt() * std::sin(Dphi);
+  fPupU1 = lPupUT.Pt() * std::cos(Dphi);
+
   return fPuppi;
 }
 std::vector<fastjet::PseudoJet> PFLoader::pfchsFetch(double iPtCut) { 
@@ -175,14 +259,16 @@ std::vector<fastjet::PseudoJet> PFLoader::pfchsFetch(double iPtCut) {
   return lParts;
 }
 RecoObj PFLoader::convert(TPFPart *iPart) { 
-    bool lIsCh   = (iPart->pfType == 1 || iPart->pfType == 2 || iPart->pfType == 3) && (iPart->vtxId > -1 || fabs(iPart->dz) < 0.3) ;
-    bool lIsPV   = (iPart->vtxId  == 0 || (fabs(iPart->dz) < 0.3 && lIsCh));
+  bool lIsCh   = (iPart->pfType == 1 || iPart->pfType == 2 || iPart->pfType == 3) && (iPart->vtxId > -1 || fabs(iPart->dz) < 0.2) ;
+  bool lIsPV   = (iPart->vtxId  == 0 || (fabs(iPart->dz) < 0.2 && lIsCh)); 
+
     int lID = -1;
     // if(fabs(iPart->eta) > 2.5) lIsCh = false;
     if (!lIsCh) lID = 1;
     if (lIsCh &&  lIsPV) lID = 2;
     if (lIsCh && !lIsPV) lID = 3;
     RecoObj pJet;
+    pJet.charge  = iPart->q;
     pJet.pt      = iPart->pt;
     pJet.eta     = iPart->eta;
     pJet.phi     = iPart->phi;

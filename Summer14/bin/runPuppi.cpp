@@ -98,8 +98,10 @@ struct MetInfo {
 
 bool DefaultJet(PseudoJet jet);
 std::vector<TLorentzVector> GetCorJets(std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr);
+bool setMET(std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVector> &lVetoes);
 bool setMET(std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr);
 bool setupMETTree(TTree *iTree,MetInfo &iMet,std::string iName);
+bool RemoveMuonPFCand(std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes);
 
 void getConstitsForCleansing(vector<PseudoJet> inputs, vector<PseudoJet> &oNeutrals, vector<PseudoJet> &oChargedLV, vector<PseudoJet> &oChargedPU){
     for (unsigned int i = 0; i < inputs.size(); i++){
@@ -336,12 +338,7 @@ void setupTree(TTree *iTree,JetInfo &iJet,std::string iName) {
     //iTree->Branch((iName+"pttrimsafe").c_str(),&iJet.pttrimsafe,(iName+"pttrimsafe/F").c_str());
     //iTree->Branch((iName+"ptconst"   ).c_str(),&iJet.ptconst   ,(iName+"ptconst/F"   ).c_str());
 }
-//vector<PseudoJet> threeHardest(vector<PseudoJet> &iParts, JetDefinition &iJetDef, Selector &iSelector,std::vector<ClusterSequence> &iCSs) {
-// cluster full event (hard + pileup)
-//  vector<PseudoJet> threehardest = iSelector(sorted_by_pt(cs.inclusive_jets()));
-//  iCSs.push_back(cs);
-//  return threehardest;
-//}
+
 PseudoJet match(PseudoJet &iJet,vector<PseudoJet> &iJets) {
 
     std::list< std::pair<double, int> > lJetEta; //Sorting jet energy 
@@ -468,8 +465,12 @@ int main (int argc, char ** argv) {
   //Declare Readers
   //fEvt      = new EvtLoader     (lTree);
   fMuon     = new MuonLoader    (lTree);
-  fPFCand   = new PFLoader      (lTree, cmsenv+"/src/SubstrAna/Summer14/data/Puppi_cff.py");
+  if (globalTag == "DES19_V1_MC" || globalTag == "AGE1K_V1_MC")
+    fPFCand   = new PFLoader      (lTree, cmsenv+"/src/SubstrAna/Summer14/data/Puppi_PhaseI_cff.py");
+  else if (globalTag == "PH2_1K_FB")
+    fPFCand   = new PFLoader      (lTree, cmsenv+"/src/SubstrAna/Summer14/data/Puppi_PhaseII_cff.py");
   fGen      = new GenLoader     (lTree);
+
   //fJet      = new JetLoader     (lTree);
 
 //----------------------------------------------------------------------------
@@ -481,7 +482,7 @@ int main (int argc, char ** argv) {
   outname.ReplaceAll(".list", ".root");
   std::stringstream ss;
   ss <<"Puppi" << lGen << lUseZ << lMet << "_" << outname;
-  std::cout << " out file name " << ss << std::endl;
+  std::cout << " Outfile name " << ss.str() << std::endl;
   TFile *lFile = new TFile(ss.str().c_str(),"RECREATE");
   TTree *lOut  = new TTree("Tree","Tree");
 
@@ -502,7 +503,9 @@ int main (int argc, char ** argv) {
   MetInfo MPF;  setupMETTree(lOut, MPF  ,"PF"      );
   MetInfo MPup; setupMETTree(lOut, MPup ,"Puppi");
   MetInfo MCHS; setupMETTree(lOut, MCHS ,"CHS"     );
-
+  MetInfo MRawPF;  setupMETTree(lOut, MRawPF  ,"PFRaw"      );
+  MetInfo MRawPup; setupMETTree(lOut, MRawPup ,"PuppiRaw");
+  MetInfo MRawCHS; setupMETTree(lOut, MRawCHS ,"CHSRaw"     );
   //JetInfo JCHS2GeV; setupTree(lOut,JCHS2GeV,"CHS2GeV");
   //JetInfo JSoft;    setupTree(lOut,JSoft   ,"SK"  );
   //JetInfo JSoftCHS; setupTree(lOut,JSoftCHS,"SKCHS");
@@ -521,6 +524,9 @@ int main (int argc, char ** argv) {
     clear(MPF);
     clear(MPup);
     clear(MCHS);
+    clear(MRawPF);
+    clear(MRawPup);
+    clear(MRawCHS);
 
     //fJet    ->load(i0); 
     fMuon   ->load(i0); 
@@ -534,8 +540,8 @@ int main (int argc, char ** argv) {
     //if(!lFind20Jet) continue;
     //////////////////////////////////////////////////////
     TLorentzVector lZ = fMuon->boson();
-    fPFCand->load(i0,lZ);
-    vector<PseudoJet> puppi_event     = fPFCand->puppiFetch(lZ);
+    fPFCand->load(i0,lVetoes);
+    vector<PseudoJet> puppi_event     = fPFCand->puppiFetch(lVetoes);
     vector<PseudoJet> pf_event        = fPFCand->pfFetch();
     vector<PseudoJet> chs_event       = fPFCand->pfchsFetch(-1);
 
@@ -570,6 +576,18 @@ int main (int argc, char ** argv) {
       std::cout << "PF size : " << EventCount[0][0] <<" " << EventCount[0][1] <<" "<< EventCount[0][2] <<" "<< std::endl;
       std::cout << "CHS size : " << EventCount[1][0] <<" " << EventCount[1][1] <<" "<< EventCount[1][2] <<" "<< std::endl;
       std::cout << "Puppi size : " << EventCount[2][0] <<" " << EventCount[2][1] <<" "<< EventCount[2][2] <<" "<< std::endl;
+    }
+
+
+
+    //----------------------------------------------------------------------------
+    //  For MET recoil
+    //----------------------------------------------------------------------------
+    if (lFindZ && lUseZ && lMet)
+    {
+      if(!RemoveMuonPFCand(pf_event, lVetoes)) continue;
+      if(!RemoveMuonPFCand(chs_event, lVetoes)) continue;
+      if(!RemoveMuonPFCand(puppi_event, lVetoes)) continue;
     }
 
 
@@ -618,6 +636,9 @@ int main (int argc, char ** argv) {
       setMET(pfJets,    MPF,  lVetoes, pPF_Rho,  PFjetCorr);
       setMET(chsJets,   MCHS, lVetoes, pCHS_Rho, CHSjetCorr);
       setMET(puppiJets, MPup, lVetoes, pPup_Rho, NULL);
+      setMET(pfJets,    MRawPF,  lVetoes);
+      setMET(chsJets,   MRawCHS, lVetoes);
+      setMET(puppiJets, MRawPup, lVetoes);
       lOut->Fill();
       continue;
     }
@@ -707,17 +728,6 @@ std::vector<TLorentzVector> GetCorJets(std::vector<PseudoJet> &iJets, std::vecto
   for(unsigned int i=0; i < iJets.size(); ++i)
   {
     PseudoJet ijet = iJets.at(i);
-
-    bool lMatch = false;
-    for(unsigned int i1 = 0; i1 < lVetoes.size(); i1++) 
-    { 
-      double pDPhi = fabs(lVetoes[i1].Phi()-ijet.phi());
-      if(pDPhi > TMath::Pi()*2.-pDPhi) pDPhi = TMath::Pi()*2.-pDPhi;
-      double pDEta = fabs(lVetoes[i1].Eta()-ijet.eta());
-      if(sqrt(pDPhi*pDPhi+pDEta*pDEta)  < 0.2) lMatch = true;
-    }
-    if(lMatch) continue;
-
     double lJEC = correction(ijet,iJetCorr,bge_rho.rho());  
     TLorentzVector pVec(0,0,0,0);
     pVec.SetPtEtaPhiM(ijet.pt()*lJEC, ijet.eta(), ijet.phi(), ijet.m());
@@ -725,7 +735,6 @@ std::vector<TLorentzVector> GetCorJets(std::vector<PseudoJet> &iJets, std::vecto
   }
   return CorJets;
 }       // -----  end of function GetCorJets  -----
-
 
 // ===  FUNCTION  ============================================================
 //         Name:  setupMETTree
@@ -749,20 +758,69 @@ bool setMET(std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVe
 {
   std::vector<TLorentzVector> iCorJets = GetCorJets(iJets, lVetoes, clust_seq_rho, iJetCorr);
 
-  TLorentzVector lVec(0,0,0,0);
-  TLorentzVector iVec(0,0,0,0);
   double SumEt = 0.0;
+  TLorentzVector lVec(0,0,0,0);
+  TLorentzVector lUT(0,0,0,0);
+  TLorentzVector lQT(0,0,0,0);
+
   for(std::vector<TLorentzVector>::const_iterator it=iCorJets.begin();
     it!=iCorJets.end(); ++it)
   {
     lVec -= *it;
+    lUT += *it;
     SumEt += it->Pt();
   }
 
   for(std::vector<TLorentzVector>::const_iterator it=lVetoes.begin();
     it!=lVetoes.end(); ++it)
   {
-    iVec += *it;
+    lVec -= *it;
+    lQT += *it;
+    SumEt += it->Pt();
+  }
+
+  iMET.fSumEt  = SumEt;
+  iMET.fMet    = lVec.Pt();
+  iMET.fMetPhi = lVec.Phi();
+  double Dphi =  lUT.DeltaPhi(lQT);
+  iMET.fU2 = lUT.Pt() * std::sin(Dphi);
+  iMET.fU1 = lUT.Pt() * std::cos(Dphi);
+
+  return true;
+}       // -----  end of function setMET  -----
+
+// ===  FUNCTION  ============================================================
+//         Name:  setMET
+//  Description:  
+// ===========================================================================
+bool setMET(std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVector> &lVetoes)
+{
+  std::vector<TLorentzVector> iCorJets;
+  for(unsigned int i=0; i < iJets.size(); ++i)
+  {
+    PseudoJet ijet = iJets.at(i);
+    TLorentzVector pVec(0,0,0,0);
+    pVec.SetPtEtaPhiM(ijet.pt(), ijet.eta(), ijet.phi(), ijet.m());
+    iCorJets.push_back(pVec);
+  }
+
+  double SumEt = 0.0;
+  TLorentzVector lVec(0,0,0,0);
+  TLorentzVector lUT(0,0,0,0);
+  TLorentzVector lQT(0,0,0,0);
+
+  for(std::vector<TLorentzVector>::const_iterator it=iCorJets.begin();
+    it!=iCorJets.end(); ++it)
+  {
+    lVec -= *it;
+    lUT += *it;
+    SumEt += it->Pt();
+  }
+
+  for(std::vector<TLorentzVector>::const_iterator it=lVetoes.begin();
+    it!=lVetoes.end(); ++it)
+  {
+    lQT += *it;
     lVec -= *it;
     SumEt += it->Pt();
   }
@@ -770,9 +828,44 @@ bool setMET(std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVe
   iMET.fSumEt  = SumEt;
   iMET.fMet    = lVec.Pt();
   iMET.fMetPhi = lVec.Phi();
-  lVec        += iVec;
-  lVec.RotateZ(-iVec.Phi());
-  iMET.fU1     = lVec.Px();
-  iMET.fU2     = lVec.Py();
+  double Dphi =  lUT.DeltaPhi(lQT);
+  iMET.fU2 = lUT.Pt() * std::sin(Dphi);
+  iMET.fU1 = lUT.Pt() * std::cos(Dphi);
+
   return true;
 }       // -----  end of function setMET  -----
+
+
+
+// ===  FUNCTION  ============================================================
+//         Name:  RemoveMuonPFCand
+//  Description:  
+// ===========================================================================
+bool RemoveMuonPFCand(std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes)
+{
+  int icoutn = 0;
+  assert(iJets.size() != 0);
+  for(std::vector<PseudoJet>::iterator it=iJets.begin(); it!=iJets.end(); )
+  {
+    PseudoJet pPar = *it;
+    // recoil
+    bool lMatch = false;
+    for(unsigned int i1 = 0; i1 < lVetoes.size(); i1++) 
+    { 
+      double pDPhi = fabs(lVetoes[i1].Phi()-pPar.phi());
+      if(pDPhi > TMath::Pi()*2.-pDPhi) pDPhi = TMath::Pi()*2.-pDPhi;
+      if (pDPhi > 0.01) continue;
+      double pDEta = fabs(lVetoes[i1].Eta()-pPar.eta());
+      if (pDEta > 0.01 ) continue;
+      if ( fabs(lVetoes[i1].Pt()-pPar.pt()) > 0.1) continue;
+      if(sqrt(pDPhi*pDPhi+pDEta*pDEta)  < 0.05) lMatch = true;
+    }
+
+    if (lMatch)
+    {
+      it = iJets.erase(it);
+      icoutn++;
+    } else it++;
+  }
+  return icoutn == 2;
+}       // -----  end of function RemoveMuonPFCand  -----
