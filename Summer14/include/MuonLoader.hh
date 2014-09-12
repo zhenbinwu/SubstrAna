@@ -1,3 +1,4 @@
+#include "TChain.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TClonesArray.h"
@@ -8,7 +9,7 @@ using namespace baconhep;
 
 class MuonLoader { 
 public:
-  MuonLoader(TTree *iTree);
+  MuonLoader(TChain *iTree);
   ~MuonLoader();
   void reset();
   void setupTree(TTree *iTree);

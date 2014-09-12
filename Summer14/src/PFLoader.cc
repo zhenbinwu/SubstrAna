@@ -14,7 +14,7 @@
 
 using namespace baconhep;
 
-PFLoader::PFLoader(TTree *iTree,std::string iName) { 
+PFLoader::PFLoader(TChain *iTree,std::string iName) { 
   fPFCands  = new TClonesArray("baconhep::TPFPart");
   fPFCandBr = 0; 
   iTree->SetBranchAddress("PFPart",       &fPFCands, &fPFCandBr);
@@ -91,6 +91,7 @@ TLorentzVector PFLoader::met() {
   return lVec;
 }
 void PFLoader::load(int iEvent, std::vector<TLorentzVector> &iVec) { 
+  //std::cout << "branches? " << fPFCandBr->GetEntries()<< std::endl;
   fPFCands  ->Clear();
   fPFCandBr ->GetEntry(iEvent);
   fetch(iVec);

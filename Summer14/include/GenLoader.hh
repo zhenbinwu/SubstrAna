@@ -1,3 +1,4 @@
+#include "TChain.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TClonesArray.h"
@@ -11,7 +12,7 @@ using namespace baconhep;
 
 class GenLoader { 
 public:
-  GenLoader(TTree *iTree);
+  GenLoader(TChain *iTree);
   ~GenLoader();
   void reset();
   void setupTree(TTree *iTree);

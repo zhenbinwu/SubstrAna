@@ -1,0 +1,9 @@
+universe = vanilla
+Executable = RunPuppi.csh
+WhenToTransferOutput = ON_EXIT
+Output = Puppi_$(Cluster)_$(Process).stdout
+Error = Puppi_$(Cluster)_$(Process).stderr
+Log = Puppi_$(Cluster)_$(Process).log
+notify_user = benwu@fnal.gov
+Arguments = TAG  GEN  SelZ MET  List 
+Queue 1

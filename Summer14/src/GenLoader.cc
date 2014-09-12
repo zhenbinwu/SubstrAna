@@ -6,7 +6,7 @@
 
 using namespace baconhep;
 
-GenLoader::GenLoader(TTree *iTree) { 
+GenLoader::GenLoader(TChain *iTree) { 
   fGenInfo  = new TGenEventInfo();
   fGenInfoBr = 0;
   iTree->SetBranchAddress("GenEvtInfo",       &fGenInfo, &fGenInfoBr);
