@@ -22,6 +22,7 @@
 #include "TTree.h"
 #include "TMath.h"
 #include "TChain.h"
+#include "TGraph.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -37,6 +38,7 @@ GenLoader       *fGen      = 0;
 JetLoader       *fJet      = 0; 
 MuonLoader      *fMuon     = 0; 
 PFLoader        *fPFCand   = 0; 
+std::vector<TGraph*> iPuppiCorr;
 
 TTree* load(std::string iName) { 
   if (iName.find("list")!= std::string::npos)
@@ -96,10 +98,12 @@ struct MetInfo {
 };
 
 
+double correctPhil(double iPt, double iEta);
+void loadPhilJEC(const std::string &globalTag, std::vector<TGraph*> &iCorr);
 bool DefaultJet(PseudoJet jet);
-std::vector<TLorentzVector> GetCorJets(std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr);
+std::vector<TLorentzVector> GetCorJets(bool IsPuppi, std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr);
 bool setMET(std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVector> &lVetoes);
-bool setMET(std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr);
+bool setMET(bool IsPuppi, std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr);
 bool setupMETTree(TTree *iTree,MetInfo &iMet,std::string iName);
 bool RemoveMuonPFCand(std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes);
 
@@ -240,7 +244,7 @@ std::map<std::string, float> GetPUJetID(PseudoJet &iJet, std::vector<PseudoJet> 
 }       // -----  end of function GetPUJetID  -----
 
 //void setJet(PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &clust_seq_rho, bool iCHS,FactorizedJetCorrector *iJetCorr,JetCorrectionUncertainty *iJetUnc,JetCleanser &gsn_cleanser) {
-void setJet(PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &clust_seq_rho, bool iCHS,FactorizedJetCorrector *iJetCorr,JetCorrectionUncertainty *iJetUnc) {
+void setJet(bool IsPuppi, PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &clust_seq_rho, bool iCHS,FactorizedJetCorrector *iJetCorr,JetCorrectionUncertainty *iJetUnc) {
     vector<PseudoJet> neutrals,chargedLV,chargedPU;
     getConstitsForCleansing(iJet.constituents(),neutrals,chargedLV,chargedPU);
     std::map<std::string, float> PUJetID = GetPUJetID(iJet, neutrals, chargedLV, chargedPU);
@@ -282,9 +286,14 @@ void setJet(PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &clust_seq_rho, 
 
     //Finally apply the JEC
     double lJEC = correction(iJet,iJetCorr,bge_rho.rho());  
+    if (IsPuppi) 
+    {
+      lJEC = correction(iJet,iJetCorr,1.);  
+      lJEC *= correctPhil(iJet.pt()*lJEC, iJet.eta()) ;
+    }
+
     double lUnc = -999.;
-    if (iJetUnc != NULL)
-      lUnc = unc       (iJet,iJetUnc);
+    if (iJetUnc != NULL) lUnc = unc       (iJet,iJetUnc);
     iJetI.pt          = lCorr     .pt();
     iJetI.ptcorr      = iJet      .pt()*lJEC;
     iJetI.ptraw       = iJet      .pt();
@@ -437,11 +446,15 @@ int main (int argc, char ** argv) {
 
   //Puppi (L2L3)
   std::vector<JetCorrectorParameters> PuppicorrParams;
-  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L2Relative_"+JetType+"chs.txt"));
-  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L3Absolute_"+JetType+"chs.txt"));
+
+  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/POSTLS170_V6_L1FastJet_AK7PF.txt"));
+  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/POSTLS170_V6_L2Relative_AK7PF.txt"));
+  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/POSTLS170_V6_L3Absolute_AK7PF.txt"));
   //corrParams.push_back(JetCorrectorParameter(cmsenv+'BaconProd/Utils/data/Summer13_V1_DATA_L2L3Residual_"+JetType+".txt'));
   FactorizedJetCorrector   *PuppijetCorr = new FactorizedJetCorrector(PuppicorrParams);
   JetCorrectionUncertainty *PuppijetUnc  = NULL;
+  loadPhilJEC(globalTag, iPuppiCorr);
+
   //JetCorrectorParameters    Puppiparam(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_Uncertainty_"+JetType+"chs.txt");
   //JetCorrectionUncertainty *PuppijetUnc  = new JetCorrectionUncertainty(Puppiparam);
 
@@ -633,9 +646,9 @@ int main (int argc, char ** argv) {
 
     if(lMet)
     {
-      setMET(pfJets,    MPF,  lVetoes, pPF_Rho,  PFjetCorr);
-      setMET(chsJets,   MCHS, lVetoes, pCHS_Rho, CHSjetCorr);
-      setMET(puppiJets, MPup, lVetoes, pPup_Rho, NULL);
+      setMET(false, pfJets,    MPF,  lVetoes, pPF_Rho,  PFjetCorr);
+      setMET(false, chsJets,   MCHS, lVetoes, pCHS_Rho, CHSjetCorr);
+      setMET(true, puppiJets, MPup, lVetoes, pPup_Rho, NULL);
       setMET(pfJets,    MRawPF,  lVetoes);
       setMET(chsJets,   MRawCHS, lVetoes);
       setMET(puppiJets, MRawPup, lVetoes);
@@ -649,17 +662,7 @@ int main (int argc, char ** argv) {
     for(unsigned int i0 = 0; i0 < loopJets.size(); i0++) 
     {
       lIndex = i0;
-      bool lMatch = false;
-      for(unsigned int i1 = 0; i1 < lVetoes.size(); i1++) 
-      { 
-        double pDPhi = fabs(lVetoes[i1].Phi()-loopJets[i0].phi());
-        if(pDPhi > TMath::Pi()*2.-pDPhi) pDPhi = TMath::Pi()*2.-pDPhi;
-        double pDEta = fabs(lVetoes[i1].Eta()-loopJets[i0].eta());
-        if(sqrt(pDPhi*pDPhi+pDEta*pDEta)  < 0.5) lMatch = true;
-      }
-      if(lMatch) continue;
       if(loopJets[i0].pt() < 1) continue;
-
 
       PseudoJet genJet     = PseudoJet();
       if (lGen) genJet = loopJets[i0];
@@ -671,10 +674,10 @@ int main (int argc, char ** argv) {
 
       //PseudoJet chs2GeVJet = match(loopJets[i0],chs2GeVJets);
       //std::cout << "==> " << genJet.pt() << " -- " << genJets[i0].pt() << " -- " << loopJets[i0].pt() << std::endl;
-      if(genJet.pt()     != 0) setJet(genJet  , JGen, pGen_Rho, false, PFjetCorr   , PFjetUnc   );
-      if(pfJet.pt()      != 0) setJet(pfJet   , JPF , pPF_Rho , false, PFjetCorr   , PFjetUnc   );
-      if(chsJet.pt()     != 0) setJet(chsJet  , JCHS, pCHS_Rho, true , CHSjetCorr  , CHSjetUnc  );
-      if(puppiJet.pt()   != 0) setJet(puppiJet, JPup, pPup_Rho, true , PuppijetCorr, PuppijetUnc);
+      if(genJet.pt()     != 0) setJet(false, genJet  , JGen, pGen_Rho, false, PFjetCorr   , PFjetUnc   );
+      if(pfJet.pt()      != 0) setJet(false, pfJet   , JPF , pPF_Rho , false, PFjetCorr   , PFjetUnc   );
+      if(chsJet.pt()     != 0) setJet(false, chsJet  , JCHS, pCHS_Rho, true , CHSjetCorr  , CHSjetUnc  );
+      if(puppiJet.pt()   != 0) setJet(false, puppiJet, JPup, pPup_Rho, true , PuppijetCorr, PuppijetUnc);
       //if(chs2GeVJet.pt() != 0) setJet(chs2GeVJet, JCHS2GeV, chs_event2GeV, true , CHSjetCorr  , CHSjetUnc  , gsn_cleanser);
 
       //////////////////////////////////////////////////////
@@ -719,7 +722,7 @@ bool DefaultJet(PseudoJet jet)
 //         Name:  GetCorJets
 //  Description:  
 // ===========================================================================
-std::vector<TLorentzVector> GetCorJets(std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr)
+std::vector<TLorentzVector> GetCorJets(bool IsPuppi, std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr)
 {
   std::vector<TLorentzVector> CorJets;
   Selector rho_range =  SelectorAbsRapMax(5.0);
@@ -729,6 +732,11 @@ std::vector<TLorentzVector> GetCorJets(std::vector<PseudoJet> &iJets, std::vecto
   {
     PseudoJet ijet = iJets.at(i);
     double lJEC = correction(ijet,iJetCorr,bge_rho.rho());  
+    if (IsPuppi) 
+    {
+      lJEC = correction(ijet,iJetCorr,1.);  
+      lJEC *= correctPhil(ijet.pt()*lJEC, ijet.eta()) ;
+    }
     TLorentzVector pVec(0,0,0,0);
     pVec.SetPtEtaPhiM(ijet.pt()*lJEC, ijet.eta(), ijet.phi(), ijet.m());
     CorJets.push_back(pVec);
@@ -754,9 +762,9 @@ bool setupMETTree(TTree *iTree,MetInfo &iMet,std::string iName)
 //         Name:  setMET
 //  Description:  
 // ===========================================================================
-bool setMET(std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr)
+bool setMET(bool IsPuppi, std::vector<PseudoJet> &iJets, MetInfo& iMET, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr)
 {
-  std::vector<TLorentzVector> iCorJets = GetCorJets(iJets, lVetoes, clust_seq_rho, iJetCorr);
+  std::vector<TLorentzVector> iCorJets = GetCorJets(IsPuppi, iJets, lVetoes, clust_seq_rho, iJetCorr);
 
   double SumEt = 0.0;
   TLorentzVector lVec(0,0,0,0);
@@ -869,3 +877,30 @@ bool RemoveMuonPFCand(std::vector<PseudoJet> &iJets, std::vector<TLorentzVector>
   }
   return icoutn == 2;
 }       // -----  end of function RemoveMuonPFCand  -----
+
+void loadPhilJEC(const std::string &globalTag, std::vector<TGraph*> &iCorr) {
+  std::string cmsenv = getenv("CMSSW_BASE");
+  std::string JECname = cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_Puppi.root";
+  TFile *lFile = TFile::Open(JECname.c_str());
+
+  for(int i0 = 0; i0 < 20; i0++) {
+    std::stringstream pSS0;
+    pSS0 << "Hpuppi" << i0;
+    TGraph* lF0 = (TGraph*) lFile->FindObjectAny(pSS0.str().c_str());
+    iCorr.push_back(lF0);
+  }
+  return;
+}
+
+double correctPhil(double iPt, double iEta) {
+  double lPt = iPt;
+  if(lPt > 1000) return 1.;
+  int iId  = 0.0;
+  int lEta = int((iEta + 5)/0.5); 
+  iId += lEta;
+  if(iPt < 10) lPt = 10;
+  double pCorr = iPuppiCorr[iId]->Eval(lPt);
+
+  pCorr/=lPt;
+  return pCorr;
+}
