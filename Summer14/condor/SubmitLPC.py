@@ -6,11 +6,11 @@ import re
 import shutil
 import glob
 
-DelDir    = ' /uscms_data/d3/benwu/JetMET_TP/Puppi/CMSSW_6_2_0_SLHC16_patch1'
+DelDir    = '/uscms_data/d3/benwu/JetMET_TP/Puppi/CMSSW_6_2_0_SLHC16_patch1'
 DelExe    = 'runPuppi'
-Directory = '/eos/uscms/store/user/benwu/TP/Puppi/TEST2/'
-Analysis  = 'DM-VBFb-ISRb_5_30'
+Directory = '/eos/uscms/store/user/benwu/TP/Puppi/Sep12'
 UserEMAIL = 'benwu@fnal.gov'
+Fraction  = 1
 Detectors = [
     'PhaseI',
     #'PhaseII3',
@@ -36,14 +36,14 @@ def Condor_Sub():
                     cond_file = splitpro.split('/')[-1].split('.')[0]
                     cond_file += "_condor"
                     print cond_file
-                    filelist = ','.join(x.strip() for x in open(splitpro, "r"))
+                    filelist = ','.join("root://cmseos.fnal.gov:1094/"+x.strip() for x in open(splitpro, "r"))
                     print filelist
                     with open(cond_file, "wt") as out:
                         for line in open("Puppi_condor", "r"):
                             line = line.replace("USER@FNAL.GOV", UserEMAIL)
-                            if pu == "50PU_noaged":
+                            if dec == "PhaseI" and pu == "50PU_noaged":
                                 line = line.replace("TAG", "DES19_V1_MC")
-                            elif pu == "140PU_aged":
+                            elif dec == "PhaseI" and pu == "140PU_aged":
                                 line = line.replace("TAG", "AGE1K_V1_MC")
                             line = line.replace("GEN", str(Projects[pro][0]))
                             line = line.replace("SelZ", str(Projects[pro][1]))
@@ -52,8 +52,8 @@ def Condor_Sub():
                             out.write(line)
 
 
-                    #os.system("condor_submit " + cond_file)
-                    return
+                    os.system("condor_submit " + cond_file)
+                    #return
 
 
 def my_CheckFile():
@@ -100,7 +100,7 @@ def my_CheckFile():
 
 def SplitPro(detector, pileup, pro):
     globout=glob.glob('./FileList/%s_%s_%s_*.list'  % (pro, detector,pileup))
-    return sorted(globout)
+    return sorted(globout[:len(globout)/Fraction])
     testout=[]
     for out in globout:
         file = out.split('/')[-1]
@@ -109,8 +109,7 @@ def SplitPro(detector, pileup, pro):
 
 def my_process():
     ## Create the output directory
-    outdir = Directory
-    #outdir = DelDir + "/" + Directory
+    outdir = Directory + "/condor"
     try:
         os.makedirs(outdir)
     except OSError:
