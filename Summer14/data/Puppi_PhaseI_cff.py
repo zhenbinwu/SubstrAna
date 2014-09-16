@@ -45,35 +45,35 @@ puppi = cms.PSet(#"PuppiProducer",
                        MinNeutralPtSlope   = cms.untracked.double(0.0),
 #                       MinNeutralPtSlope   = cms.untracked.double(0.03),
                        MinPuppiWeight = cms.untracked.double(0.01),
-                       algos          = cms.VPSet( 
-                        cms.PSet( 
+                       algos          = cms.VPSet(
+                        cms.PSet(
                          etaMin = cms.untracked.double(-2.5),
                          etaMax = cms.untracked.double( 2.5),
                          ptMin  = cms.untracked.double(0.0),
                          puppiAlgos = puppiCentral
                         ),
-#                        cms.PSet( 
+#                        cms.PSet(
 #                         etaMin = cms.untracked.double(-5.0),
 #                         etaMax = cms.untracked.double(-3.0),
 #                         ptMin  = cms.untracked.double(1.0),
 #                         puppiAlgos = puppiForward
 #                        ),
-#                        cms.PSet( 
+#                        cms.PSet(
 #                         etaMin = cms.untracked.double(-3.0),
 #                         etaMax = cms.untracked.double(-2.6),
 #                         ptMin  = cms.untracked.double(-0.5),
 #                         puppiAlgos = puppiForward
 #                        ),
-                        cms.PSet( 
+                        cms.PSet(
                          etaMin = cms.untracked.double(2.5),
                          etaMax = cms.untracked.double(3.0),
                          ptMin  = cms.untracked.double(1.0),
                          puppiAlgos = puppiForward
                         ),
-                        cms.PSet( 
+                        cms.PSet(
                          etaMin = cms.untracked.double(3.0),
                          etaMax = cms.untracked.double(5.0),
-                         ptMin  = cms.untracked.double(4.0),
+                         ptMin  = cms.untracked.double(1.5),
                          puppiAlgos = puppiForward
                         )
                       )
