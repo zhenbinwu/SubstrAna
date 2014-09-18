@@ -891,7 +891,7 @@ void loadPhilJEC(const std::string &globalTag, std::vector<TGraph*> &iCorr) {
 
   for(int i0 = 0; i0 < 20; i0++) {
     std::stringstream pSS0;
-    pSS0 << "Hpuppi" << i0;
+    pSS0 << "puppi" << i0;
     TGraph* lF0 = (TGraph*) lFile->FindObjectAny(pSS0.str().c_str());
     iCorr.push_back(lF0);
   }
@@ -901,8 +901,8 @@ void loadPhilJEC(const std::string &globalTag, std::vector<TGraph*> &iCorr) {
 double correctPhil(double iPt, double iEta) {
   double lPt = iPt;
   if(lPt > 1000) return 1.;
-  if (iEta >= 5) iEta = 4.95;
-  if (iEta <=-5) iEta = -4.95;
+  if(iPt < 30) lPt = 30;
+  if (fabs(iEta) > 4.99) iEta = iEta/fabs(iEta) * 4.99;
   if(iPt < 10) lPt = 10;
 
   int iId  = 0.0;
