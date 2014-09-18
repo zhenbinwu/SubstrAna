@@ -35,15 +35,15 @@ puppiForward = cms.VPSet(
 
 puppi = cms.PSet(#"PuppiProducer",
                        PuppiName      = cms.untracked.string("Puppi"),
-                       UseDeltaZCut   = cms.untracked.bool  (False),
+                       UseDeltaZCut   = cms.untracked.bool  (True),
                        DeltaZCut      = cms.untracked.double(0.3),
                        candName       = cms.untracked.string('particleFlow'),
                        vertexName     = cms.untracked.string('offlinePrimaryVertices'),
                        applyCHS       = cms.untracked.bool  (True),
                        useExp         = cms.untracked.bool  (False),
                        MinNeutralPt   = cms.untracked.double(0.2),
-                       MinNeutralPtSlope   = cms.untracked.double(0.0),
-#                       MinNeutralPtSlope   = cms.untracked.double(0.03),
+                       #MinNeutralPtSlope   = cms.untracked.double(0.0),
+                       MinNeutralPtSlope   = cms.untracked.double(0.015),
                        MinPuppiWeight = cms.untracked.double(0.01),
                        algos          = cms.VPSet(
                         cms.PSet(

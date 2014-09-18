@@ -891,7 +891,7 @@ void loadPhilJEC(const std::string &globalTag, std::vector<TGraph*> &iCorr) {
 
   for(int i0 = 0; i0 < 20; i0++) {
     std::stringstream pSS0;
-    pSS0 << "Hpuppi" << i0;
+    pSS0 << "puppi" << i0;
     TGraph* lF0 = (TGraph*) lFile->FindObjectAny(pSS0.str().c_str());
     iCorr.push_back(lF0);
   }
