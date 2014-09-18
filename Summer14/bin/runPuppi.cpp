@@ -898,7 +898,7 @@ void loadPhilJEC(const std::string &globalTag, std::vector<TGraph*> &iCorr) {
   return;
 }
 
-double correctPhil(const double iPt, const double iEta) {
+double correctPhil(double iPt, double iEta) {
   double lPt = iPt;
   if(lPt > 1000) return 1.;
   if(iPt < 30) lPt = 30;
