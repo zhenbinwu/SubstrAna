@@ -262,7 +262,8 @@ void setJet(bool IsPuppi, PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &c
     // define safeAreaSub (PF)
     //AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
     //JetDefinition jet_def_for_rho(kt_algorithm, 0.4);
-    Selector rho_range =  SelectorAbsRapMax(5.0);
+    Selector rho_range =  SelectorAbsRapMax(4.4); //CMSSW 
+    //Selector rho_range =  SelectorAbsRapMax(5.0);
     //ClusterSequenceArea clust_seq_rho(iParticles, jet_def_for_rho, area_def);
     // the two background estimators
     JetMedianBackgroundEstimator bge_rho (rho_range, clust_seq_rho);
@@ -375,7 +376,7 @@ PseudoJet match(PseudoJet &iJet,vector<PseudoJet> &iJets) {
     {
       int MatchedIdx = lJetEta.front().second;
       PseudoJet retJet = iJets[MatchedIdx];
-      iJets.erase(iJets.begin()+MatchedIdx);
+      //iJets.erase(iJets.begin()+MatchedIdx);
       return retJet;
     }
     else 
@@ -385,6 +386,7 @@ PseudoJet match(PseudoJet &iJet,vector<PseudoJet> &iJets) {
 void clear(JetInfo &iJet) {
     iJet.pt         = -999;
     iJet.ptraw      = -999;
+    iJet.ptcorr     = -999;
     //iJet.ptclean    = -999;
     //iJet.pttrim     = -999;
     //iJet.pttrimsafe = -999;
@@ -465,9 +467,9 @@ int main (int argc, char ** argv) {
 
   //Setup JetAlgos
   double R = 0.4;
-  JetDefinition jet_def(antikt_algorithm,R);         // the jet definition....
-  AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
-  Selector selector = SelectorNHardest(3);   // definition of a selector for the three hardest jets
+  JetDefinition jet_def(antikt_algorithm, R);         // the jet definition....
+  AreaDefinition area_def(active_area, GhostedAreaSpec(SelectorAbsRapMax(5.0))); //CMSSW 
+  //AreaDefinition area_def(active_area_explicit_ghosts,GhostedAreaSpec(SelectorAbsRapMax(5.0)));
 
   //Now setup cleansing
   //JetDefinition subjet_def(kt_algorithm,0.2);
@@ -514,13 +516,13 @@ int main (int argc, char ** argv) {
   int lIndex = 0; 
   lOut->Branch("index",&lIndex,"lIndex/F");
 
-  JetInfo JGen; setupTree(lOut,    JGen ,"Gen"     );
-  JetInfo JPF;  setupTree(lOut,    JPF  ,"PF"      );
-  JetInfo JPup; setupTree(lOut,    JPup ,"Puppi");
-  JetInfo JCHS; setupTree(lOut,    JCHS ,"CHS"     );
-  MetInfo MPF;  setupMETTree(lOut, MPF  ,"PF"      );
-  MetInfo MPup; setupMETTree(lOut, MPup ,"Puppi");
-  MetInfo MCHS; setupMETTree(lOut, MCHS ,"CHS"     );
+  JetInfo JGen;    setupTree(lOut,    JGen    ,"Gen"        );
+  JetInfo JPF;     setupTree(lOut,    JPF     ,"PF"         );
+  JetInfo JPup;    setupTree(lOut,    JPup    ,"Puppi");
+  JetInfo JCHS;    setupTree(lOut,    JCHS    ,"CHS"        );
+  MetInfo MPF;     setupMETTree(lOut, MPF     ,"PF"         );
+  MetInfo MPup;    setupMETTree(lOut, MPup    ,"Puppi");
+  MetInfo MCHS;    setupMETTree(lOut, MCHS    ,"CHS"        );
   MetInfo MRawPF;  setupMETTree(lOut, MRawPF  ,"PFRaw"      );
   MetInfo MRawPup; setupMETTree(lOut, MRawPup ,"PuppiRaw");
   MetInfo MRawCHS; setupMETTree(lOut, MRawCHS ,"CHSRaw"     );
@@ -534,10 +536,6 @@ int main (int argc, char ** argv) {
     if(i0 % 500 == 0) 
       std::cout << "===> Processed " << i0 << " - Done : " << (float(i0)/float(maxEvents)) << " with " << lTree->GetCurrentFile()->GetName() << std::endl;
 
-    clear(JGen);
-    clear(JPF);
-    clear(JPup);
-    clear(JCHS);
     //clear(JCHS2GeV);
     clear(MPF);
     clear(MPup);
@@ -643,11 +641,11 @@ int main (int argc, char ** argv) {
     //vector<PseudoJet> softCHSJets = sorted_by_pt(pSoftCHS.inclusive_jets());
     
     // Rho
-    JetDefinition jet_def_for_rho(kt_algorithm, 0.4);
+    JetDefinition jet_def_for_rho(kt_algorithm, 0.6);
     ClusterSequenceArea pGen_Rho    (gen_event  , jet_def_for_rho, area_def);
     ClusterSequenceArea pPup_Rho    (puppi_event, jet_def_for_rho, area_def);
     ClusterSequenceArea pPF_Rho     (pf_event   , jet_def_for_rho, area_def);
-    ClusterSequenceArea pCHS_Rho    (chs_event  , jet_def_for_rho, area_def);
+    ClusterSequenceArea pCHS_Rho    (pf_event  , jet_def_for_rho, area_def);
 
 
     if(lMet)
@@ -668,6 +666,11 @@ int main (int argc, char ** argv) {
     for(unsigned int i0 = 0; i0 < loopJets.size(); i0++) 
     {
       lIndex = i0;
+      clear(JGen);
+      clear(JPF);
+      clear(JPup);
+      clear(JCHS);
+
       if(loopJets[i0].pt() < 1) continue;
 
       PseudoJet genJet     = PseudoJet();
@@ -683,7 +686,7 @@ int main (int argc, char ** argv) {
       if(genJet.pt()     != 0) setJet(false, genJet  , JGen, pGen_Rho, false, PFjetCorr   , PFjetUnc   );
       if(pfJet.pt()      != 0) setJet(false, pfJet   , JPF , pPF_Rho , false, PFjetCorr   , PFjetUnc   );
       if(chsJet.pt()     != 0) setJet(false, chsJet  , JCHS, pCHS_Rho, true , CHSjetCorr  , CHSjetUnc  );
-      if(puppiJet.pt()   != 0) setJet(false, puppiJet, JPup, pPup_Rho, true , PuppijetCorr, PuppijetUnc);
+      if(puppiJet.pt()   != 0) setJet(true,  puppiJet, JPup, pPup_Rho, true , PuppijetCorr, PuppijetUnc);
       //if(chs2GeVJet.pt() != 0) setJet(chs2GeVJet, JCHS2GeV, chs_event2GeV, true , CHSjetCorr  , CHSjetUnc  , gsn_cleanser);
 
       //////////////////////////////////////////////////////
@@ -731,7 +734,7 @@ bool DefaultJet(PseudoJet jet)
 std::vector<TLorentzVector> GetCorJets(bool IsPuppi, std::vector<PseudoJet> &iJets, std::vector<TLorentzVector> &lVetoes, ClusterSequenceArea &clust_seq_rho, FactorizedJetCorrector *iJetCorr)
 {
   std::vector<TLorentzVector> CorJets;
-  Selector rho_range =  SelectorAbsRapMax(5.0);
+  Selector rho_range =  SelectorAbsRapMax(4.4);
   JetMedianBackgroundEstimator bge_rho (rho_range, clust_seq_rho);
 
   for(unsigned int i=0; i < iJets.size(); ++i)
