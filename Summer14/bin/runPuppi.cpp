@@ -1,12 +1,12 @@
 //#include "../include/puppiContainer.hh"
 #include "../include/GenLoader.hh"
 #include "../include/MuonLoader.hh"
-#include "../include/JetLoader.hh"
+//#include "../include/JetLoader.hh"
 #include "../include/PFLoader.hh"
 #include "fastjet/tools/Filter.hh"
 #include "fastjet/tools/Pruner.hh"
 #include "fastjet/ClusterSequence.hh"
-#include "fastjet/contrib/JetCleanser.hh"
+//#include "fastjet/contrib/JetCleanser.hh"
 #include "fastjet/ClusterSequenceArea.hh"
 #include "fastjet/tools/GridMedianBackgroundEstimator.hh"
 #include "fastjet/tools/JetMedianBackgroundEstimator.hh"
@@ -36,7 +36,7 @@ const bool verbose = false;
 
 //Object Processors
 GenLoader       *fGen      = 0; 
-JetLoader       *fJet      = 0; 
+//JetLoader       *fJet      = 0; 
 MuonLoader      *fMuon     = 0; 
 PFLoader        *fPFCand   = 0; 
 std::vector<TGraph*> iPuppiCorr;
@@ -291,12 +291,14 @@ void setJet(bool IsPuppi, PseudoJet &iJet,JetInfo &iJetI, ClusterSequenceArea &c
     //PseudoJet lConstit = subtractor(iJet);
 
     //Finally apply the JEC
-    double lJEC = correction(iJet,iJetCorr,bge_rho.rho());  
-    if (IsPuppi) 
-    {
-      lJEC = correction(iJet,iJetCorr,1.);  
-      lJEC *= correctPhil(iJet.pt()*lJEC, iJet.eta()) ;
-    }
+    double lJEC  = correction(iJet,iJetCorr,bge_rho.rho());  
+    //double lJEC1 = correction(iJet,iJetCorr,1.);
+    //if(IsPuppi) std::cout << "==> Puppi : " << lJEC << " -- " << lJEC1 << " -- " << bge_rho.rho() << std::endl;
+    //if (IsPuppi) 
+    //{
+    //  lJEC = correction(iJet,iJetCorr,1.);  
+    //  lJEC *= correctPhil(iJet.pt()*lJEC, iJet.eta()) ;
+    // }
 
     double lUnc = -999.;
     if (iJetUnc != NULL) lUnc = unc       (iJet,iJetUnc);
@@ -453,10 +455,12 @@ int main (int argc, char ** argv) {
 
   //Puppi (L2L3)
   std::vector<JetCorrectorParameters> PuppicorrParams;
-
-  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/POSTLS170_V6_L1FastJet_AK7PF.txt"));
-  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/POSTLS170_V6_L2Relative_AK7PF.txt"));
-  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/POSTLS170_V6_L3Absolute_AK7PF.txt"));
+  //PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L2Relative_"+JetType+".txt"));
+  //PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L3Absolute_"+JetType+".txt"));
+  PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/"+globalTag+"_L2Relative_"+JetType+"puppi.txt"));
+  //PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/POSTLS170_V6_L1FastJet_AK7PF.txt"));
+  //PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/POSTLS170_V6_L2Relative_AK7PF.txt"));
+  //PuppicorrParams.push_back(JetCorrectorParameters(cmsenv+"/src/SubstrAna/Summer14/data/POSTLS170_V6_L3Absolute_AK7PF.txt"));
   //corrParams.push_back(JetCorrectorParameter(cmsenv+'BaconProd/Utils/data/Summer13_V1_DATA_L2L3Residual_"+JetType+".txt'));
   FactorizedJetCorrector   *PuppijetCorr = new FactorizedJetCorrector(PuppicorrParams);
   JetCorrectionUncertainty *PuppijetUnc  = NULL;
@@ -741,11 +745,11 @@ std::vector<TLorentzVector> GetCorJets(bool IsPuppi, std::vector<PseudoJet> &iJe
   {
     PseudoJet ijet = iJets.at(i);
     double lJEC = correction(ijet,iJetCorr,bge_rho.rho());  
-    if (IsPuppi) 
-    {
-      lJEC = correction(ijet,iJetCorr,1.);  
-      lJEC *= correctPhil(ijet.pt()*lJEC, ijet.eta()) ;
-    }
+    //if (IsPuppi) 
+    // {
+    //  lJEC = correction(ijet,iJetCorr,1.);  
+    //  lJEC *= correctPhil(ijet.pt()*lJEC, ijet.eta()) ;
+    //}
     TLorentzVector pVec(0,0,0,0);
     pVec.SetPtEtaPhiM(ijet.pt()*lJEC, ijet.eta(), ijet.phi(), ijet.m());
     CorJets.push_back(pVec);

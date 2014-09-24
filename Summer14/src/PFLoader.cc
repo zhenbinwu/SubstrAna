@@ -262,31 +262,32 @@ std::vector<fastjet::PseudoJet> PFLoader::pfchsFetch(double iPtCut) {
 RecoObj PFLoader::convert(TPFPart *iPart) { 
   bool lIsCh   = (iPart->pfType == 1 || iPart->pfType == 2 || iPart->pfType == 3) && (iPart->vtxId > -1 || fabs(iPart->dz) < 0.2) ;
   bool lIsPV   = (iPart->vtxId  == 0 || (fabs(iPart->dz) < 0.2 && lIsCh)); 
-
-    int lID = -1;
-    // if(fabs(iPart->eta) > 2.5) lIsCh = false;
-    if (!lIsCh) lID = 1;
-    if (lIsCh &&  lIsPV) lID = 2;
-    if (lIsCh && !lIsPV) lID = 3;
-    RecoObj pJet;
-    pJet.charge  = iPart->q;
-    pJet.pt      = iPart->pt;
-    pJet.eta     = iPart->eta;
-    pJet.phi     = iPart->phi;
-    pJet.m       = iPart->m;
-    pJet.id      = lID;
-    pJet.vtxId   = iPart->vtxId;
-    pJet.trkChi2 = iPart->trkChi2;
-    pJet.vtxChi2 = iPart->vtxChi2;
-    pJet.pfType  = iPart->pfType;
-    pJet.depth   = iPart->depth;
-    pJet.time    = iPart->time;
-    pJet.d0      = iPart->d0;
-    pJet.dZ      = iPart->dz;
-    //if(!lIsCh && pJet.pfType == 1) pJet.pfType  = 5;//iPart->d0;
-    // if(!lIsCh) pJet.d0      = 0;//iPart->d0;
-    //if(!lIsCh) pJet.dZ      = 0;//iPart->dz;
-    return pJet;
+  //bool lIsPV   = (iPart->vtxId  == 0 && lIsCh); 
+  
+  int lID = -1;
+  // if(fabs(iPart->eta) > 2.5) lIsCh = false;
+  if (!lIsCh) lID = 1;
+  if (lIsCh &&  lIsPV) lID = 2;
+  if (lIsCh && !lIsPV) lID = 3;
+  RecoObj pJet;
+  pJet.charge  = iPart->q;
+  pJet.pt      = iPart->pt;
+  pJet.eta     = iPart->eta;
+  pJet.phi     = iPart->phi;
+  pJet.m       = iPart->m;
+  pJet.id      = lID;
+  pJet.vtxId   = iPart->vtxId;
+  pJet.trkChi2 = iPart->trkChi2;
+  pJet.vtxChi2 = iPart->vtxChi2;
+  pJet.pfType  = iPart->pfType;
+  pJet.depth   = iPart->depth;
+  pJet.time    = iPart->time;
+  pJet.d0      = iPart->d0;
+  pJet.dZ      = iPart->dz;
+  //if(!lIsCh && pJet.pfType == 1) pJet.pfType  = 5;//iPart->d0;
+  // if(!lIsCh) pJet.d0      = 0;//iPart->d0;
+  //if(!lIsCh) pJet.dZ      = 0;//iPart->dz;
+  return pJet;
 }
 PseudoJet PFLoader::convert(RecoObj *iObj) { 
   double Px    = iObj->pt*cos(iObj->phi);
